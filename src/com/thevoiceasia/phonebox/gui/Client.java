@@ -35,7 +35,7 @@ public class Client extends JFrame implements WindowListener{
 		setupLogging();
 		xStrings = new I18NStrings("en", "GB");
 		chatManager = new ChatManager("newssms@elastix", "N3wssmsas1a", "News SMS", "elastix", "phonebox@conference.elastix", "en", "GB");
-		//TEST
+		//TESTING
 		/** Build GUI **/
 		setLookandFeel();
 		this.setSize(180, 400);
