@@ -1,23 +1,24 @@
 package com.thevoiceasia.phonebox.chat;
 
 import java.io.IOException;
+import java.util.Vector;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.JOptionPane;
 
-import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.Connection;
-import org.jivesoftware.smack.MessageListener;
+import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.SmackConfiguration;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smackx.muc.DiscussionHistory;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 
-public class ChatManager implements MessageListener {
+public class ChatManager implements PacketListener {
 
 	//XMPP Settings
 	private String XMPPUserName, XMPPPassword, XMPPNickName, XMPPServerHostName, XMPPRoomName;
@@ -30,27 +31,13 @@ public class ChatManager implements MessageListener {
 	//ChatManager vars
 	private boolean hasErrors = false; //Error Flag used internally
 	private I18NStrings xStrings; //Link to external string resources
+	private Vector<MessageReceiver> receivers = new Vector<MessageReceiver>();
+	
 	
 	/** STATICS **/
 	private static final int XMPP_CHAT_HISTORY = 600; //Chat Messages in the last x seconds
 	private static final Logger LOGGER = Logger.getLogger(ChatManager.class.getName());//Logger
-	
-	/**
-	 * Testing Entry point for ChatManager, this handles all the chat side of TVAPhoneBox
-	 * @param args language, country e.g. javaw -jar ChatManager en GB
-	 */
-	public static void main(String[] args){
-		
-		//DEBUG Settings for XMPP Chat
-		//TODO 
-		ChatManager cm = new ChatManager("newssms@elastix", "N3wssmsas1a", "News SMS", "elastix", "phonebox@conference.elastix");
-		cm.setLoggingLevel(Level.WARNING);
-		cm.connect();
-		cm.sendMessage("Hello");
-		cm.disconnect();
-		
-		
-	}
+	private static final Level LOG_LEVEL = Level.INFO;
 	
 	/**
 	 * Create ChatManager with default locale (en, GB)
@@ -109,7 +96,7 @@ public class ChatManager implements MessageListener {
 	 */
 	public void setupLogging(){
 		
-		LOGGER.setLevel(Level.SEVERE);
+		LOGGER.setLevel(LOG_LEVEL);
 		
 		try{
 			LOGGER.addHandler(new FileHandler("chatLog.log")); //$NON-NLS-1$
@@ -200,7 +187,7 @@ public class ChatManager implements MessageListener {
 				phoneboxChat = new MultiUserChat(XMPPServerConnection, XMPPRoomName);
 				DiscussionHistory chatHistory = new DiscussionHistory();
 				chatHistory.setSeconds(XMPPChatHistory);
-				
+				phoneboxChat.addMessageListener(this);
 				
 				try{
 					LOGGER.info(xStrings.getString("ChatManager.logJoinRoom")); //$NON-NLS-1$
@@ -264,7 +251,7 @@ public class ChatManager implements MessageListener {
 	}
 	
 	/**
-	 * TODO
+	 * Sends the given string as a message to the XMPP chat room
 	 * @param msg
 	 */
 	public void sendMessage(String msg){
@@ -305,9 +292,55 @@ public class ChatManager implements MessageListener {
 		
 	}
 
+	/**
+	 * TODO
+	 * @param mr
+	 */
+	public void addMessageReceiver(MessageReceiver mr){
+	
+		LOGGER.info(xStrings.getString("ChatManager.addMessageReceiver") + mr.toString()); //$NON-NLS-1$
+		receivers.add(mr);
+		
+	}
+	
+	/**
+	 * TODO
+	 * @param mr
+	 */
+	public void removeMessageReceiver(MessageReceiver mr){
+		
+		LOGGER.info(xStrings.getString("ChatManager.removeMessageReceiver") + mr.toString()); //$NON-NLS-1$
+		
+		int i = 0;
+		boolean removed = false;
+		
+		while(!removed && i < receivers.size()){
+			
+			if(receivers.get(i) == mr){
+				
+				receivers.remove(i);
+				removed = true;
+				LOGGER.info(xStrings.getString("ChatManager.removedMessageReceiver")); //$NON-NLS-1$
+				
+			}
+			
+		}
+		
+		if(!removed)
+			LOGGER.warning(xStrings.getString("ChatManager.errorRemovingMessageReceiver") + mr.toString()); //$NON-NLS-1$
+		
+	}
+	
 	@Override
-	public void processMessage(Chat arg0, Message arg1) {
+	public void processPacket(Packet XMPPPacket) {
+		
 		// TODO Auto-generated method stub
+		LOGGER.info(xStrings.getString("ChatManager.receivedMessage") + XMPPPacket); //$NON-NLS-1$
+		Message msg = (Message)XMPPPacket;
+		LOGGER.info(msg.getBody());
+		
+		for(int i = 0; i < receivers.size(); i++)
+			receivers.get(i).receiveMessage(msg);
 		
 	}
 	
