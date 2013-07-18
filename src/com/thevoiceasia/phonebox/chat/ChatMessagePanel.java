@@ -109,8 +109,8 @@ public class ChatMessagePanel extends JPanel implements MessageReceiver{
 		if(friendlyFrom.contains("/")) //$NON-NLS-1$
 			friendlyFrom = friendlyFrom.split("/")[1]; //$NON-NLS-1$
 		
-		final String from = friendlyFrom;
-		final String body = message.getBody();
+		final String from = friendlyFrom + ": "; //$NON-NLS-1$
+		final String body = message.getBody() + "\n"; //$NON-NLS-1$
 		
 		SwingUtilities.invokeLater(new Runnable(){
 			public void run(){

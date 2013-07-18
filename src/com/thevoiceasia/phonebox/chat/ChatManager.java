@@ -91,6 +91,14 @@ public class ChatManager implements PacketListener {
 	}
 	
 	/**
+	 * Returns true if hasErrors is set, usually from XMPP connect/message errors
+	 * @return
+	 */
+	public boolean hasErrors(){
+		return hasErrors;
+	}
+	
+	/**
 	 * Set the Logger object
 	 * 
 	 */

@@ -8,7 +8,7 @@ public class ChatWindow extends JPanel {
 	/** STATICS **/
 	private static final long serialVersionUID = 1L;
 	
-	public ChatWindow(ChatManager chatManager){
+	public ChatWindow(ChatManager chatManager, String language, String country){
 		
 		super();
 		
@@ -27,7 +27,7 @@ public class ChatWindow extends JPanel {
 		 *   ChatInputPanel (autohide?)
 		 *   UserStatusPanel (toggle hide)
 		 */
-		ChatMessagePanel messages = new ChatMessagePanel();
+		ChatMessagePanel messages = new ChatMessagePanel(language, country);
 		chatManager.addMessageReceiver(messages);
 		
 		this.setLayout(new BorderLayout());
