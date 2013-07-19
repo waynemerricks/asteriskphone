@@ -118,7 +118,17 @@ public class Client extends JFrame implements WindowListener{
 				xStrings.getString("Client.applicationClosing")); //$NON-NLS-1$
 		
 		//Clean up and free connections/memory
-		chatManager.disconnect();
+		try{
+			chatManager.disconnect();
+		}catch(IllegalStateException e){
+			/*
+			 * This only happens if program was logged in twice as the same user,
+			 * in this case the older instance gets kicked from the server.
+			 * 
+			 * As we're closing we can ignore the error and continue to shutdown.
+			 */
+		}
+		
 		chatManager = null;
 		
 	}
