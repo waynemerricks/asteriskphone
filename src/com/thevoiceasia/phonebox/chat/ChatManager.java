@@ -220,7 +220,7 @@ public class ChatManager implements PacketListener {
 	/**
 	 * Disconnect from the XMPP Chat Server
 	 */
-	public void disconnect(){
+	public void disconnect() throws IllegalStateException{
 		
 		//Leave joined XMPP rooms, not strictly necessary as disconnect will handle this
 		if(phoneboxChat != null){
