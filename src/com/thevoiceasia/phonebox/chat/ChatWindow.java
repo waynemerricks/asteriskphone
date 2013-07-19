@@ -31,6 +31,7 @@ public class ChatWindow extends JPanel {
 		chatManager.addMessageReceiver(messages);
 		
 		this.setLayout(new BorderLayout());
+		this.add(new ChatShortcutBar(language, country, chatManager), BorderLayout.NORTH);
 		this.add(messages, BorderLayout.CENTER);
 		this.add(new ChatInputPanel(language, country, chatManager), BorderLayout.SOUTH);
 		this.add(new UserStatusPanel(), BorderLayout.EAST);
