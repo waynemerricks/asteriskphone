@@ -5,6 +5,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -34,9 +35,12 @@ public class ChatInputPanel extends JPanel implements ActionListener, KeyListene
 		message.setWrapStyleWord(true);
 		message.addKeyListener(this);
 		
-		JButton send = new JButton(xStrings.getString("ChatManager.buttonSend")); //$NON-NLS-1$
+		String sendButtonText = xStrings.getString("ChatManager.buttonSend");  //$NON-NLS-1$
+		JButton send = new JButton(sendButtonText);
 		send.setToolTipText(xStrings.getString("ChatManager.buttonSendToolTip")); //$NON-NLS-1$
-		//TODO Mnemonic based on first letter (might have to build a hashmap :\
+		
+		send.setMnemonic(sendButtonText.substring(0,1).toLowerCase().toCharArray()[0]);
+		//TODO Mnemonic based on first letter (might have to build a hashmap :\)
 		
 		this.add(new JScrollPane(message), BorderLayout.CENTER);
 		this.add(send, BorderLayout.EAST);
@@ -54,7 +58,6 @@ public class ChatInputPanel extends JPanel implements ActionListener, KeyListene
 		});
 		
 	}
-	
 	
 	@Override
 	public void actionPerformed(ActionEvent evt) {
