@@ -35,7 +35,14 @@ public class ChatMessagePanel extends JPanel implements MessageReceiver, TopicRe
 	private static final Logger LOGGER = Logger.getLogger(Client.class.getName());//Logger
 	private static final Level LOG_LEVEL = Level.INFO;
 	private I18NStrings xStrings;
-	
+	private static final long serialVersionUID = 1L;
+
+	/**
+	 * TODO
+	 * @param language
+	 * @param country
+	 * @param myNickName
+	 */
 	public ChatMessagePanel(String language, String country, String myNickName){
 		
 		super();
@@ -70,12 +77,19 @@ public class ChatMessagePanel extends JPanel implements MessageReceiver, TopicRe
 		
 	}
 	
+	/**
+	 * TODO
+	 * @param c
+	 */
 	private void setTextColour(Color c){
 		
 		StyleConstants.setForeground(chatStyle, c);
 		
 	}
 	
+	/**
+	 * TODO
+	 */
 	public void clear(){
 		
 		SwingUtilities.invokeLater(new Runnable(){
@@ -88,7 +102,6 @@ public class ChatMessagePanel extends JPanel implements MessageReceiver, TopicRe
 	
 	/**
 	 * Set the Logger object
-	 * 
 	 */
 	private void setupLogging(){
 		
@@ -119,8 +132,6 @@ public class ChatMessagePanel extends JPanel implements MessageReceiver, TopicRe
 		
 	}
 	
-	private static final long serialVersionUID = 1L;
-
 	@Override
 	public void receiveMessage(Message message) {
 		
