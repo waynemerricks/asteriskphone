@@ -107,7 +107,7 @@ public class ChatMessagePanel extends JPanel implements MessageReceiver{
 	@Override
 	public void receiveMessage(Message message) {
 		
-		LOGGER.info(xStrings.getString("ChatManager.receivedMessage")); //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("ChatManager.receivedMessage") + message); //$NON-NLS-1$
 		String friendlyFrom = message.getFrom();
 		if(friendlyFrom.contains("/")) //$NON-NLS-1$
 			friendlyFrom = friendlyFrom.split("/")[1]; //$NON-NLS-1$
