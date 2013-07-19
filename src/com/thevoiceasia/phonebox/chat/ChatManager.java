@@ -293,6 +293,8 @@ public class ChatManager implements PacketListener, SubjectUpdatedListener {
 			phoneboxChat.sendMessage(msg);
 		}catch(XMPPException e){
 			showWarning(e, xStrings.getString("ChatManager.chatRoomError")); //$NON-NLS-1$
+		}catch(IllegalStateException e){
+			showWarning(e, xStrings.getString("ChatManager.duplicateLoginError")); //$NON-NLS-1$
 		}
 		
 	}
