@@ -2,6 +2,7 @@ package com.thevoiceasia.phonebox.chat;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Font;
 import java.io.IOException;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
@@ -24,11 +25,12 @@ import com.thevoiceasia.phonebox.gui.Client;
  * @author waynemerricks
  *
  */
-public class ChatMessagePanel extends JPanel implements MessageReceiver{
+public class ChatMessagePanel extends JPanel implements MessageReceiver, TopicReceiver{
 
 	private JTextPane messages = new JTextPane();
 	private Style chatStyle;
 	private String myNickName;
+	private JLabel topic = new JLabel();
 	
 	private static final Logger LOGGER = Logger.getLogger(Client.class.getName());//Logger
 	private static final Level LOG_LEVEL = Level.INFO;
@@ -46,12 +48,27 @@ public class ChatMessagePanel extends JPanel implements MessageReceiver{
 		xStrings = new I18NStrings(language, country);
 		chatStyle = messages.addStyle("chatStyle", null); //$NON-NLS-1$
 		
+		//Setup Topic
+		//Increase font size
+		Font t = topic.getFont();
+		t = t.deriveFont(Font.BOLD);
+		t = t.deriveFont(24F);
+		topic.setFont(t);
+		topic.setHorizontalTextPosition(JLabel.CENTER);
+		topic.setHorizontalAlignment(JLabel.CENTER);
+		topic.setText(xStrings.getString("ChatManager.topicLabel")); //$NON-NLS-1$
+		
+		JPanel north = new JPanel(new BorderLayout());
+		north.add(topic, BorderLayout.SOUTH);
+		north.add(new JSeparator(JSeparator.HORIZONTAL));
+		
+		this.add(north, BorderLayout.NORTH);
+		
 		JScrollPane messageScroll = new JScrollPane(messages);
 		messageScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		this.add(messageScroll, BorderLayout.CENTER);
 		
 	}
-	
 	
 	private void setTextColour(Color c){
 		
@@ -137,6 +154,21 @@ public class ChatMessagePanel extends JPanel implements MessageReceiver{
 					LOGGER.severe(xStrings.getString("ChatManager.errorInsertingMessage")); //$NON-NLS-1$
 					e.printStackTrace();
 				}
+				
+			}
+		});
+		
+	}
+
+	@Override
+	public void receiveTopic(String newTopic) {
+		
+		final String t = newTopic;
+		
+		SwingUtilities.invokeLater(new Runnable(){
+			public void run(){
+				
+				topic.setText(t);
 				
 			}
 		});
