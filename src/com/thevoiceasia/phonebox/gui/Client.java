@@ -38,7 +38,7 @@ public class Client extends JFrame implements WindowListener{
 		//TESTING
 		/** Build GUI **/
 		setLookandFeel();
-		this.setSize(180, 400);
+		this.setSize(320, 400);
 		this.setLayout(new BorderLayout());
 		this.setTitle(xStrings.getString("Client.appTitle")); //$NON-NLS-1$
 		this.addWindowListener(this);
@@ -67,9 +67,6 @@ public class Client extends JFrame implements WindowListener{
 	public void connectChat(){
 		
 		chatManager.connect();
-		
-		if(!chatManager.hasErrors())
-			chatManager.sendMessage("Hello");
 		
 	}
 	
