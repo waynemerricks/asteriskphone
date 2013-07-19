@@ -38,8 +38,8 @@ public class ChatInputPanel extends JPanel implements ActionListener, KeyListene
 		String sendButtonText = xStrings.getString("ChatManager.buttonSend");  //$NON-NLS-1$
 		JButton send = new JButton(sendButtonText);
 		send.setToolTipText(xStrings.getString("ChatManager.buttonSendToolTip")); //$NON-NLS-1$
-		
 		send.setMnemonic(sendButtonText.substring(0,1).toLowerCase().toCharArray()[0]);
+		send.addActionListener(this);
 		
 		this.add(new JScrollPane(message), BorderLayout.CENTER);
 		this.add(send, BorderLayout.EAST);
