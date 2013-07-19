@@ -28,13 +28,16 @@ public class ChatMessagePanel extends JPanel implements MessageReceiver{
 
 	private JTextPane messages = new JTextPane();
 	private Style chatStyle;
+	private String myNickName;
 	
 	private static final Logger LOGGER = Logger.getLogger(Client.class.getName());//Logger
 	private static final Level LOG_LEVEL = Level.INFO;
 	private I18NStrings xStrings;
 	
-	public ChatMessagePanel(String language, String country){
+	public ChatMessagePanel(String language, String country, String myNickName){
 		
+		super();
+		this.myNickName = myNickName;
 		this.setLayout(new BorderLayout());
 		setupLogging();
 		
@@ -109,17 +112,22 @@ public class ChatMessagePanel extends JPanel implements MessageReceiver{
 		if(friendlyFrom.contains("/")) //$NON-NLS-1$
 			friendlyFrom = friendlyFrom.split("/")[1]; //$NON-NLS-1$
 		
-		final String from = friendlyFrom + ": "; //$NON-NLS-1$
+		final String from = friendlyFrom;
 		final String body = message.getBody() + "\n"; //$NON-NLS-1$
 		
 		SwingUtilities.invokeLater(new Runnable(){
 			public void run(){
 				
 				try{
-					setTextColour(Color.RED);
+					
+					if(from.equals(myNickName))
+						setTextColour(Color.RED);
+					else
+						setTextColour(Color.BLUE);
+					
 					StyledDocument doc = messages.getStyledDocument();
 					//Add From in RED TODO FROM ME = BLUE?
-					doc.insertString(doc.getLength(), from, chatStyle);
+					doc.insertString(doc.getLength(), from + ": ", chatStyle); //$NON-NLS-1$
 					
 					//Add Message in normal black
 					setTextColour(Color.BLACK);
