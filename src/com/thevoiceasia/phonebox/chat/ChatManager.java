@@ -17,8 +17,10 @@ import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smackx.muc.DiscussionHistory;
 import org.jivesoftware.smackx.muc.MultiUserChat;
+import org.jivesoftware.smackx.muc.RoomInfo;
+import org.jivesoftware.smackx.muc.SubjectUpdatedListener;
 
-public class ChatManager implements PacketListener {
+public class ChatManager implements PacketListener, SubjectUpdatedListener {
 
 	//XMPP Settings
 	private String XMPPUserName, XMPPPassword, XMPPNickName, XMPPServerHostName, XMPPRoomName;
@@ -32,7 +34,7 @@ public class ChatManager implements PacketListener {
 	private boolean hasErrors = false; //Error Flag used internally
 	private I18NStrings xStrings; //Link to external string resources
 	private Vector<MessageReceiver> receivers = new Vector<MessageReceiver>();
-	
+	private Vector<TopicReceiver> topicReceivers = new Vector<TopicReceiver>();
 	
 	/** STATICS **/
 	private static final int XMPP_CHAT_HISTORY = 600; //Chat Messages in the last x seconds
@@ -210,6 +212,29 @@ public class ChatManager implements PacketListener {
 					
 				}
 				
+				//Get Room Topic
+				if(!hasErrors){
+					
+					try {
+						LOGGER.info(xStrings.getString("ChatManager.logGetRoomInfo")); //$NON-NLS-1$
+						RoomInfo info = MultiUserChat.getRoomInfo(XMPPServerConnection, XMPPRoomName);
+						LOGGER.info(xStrings.getString("ChatManager.logGotRoomInfo")); //$NON-NLS-1$
+						
+						phoneboxChat.addSubjectUpdatedListener(this);
+						
+						subjectUpdated(info.getSubject(), ""); //$NON-NLS-1$
+						
+					} catch (XMPPException e) {
+						
+						showError(e, xStrings.getString("ChatManager.chatRoomInfoError")); //$NON-NLS-1$
+						hasErrors = true;
+						disconnect();
+						
+					}
+					
+					
+				}
+				
 			}
 			
 		}
@@ -339,6 +364,45 @@ public class ChatManager implements PacketListener {
 		
 	}
 	
+	/**
+	 * TODO
+	 * @param mr
+	 */
+	public void addTopicReceiver(TopicReceiver tr){
+	
+		LOGGER.info(xStrings.getString("ChatManager.addTopicReceiver") + tr.toString()); //$NON-NLS-1$
+		topicReceivers.add(tr);
+		
+	}
+	
+	/**
+	 * TODO
+	 * @param mr
+	 */
+	public void removeTopicReceiver(TopicReceiver tr){
+		
+		LOGGER.info(xStrings.getString("ChatManager.removeTopicReceiver") + tr.toString()); //$NON-NLS-1$
+		
+		int i = 0;
+		boolean removed = false;
+		
+		while(!removed && i < topicReceivers.size()){
+			
+			if(topicReceivers.get(i) == tr){
+				
+				topicReceivers.remove(i);
+				removed = true;
+				LOGGER.info(xStrings.getString("ChatManager.removedTopicReceiver")); //$NON-NLS-1$
+				
+			}
+			
+		}
+		
+		if(!removed)
+			LOGGER.warning(xStrings.getString("ChatManager.errorRemovingTopicReceiver") + tr.toString()); //$NON-NLS-1$
+		
+	}
+	
 	@Override
 	public void processPacket(Packet XMPPPacket) {
 		
@@ -349,6 +413,26 @@ public class ChatManager implements PacketListener {
 		
 		for(int i = 0; i < receivers.size(); i++)
 			receivers.get(i).receiveMessage(msg);
+		
+	}
+	
+	/**
+	 * TODO
+	 * @param topic
+	 */
+	public void changeTopic(String topic){
+		
+		subjectUpdated(topic, ""); //$NON-NLS-1$
+		
+	}
+
+	@Override
+	public void subjectUpdated(String subject, String from) {
+		
+		LOGGER.info(xStrings.getString("ChatManager.logSettingTopic") + subject); //$NON-NLS-1$
+			
+		for(int i = 0; i < topicReceivers.size(); i++)
+			topicReceivers.get(i).receiveTopic(subject);
 		
 	}
 	
