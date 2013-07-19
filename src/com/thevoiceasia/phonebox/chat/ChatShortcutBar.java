@@ -136,11 +136,13 @@ public class ChatShortcutBar extends JPanel implements ActionListener {
 			
 			LOGGER.info(xStrings.getString("ChatManager.setNoCalls")); //$NON-NLS-1$
 			chatManager.sendMessage(xStrings.getString("ChatManager.chatNoCalls")); //$NON-NLS-1$
+			chatManager.changeTopic(xStrings.getString("ChatManager.subjectNoCalls")); //$NON-NLS-1$
 			
 		}else{
 			
 			LOGGER.info(xStrings.getString("ChatManager.setCalls")); //$NON-NLS-1$
 			chatManager.sendMessage(xStrings.getString("ChatManager.chatResumeCalls")); //$NON-NLS-1$
+			chatManager.changeTopic(""); //$NON-NLS-1$
 			
 		}
 			
@@ -156,11 +158,13 @@ public class ChatShortcutBar extends JPanel implements ActionListener {
 			
 			LOGGER.info(xStrings.getString("ChatManager.setBackSoon")); //$NON-NLS-1$
 			chatManager.sendMessage(xStrings.getString("ChatManager.chatBackSoon")); //$NON-NLS-1$
+			chatManager.changeTopic(xStrings.getString("ChatManager.subjectBackSoon")); //$NON-NLS-1$
 			
 		}else{
 			
 			LOGGER.info(xStrings.getString("ChatManager.setReturned")); //$NON-NLS-1$
 			chatManager.sendMessage(xStrings.getString("ChatManager.chatResumeCalls")); //$NON-NLS-1$
+			chatManager.changeTopic(""); //$NON-NLS-1$
 			
 		}
 		
@@ -176,11 +180,13 @@ public class ChatShortcutBar extends JPanel implements ActionListener {
 			
 			LOGGER.info(xStrings.getString("ChatManager.setHelpMe")); //$NON-NLS-1$
 			chatManager.sendMessage(xStrings.getString("ChatManager.chatHelpMe")); //$NON-NLS-1$
+			chatManager.changeTopic(xStrings.getString("ChatManager.subjectHelp")); //$NON-NLS-1$
 			
 		}else{
 			
 			LOGGER.info(xStrings.getString("ChatManager.setPanicOver")); //$NON-NLS-1$
 			chatManager.sendMessage(xStrings.getString("ChatManager.chatCrisisOver")); //$NON-NLS-1$
+			chatManager.changeTopic(""); //$NON-NLS-1$
 			
 		}
 		
