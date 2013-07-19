@@ -9,6 +9,7 @@ import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -30,7 +31,9 @@ public class ChatShortcutBar extends JPanel implements ActionListener {
 	/** CLASS VARS **/
 	private I18NStrings xStrings; //Link to external string resources
 	private JToggleButton callToggle, breakToggle, helpToggle;
+	private ButtonGroup shortCutGroup;
 	private ChatManager chatManager;
+	private boolean callPressed = false, breakPressed = false, helpPressed = false;
 	
 	/**
 	 * TODO 
@@ -67,6 +70,12 @@ public class ChatShortcutBar extends JPanel implements ActionListener {
 		helpToggle.setActionCommand("help"); //$NON-NLS-1$
 		helpToggle.addActionListener(this);
 		this.add(helpToggle);
+		
+		//Add buttons to group so only one is selected (cuts down on duplicate offs)
+		shortCutGroup = new ButtonGroup();
+		shortCutGroup.add(callToggle);
+		shortCutGroup.add(breakToggle);
+		shortCutGroup.add(helpToggle);
 		
 	}
 
@@ -132,15 +141,21 @@ public class ChatShortcutBar extends JPanel implements ActionListener {
 	private void noCallsPressed(){
 	
 		//TODO Integrate with room TOPIC
-		if(callToggle.isSelected()){
+		if(callToggle.isSelected() && !callPressed){
 			
-			LOGGER.info(xStrings.getString("ChatManager.setNoCalls")); //$NON-NLS-1$
+			callPressed = true;
+			breakPressed = false;
+			helpPressed = false;
+			LOGGER.info(xStrings.getString("ChatManager.logSetNoCalls")); //$NON-NLS-1$
 			chatManager.sendMessage(xStrings.getString("ChatManager.chatNoCalls")); //$NON-NLS-1$
 			chatManager.changeTopic(xStrings.getString("ChatManager.subjectNoCalls")); //$NON-NLS-1$
 			
-		}else{
+		}else if(callPressed){
 			
-			LOGGER.info(xStrings.getString("ChatManager.setCalls")); //$NON-NLS-1$
+			callPressed = false;
+			shortCutGroup.clearSelection();
+			callToggle.setSelected(false);
+			LOGGER.info(xStrings.getString("ChatManager.logSetCalls")); //$NON-NLS-1$
 			chatManager.sendMessage(xStrings.getString("ChatManager.chatResumeCalls")); //$NON-NLS-1$
 			chatManager.changeTopic(""); //$NON-NLS-1$
 			
@@ -154,15 +169,21 @@ public class ChatShortcutBar extends JPanel implements ActionListener {
 	private void backSoonPressed(){
 		
 		//TODO Integrate with room TOPIC
-		if(breakToggle.isSelected()){
+		if(breakToggle.isSelected() && !breakPressed){
 			
-			LOGGER.info(xStrings.getString("ChatManager.setBackSoon")); //$NON-NLS-1$
+			breakPressed = true;
+			callPressed = false;
+			helpPressed = false;
+			LOGGER.info(xStrings.getString("ChatManager.logSetBackSoon")); //$NON-NLS-1$
 			chatManager.sendMessage(xStrings.getString("ChatManager.chatBackSoon")); //$NON-NLS-1$
 			chatManager.changeTopic(xStrings.getString("ChatManager.subjectBackSoon")); //$NON-NLS-1$
 			
-		}else{
+		}else if(breakPressed){
 			
-			LOGGER.info(xStrings.getString("ChatManager.setReturned")); //$NON-NLS-1$
+			breakPressed = false;
+			shortCutGroup.clearSelection();
+			breakToggle.setSelected(false);
+			LOGGER.info(xStrings.getString("ChatManager.logSetReturned")); //$NON-NLS-1$
 			chatManager.sendMessage(xStrings.getString("ChatManager.chatResumeCalls")); //$NON-NLS-1$
 			chatManager.changeTopic(""); //$NON-NLS-1$
 			
@@ -176,15 +197,21 @@ public class ChatShortcutBar extends JPanel implements ActionListener {
 	private void helpPressed(){
 		
 		//TODO Integrate with room TOPIC
-		if(helpToggle.isSelected()){
+		if(helpToggle.isSelected() && !helpPressed){
 			
-			LOGGER.info(xStrings.getString("ChatManager.setHelpMe")); //$NON-NLS-1$
+			helpPressed = true;
+			callPressed = false;
+			breakPressed = false;
+			LOGGER.info(xStrings.getString("ChatManager.logSetHelpMe")); //$NON-NLS-1$
 			chatManager.sendMessage(xStrings.getString("ChatManager.chatHelpMe")); //$NON-NLS-1$
 			chatManager.changeTopic(xStrings.getString("ChatManager.subjectHelp")); //$NON-NLS-1$
 			
-		}else{
+		}else if(helpPressed){
 			
-			LOGGER.info(xStrings.getString("ChatManager.setPanicOver")); //$NON-NLS-1$
+			helpPressed = false;
+			shortCutGroup.clearSelection();
+			helpToggle.setSelected(false);
+			LOGGER.info(xStrings.getString("ChatManager.logSetPanicOver")); //$NON-NLS-1$
 			chatManager.sendMessage(xStrings.getString("ChatManager.chatCrisisOver")); //$NON-NLS-1$
 			chatManager.changeTopic(""); //$NON-NLS-1$
 			
