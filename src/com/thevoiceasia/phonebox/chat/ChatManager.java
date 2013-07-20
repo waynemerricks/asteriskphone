@@ -2,8 +2,6 @@ package com.thevoiceasia.phonebox.chat;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Vector;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -11,21 +9,16 @@ import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 
 import org.jivesoftware.smack.Connection;
-import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.SmackConfiguration;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smack.packet.Packet;
-import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smackx.muc.DiscussionHistory;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.ParticipantStatusListener;
-import org.jivesoftware.smackx.muc.RoomInfo;
-import org.jivesoftware.smackx.muc.SubjectUpdatedListener;
 import org.jivesoftware.smackx.muc.UserStatusListener;
 
-public class ChatManager implements PacketListener, SubjectUpdatedListener, UserStatusListener, ParticipantStatusListener {
+public class ChatManager implements UserStatusListener, ParticipantStatusListener {
 
 	//XMPP Settings
 	private String XMPPUserName, XMPPPassword, XMPPNickName, XMPPServerHostName, XMPPRoomName;
@@ -39,8 +32,6 @@ public class ChatManager implements PacketListener, SubjectUpdatedListener, User
 	private boolean hasErrors = false; //Error Flag used internally
 	private I18NStrings xStrings; //Link to external string resources
 	private String language;
-	private Vector<MessageReceiver> receivers = new Vector<MessageReceiver>();
-	private Vector<TopicReceiver> topicReceivers = new Vector<TopicReceiver>();
 	private HashMap<String, Integer> roomRoster = new HashMap<String, Integer>();
 	
 	/** STATICS **/
@@ -101,6 +92,16 @@ public class ChatManager implements PacketListener, SubjectUpdatedListener, User
 	}
 	
 	/**
+	 * Returns the Phonebox Chat Room
+	 * @return
+	 */
+	public MultiUserChat getChatRoom(){
+		
+		return phoneboxChat;
+		
+	}
+	
+	/**
 	 * Returns true if hasErrors is set, usually from XMPP connect/message errors
 	 * @return
 	 */
@@ -110,7 +111,6 @@ public class ChatManager implements PacketListener, SubjectUpdatedListener, User
 	
 	/**
 	 * Set the Logger object
-	 * 
 	 */
 	public void setupLogging(){
 		
@@ -205,17 +205,16 @@ public class ChatManager implements PacketListener, SubjectUpdatedListener, User
 				phoneboxChat = new MultiUserChat(XMPPServerConnection, XMPPRoomName);
 				DiscussionHistory chatHistory = new DiscussionHistory();
 				chatHistory.setSeconds(XMPPChatHistory);
-				phoneboxChat.addMessageListener(this);
 				
 				try{
 					LOGGER.info(xStrings.getString("ChatManager.logJoinRoom")); //$NON-NLS-1$
 					phoneboxChat.join(XMPPNickName, XMPPPassword, chatHistory, 
 							SmackConfiguration.getPacketReplyTimeout());
 					LOGGER.info(xStrings.getString("ChatManager.logJoinedRoom")); //$NON-NLS-1$
-					phoneboxChat.addUserStatusListener(this);
-					LOGGER.info(xStrings.getString("ChatManager.logAddedUserStatusListener")); //$NON-NLS-1$
-					phoneboxChat.addParticipantStatusListener(this);
-					LOGGER.info(xStrings.getString("ChatManager.logAddedParticipantStatusListener")); //$NON-NLS-1$
+					//phoneboxChat.addUserStatusListener(this);
+					//LOGGER.info(xStrings.getString("ChatManager.logAddedUserStatusListener")); //$NON-NLS-1$
+					//phoneboxChat.addParticipantStatusListener(this);
+					//LOGGER.info(xStrings.getString("ChatManager.logAddedParticipantStatusListener")); //$NON-NLS-1$
 					//phoneboxChat.addParticipantListener(this);
 					//LOGGER.info(xStrings.getString("ChatManager.logAddedParticipantListener")); //$NON-NLS-1$
 					
@@ -227,60 +226,9 @@ public class ChatManager implements PacketListener, SubjectUpdatedListener, User
 					
 				}
 				
-				//Get Room Topic
-				if(!hasErrors){
-					
-					try {
-						LOGGER.info(xStrings.getString("ChatManager.logGetRoomInfo")); //$NON-NLS-1$
-						RoomInfo info = MultiUserChat.getRoomInfo(XMPPServerConnection, XMPPRoomName);
-						LOGGER.info(xStrings.getString("ChatManager.logGotRoomInfo")); //$NON-NLS-1$
-						
-						phoneboxChat.addSubjectUpdatedListener(this);
-						
-						subjectUpdated(info.getSubject(), ""); //$NON-NLS-1$
-						
-					} catch (XMPPException e) {
-						
-						showError(e, xStrings.getString("ChatManager.chatRoomInfoError")); //$NON-NLS-1$
-						hasErrors = true;
-						disconnect();
-						
-					}
-					
-					//Get Roster (Online List)
-					if(!hasErrors){
-						
-						LOGGER.info(xStrings.getString("ChatManager.logRequestRoster")); //$NON-NLS-1$
-						
-						Iterator<String> occupants = phoneboxChat.getOccupants();
-						
-						while(occupants.hasNext()){
-							
-							String occupant = occupants.next();
-							//2 = Available
-							//1 = Away
-							//0 = Offline/dead/whatever
-							int presence = 0;
-							
-							if(phoneboxChat.getOccupantPresence(occupant).isAvailable())
-								presence = 2;
-							else if(phoneboxChat.getOccupantPresence(occupant).isAway())
-								presence = 1;
-							
-							roomRoster.put(occupant, presence);
-							
-						}
-						
-						LOGGER.info(xStrings.getString("ChatManager.logReceivedRoster")); //$NON-NLS-1$
-						
-					}
-						
-				}
-				
 			}
 			
 		}
-		
 		
 	}
 	
@@ -369,126 +317,6 @@ public class ChatManager implements PacketListener, SubjectUpdatedListener, User
 		
 	}
 
-	/**
-	 * Adds the given message receiver to the list of objects to be notified when a new message arrives
-	 * @param mr
-	 */
-	public void addMessageReceiver(MessageReceiver mr){
-	
-		LOGGER.info(xStrings.getString("ChatManager.addMessageReceiver") + mr.toString()); //$NON-NLS-1$
-		receivers.add(mr);
-		
-	}
-	
-	/**
-	 * Removes the given message receiver from the notified objects list
-	 * @param mr
-	 */
-	public void removeMessageReceiver(MessageReceiver mr){
-		
-		LOGGER.info(xStrings.getString("ChatManager.removeMessageReceiver") + mr.toString()); //$NON-NLS-1$
-		
-		int i = 0;
-		boolean removed = false;
-		
-		while(!removed && i < receivers.size()){
-			
-			if(receivers.get(i) == mr){
-				
-				receivers.remove(i);
-				removed = true;
-				LOGGER.info(xStrings.getString("ChatManager.removedMessageReceiver")); //$NON-NLS-1$
-				
-			}
-			
-		}
-		
-		if(!removed)
-			LOGGER.warning(xStrings.getString("ChatManager.errorRemovingMessageReceiver") + mr.toString()); //$NON-NLS-1$
-		
-	}
-	
-	/**
-	 * Adds the given topic receiver to the list of objects to be notified when the topic changes
-	 * @param mr
-	 */
-	public void addTopicReceiver(TopicReceiver tr){
-	
-		LOGGER.info(xStrings.getString("ChatManager.addTopicReceiver") + tr.toString()); //$NON-NLS-1$
-		topicReceivers.add(tr);
-		
-	}
-	
-	/**
-	 * Removes the given topic receiver from the list of objects to be notified
-	 * @param mr
-	 */
-	public void removeTopicReceiver(TopicReceiver tr){
-		
-		LOGGER.info(xStrings.getString("ChatManager.removeTopicReceiver") + tr.toString()); //$NON-NLS-1$
-		
-		int i = 0;
-		boolean removed = false;
-		
-		while(!removed && i < topicReceivers.size()){
-			
-			if(topicReceivers.get(i) == tr){
-				
-				topicReceivers.remove(i);
-				removed = true;
-				LOGGER.info(xStrings.getString("ChatManager.removedTopicReceiver")); //$NON-NLS-1$
-				
-			}
-			
-		}
-		
-		if(!removed)
-			LOGGER.warning(xStrings.getString("ChatManager.errorRemovingTopicReceiver") + tr.toString()); //$NON-NLS-1$
-		
-	}
-	
-	@Override
-	public void processPacket(Packet XMPPPacket) {
-		
-		// TODO ParticipantListener also a problem here
-		LOGGER.info(xStrings.getString("ChatManager.receivedMessage") + XMPPPacket); //$NON-NLS-1$
-		
-		if(XMPPPacket instanceof Message){
-			
-			Message msg = (Message)XMPPPacket;
-			LOGGER.info(msg.getBody());
-			
-			for(int i = 0; i < receivers.size(); i++)
-				receivers.get(i).receiveMessage(msg);
-			
-		}else if(XMPPPacket instanceof Presence){
-			
-			//TODO ParticipantListener?
-			
-		}
-		
-	}
-	
-	/**
-	 * Sets the room topic to the given String
-	 * @param topic
-	 */
-	public void changeTopic(String topic){
-		
-		subjectUpdated(topic, ""); //$NON-NLS-1$
-		
-	}
-
-	@Override
-	public void subjectUpdated(String subject, String from) {
-		
-		LOGGER.info(xStrings.getString("ChatManager.logSettingTopic") + subject); //$NON-NLS-1$
-			
-		for(int i = 0; i < topicReceivers.size(); i++)
-			topicReceivers.get(i).receiveTopic(subject);
-		
-	}
-
 	/** UserStatusListener methods **/
 	@Override
 	public void kicked(String actor, String reason) {
@@ -555,7 +383,7 @@ public class ChatManager implements PacketListener, SubjectUpdatedListener, User
 		Message joinedMessage = new Message();
 		joinedMessage.addBody(language, participant + " " + xStrings.getString("ChatManager.chatParticipantJoined"));  //$NON-NLS-1$//$NON-NLS-2$
 		joinedMessage.setFrom(xStrings.getString("ChatManager.SYSTEM")); //$NON-NLS-1$
-		processPacket(joinedMessage);
+		//processPacket(joinedMessage);
 		//TODO Notify listeners
 		
 	}
@@ -569,7 +397,7 @@ public class ChatManager implements PacketListener, SubjectUpdatedListener, User
 		Message leftMessage = new Message();
 		leftMessage.addBody(language, participant + " " + xStrings.getString("ChatManager.chatParticipantLeft")); //$NON-NLS-1$//$NON-NLS-2$
 		leftMessage.setFrom(xStrings.getString("ChatManager.SYSTEM")); //$NON-NLS-1$
-		processPacket(leftMessage);
+		//processPacket(leftMessage);
 		//TODO Notify listeners
 		
 	}
