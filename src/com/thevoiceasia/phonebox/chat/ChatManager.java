@@ -1,6 +1,8 @@
 package com.thevoiceasia.phonebox.chat;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Vector;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
@@ -15,12 +17,15 @@ import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
+import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smackx.muc.DiscussionHistory;
 import org.jivesoftware.smackx.muc.MultiUserChat;
+import org.jivesoftware.smackx.muc.ParticipantStatusListener;
 import org.jivesoftware.smackx.muc.RoomInfo;
 import org.jivesoftware.smackx.muc.SubjectUpdatedListener;
+import org.jivesoftware.smackx.muc.UserStatusListener;
 
-public class ChatManager implements PacketListener, SubjectUpdatedListener {
+public class ChatManager implements PacketListener, SubjectUpdatedListener, UserStatusListener, ParticipantStatusListener {
 
 	//XMPP Settings
 	private String XMPPUserName, XMPPPassword, XMPPNickName, XMPPServerHostName, XMPPRoomName;
@@ -33,8 +38,10 @@ public class ChatManager implements PacketListener, SubjectUpdatedListener {
 	//ChatManager vars
 	private boolean hasErrors = false; //Error Flag used internally
 	private I18NStrings xStrings; //Link to external string resources
+	private String language;
 	private Vector<MessageReceiver> receivers = new Vector<MessageReceiver>();
 	private Vector<TopicReceiver> topicReceivers = new Vector<TopicReceiver>();
+	private HashMap<String, Integer> roomRoster = new HashMap<String, Integer>();
 	
 	/** STATICS **/
 	private static final int XMPP_CHAT_HISTORY = 600; //Chat Messages in the last x seconds
@@ -82,6 +89,7 @@ public class ChatManager implements PacketListener, SubjectUpdatedListener {
 		
 		//Get I18N handle for external strings
 		xStrings = new I18NStrings(language, country);
+		this.language = language;
 		this.XMPPUserName = userName;
 		this.XMPPPassword = password;
 		this.XMPPServerHostName = serverHostName;
@@ -204,6 +212,13 @@ public class ChatManager implements PacketListener, SubjectUpdatedListener {
 					phoneboxChat.join(XMPPNickName, XMPPPassword, chatHistory, 
 							SmackConfiguration.getPacketReplyTimeout());
 					LOGGER.info(xStrings.getString("ChatManager.logJoinedRoom")); //$NON-NLS-1$
+					phoneboxChat.addUserStatusListener(this);
+					LOGGER.info(xStrings.getString("ChatManager.logAddedUserStatusListener")); //$NON-NLS-1$
+					phoneboxChat.addParticipantStatusListener(this);
+					LOGGER.info(xStrings.getString("ChatManager.logAddedParticipantStatusListener")); //$NON-NLS-1$
+					//phoneboxChat.addParticipantListener(this);
+					//LOGGER.info(xStrings.getString("ChatManager.logAddedParticipantListener")); //$NON-NLS-1$
+					
 				}catch(XMPPException e){
 					
 					showError(e, xStrings.getString("ChatManager.chatRoomError")); //$NON-NLS-1$
@@ -232,7 +247,34 @@ public class ChatManager implements PacketListener, SubjectUpdatedListener {
 						
 					}
 					
-					
+					//Get Roster (Online List)
+					if(!hasErrors){
+						
+						LOGGER.info(xStrings.getString("ChatManager.logRequestRoster")); //$NON-NLS-1$
+						
+						Iterator<String> occupants = phoneboxChat.getOccupants();
+						
+						while(occupants.hasNext()){
+							
+							String occupant = occupants.next();
+							//2 = Available
+							//1 = Away
+							//0 = Offline/dead/whatever
+							int presence = 0;
+							
+							if(phoneboxChat.getOccupantPresence(occupant).isAvailable())
+								presence = 2;
+							else if(phoneboxChat.getOccupantPresence(occupant).isAway())
+								presence = 1;
+							
+							roomRoster.put(occupant, presence);
+							
+						}
+						
+						LOGGER.info(xStrings.getString("ChatManager.logReceivedRoster")); //$NON-NLS-1$
+						
+					}
+						
 				}
 				
 			}
@@ -328,7 +370,7 @@ public class ChatManager implements PacketListener, SubjectUpdatedListener {
 	}
 
 	/**
-	 * TODO
+	 * Adds the given message receiver to the list of objects to be notified when a new message arrives
 	 * @param mr
 	 */
 	public void addMessageReceiver(MessageReceiver mr){
@@ -339,7 +381,7 @@ public class ChatManager implements PacketListener, SubjectUpdatedListener {
 	}
 	
 	/**
-	 * TODO
+	 * Removes the given message receiver from the notified objects list
 	 * @param mr
 	 */
 	public void removeMessageReceiver(MessageReceiver mr){
@@ -367,7 +409,7 @@ public class ChatManager implements PacketListener, SubjectUpdatedListener {
 	}
 	
 	/**
-	 * TODO
+	 * Adds the given topic receiver to the list of objects to be notified when the topic changes
 	 * @param mr
 	 */
 	public void addTopicReceiver(TopicReceiver tr){
@@ -378,7 +420,7 @@ public class ChatManager implements PacketListener, SubjectUpdatedListener {
 	}
 	
 	/**
-	 * TODO
+	 * Removes the given topic receiver from the list of objects to be notified
 	 * @param mr
 	 */
 	public void removeTopicReceiver(TopicReceiver tr){
@@ -408,18 +450,27 @@ public class ChatManager implements PacketListener, SubjectUpdatedListener {
 	@Override
 	public void processPacket(Packet XMPPPacket) {
 		
-		// TODO Auto-generated method stub
+		// TODO ParticipantListener also a problem here
 		LOGGER.info(xStrings.getString("ChatManager.receivedMessage") + XMPPPacket); //$NON-NLS-1$
-		Message msg = (Message)XMPPPacket;
-		LOGGER.info(msg.getBody());
 		
-		for(int i = 0; i < receivers.size(); i++)
-			receivers.get(i).receiveMessage(msg);
+		if(XMPPPacket instanceof Message){
+			
+			Message msg = (Message)XMPPPacket;
+			LOGGER.info(msg.getBody());
+			
+			for(int i = 0; i < receivers.size(); i++)
+				receivers.get(i).receiveMessage(msg);
+			
+		}else if(XMPPPacket instanceof Presence){
+			
+			//TODO ParticipantListener?
+			
+		}
 		
 	}
 	
 	/**
-	 * TODO
+	 * Sets the room topic to the given String
 	 * @param topic
 	 */
 	public void changeTopic(String topic){
@@ -437,5 +488,139 @@ public class ChatManager implements PacketListener, SubjectUpdatedListener {
 			topicReceivers.get(i).receiveTopic(subject);
 		
 	}
+
+	/** UserStatusListener methods **/
+	@Override
+	public void kicked(String actor, String reason) {
+
+		/*
+		 * Called when a user is kicked from a room
+		 * Should never happen unless client logs in twice as a duplicate
+		 * or someone logs in as admin and manually kicks everyone
+		 */
+		LOGGER.info(xStrings.getString("ChatManager.logKickedFromRoom") + actor + ": " + reason); //$NON-NLS-1$ //$NON-NLS-2$
+		disconnect();
+		
+	}
+
+	/** UNUSED UserStatusListener methods **/
+	@Override
+	public void adminGranted() {}
+
+	@Override
+	public void adminRevoked() {}
+
+	@Override
+	public void membershipGranted() {}
+
+	@Override
+	public void membershipRevoked() {}
+
+	@Override
+	public void moderatorGranted() {}
+
+	@Override
+	public void moderatorRevoked() {}
+
+	@Override
+	public void ownershipGranted() {}
+
+	@Override
+	public void ownershipRevoked() {}
+
+	@Override
+	public void voiceGranted() {}
+
+	@Override
+	public void voiceRevoked() {}
+	
+	@Override
+	public void banned(String actor, String reason) {}
+	/** END UNUSED userStatusListener methods **/
+
+	/** ParticipantStatusListener methods **/
+	@Override
+	public void joined(String participant) {
+		
+		LOGGER.info(participant + " " + xStrings.getString("chatParticipantJoined"));  //$NON-NLS-1$//$NON-NLS-2$
+		int presence = 0;
+		
+		if(phoneboxChat.getOccupantPresence(participant).isAvailable())
+			presence = 2;
+		else if(phoneboxChat.getOccupantPresence(participant).isAway())
+			presence = 1;
+		
+		roomRoster.put(participant, presence);
+		
+		Message joinedMessage = new Message();
+		joinedMessage.addBody(language, participant + " " + xStrings.getString("ChatManager.chatParticipantJoined"));  //$NON-NLS-1$//$NON-NLS-2$
+		joinedMessage.setFrom(xStrings.getString("ChatManager.SYSTEM")); //$NON-NLS-1$
+		processPacket(joinedMessage);
+		//TODO Notify listeners
+		
+	}
+
+	@Override
+	public void left(String participant) {
+
+		LOGGER.info(participant + " " + xStrings.getString("chatParticipantLeft"));  //$NON-NLS-1$//$NON-NLS-2$
+		roomRoster.remove(participant);
+		
+		Message leftMessage = new Message();
+		leftMessage.addBody(language, participant + " " + xStrings.getString("ChatManager.chatParticipantLeft")); //$NON-NLS-1$//$NON-NLS-2$
+		leftMessage.setFrom(xStrings.getString("ChatManager.SYSTEM")); //$NON-NLS-1$
+		processPacket(leftMessage);
+		//TODO Notify listeners
+		
+	}
+	
+	@Override
+	public void kicked(String participant, String actor, String reason) {
+		
+		left(participant);
+		
+	}
+
+	@Override
+	public void nicknameChanged(String participant, String newNick) {
+		// TODO Auto-generated method stub
+		LOGGER.info(xStrings.getString("ChatManager.nickNameChanged") + " " + participant + " " + newNick); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		
+	}
+
+	/** UNUSED ParticipantStatusListener methods **/
+	@Override
+	public void banned(String participant, String actor, String reason) {}
+
+	@Override
+	public void adminGranted(String participant) {}
+
+	@Override
+	public void adminRevoked(String participant) {}
+
+	@Override
+	public void membershipGranted(String participant) {}
+
+	@Override
+	public void membershipRevoked(String participant) {}
+
+	@Override
+	public void moderatorGranted(String participant) {}
+
+	@Override
+	public void moderatorRevoked(String participant) {}
+
+	@Override
+	public void ownershipGranted(String participant) {}
+
+	@Override
+	public void ownershipRevoked(String participant) {}
+
+	@Override
+	public void voiceGranted(String participant) {}
+
+	@Override
+	public void voiceRevoked(String participant) {}
+	/** END UNUSED ParticipantStatusListener methods **/
 	
 }
