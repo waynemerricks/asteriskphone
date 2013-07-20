@@ -31,14 +31,16 @@ public class ChatMessagePanel extends JPanel implements MessageReceiver, TopicRe
 	private Style chatStyle;
 	private String myNickName;
 	private JLabel topic = new JLabel();
+	private I18NStrings xStrings;
 	
 	private static final Logger LOGGER = Logger.getLogger(Client.class.getName());//Logger
 	private static final Level LOG_LEVEL = Level.INFO;
-	private I18NStrings xStrings;
+	private static final Color GREEN = new Color(109, 154, 11);
 	private static final long serialVersionUID = 1L;
 
 	/**
-	 * TODO
+	 * Sets up the Message Panel, uses language/country to get the right I18N strings
+	 * Nickname is used to highlight your own messages in a different colour
 	 * @param language
 	 * @param country
 	 * @param myNickName
@@ -78,7 +80,7 @@ public class ChatMessagePanel extends JPanel implements MessageReceiver, TopicRe
 	}
 	
 	/**
-	 * TODO
+	 * Sets the chat window text colour for the next string to be inserted
 	 * @param c
 	 */
 	private void setTextColour(Color c){
@@ -88,7 +90,7 @@ public class ChatMessagePanel extends JPanel implements MessageReceiver, TopicRe
 	}
 	
 	/**
-	 * TODO
+	 * Clears all text in the chat window
 	 */
 	public void clear(){
 		
@@ -140,8 +142,19 @@ public class ChatMessagePanel extends JPanel implements MessageReceiver, TopicRe
 		if(friendlyFrom.contains("/")) //$NON-NLS-1$
 			friendlyFrom = friendlyFrom.split("/")[1]; //$NON-NLS-1$
 		
+		String b = message.getBody();
+		
+		if(friendlyFrom.equals(xStrings.getString("ChatManager.SYSTEM"))){  //$NON-NLS-1$
+			
+			//Control Messages, need to clean up message body and act accordingly
+			//phonebox@conference.elastix/waynemerricks !ChatManager.chatParticipantLeft!
+			if(b.contains("/")) //$NON-NLS-1$
+				b = b.split("/")[1]; //$NON-NLS-1$
+			
+		}
+		
 		final String from = friendlyFrom;
-		final String body = message.getBody() + "\n"; //$NON-NLS-1$
+		final String body = b + "\n"; //$NON-NLS-1$
 		
 		SwingUtilities.invokeLater(new Runnable(){
 			public void run(){
@@ -150,15 +163,17 @@ public class ChatMessagePanel extends JPanel implements MessageReceiver, TopicRe
 					
 					if(from.equals(myNickName))
 						setTextColour(Color.RED);
+					else if(from.equals("SYSTEM")) //$NON-NLS-1$
+						setTextColour(GREEN);
 					else
 						setTextColour(Color.BLUE);
 					
 					StyledDocument doc = messages.getStyledDocument();
-					//Add From in RED TODO FROM ME = BLUE?
 					doc.insertString(doc.getLength(), from + ": ", chatStyle); //$NON-NLS-1$
 					
 					//Add Message in normal black
-					setTextColour(Color.BLACK);
+					if(!from.equals("SYSTEM")) //$NON-NLS-1$
+						setTextColour(Color.BLACK);
 					doc.insertString(doc.getLength(), body, chatStyle);
 					
 				}catch(BadLocationException e){
