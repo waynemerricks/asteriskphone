@@ -14,7 +14,10 @@ import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 
+import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smack.packet.Packet;
+import org.jivesoftware.smackx.muc.SubjectUpdatedListener;
 
 import com.thevoiceasia.phonebox.gui.Client;
 /**
@@ -25,7 +28,7 @@ import com.thevoiceasia.phonebox.gui.Client;
  * @author waynemerricks
  *
  */
-public class ChatMessagePanel extends JPanel implements MessageReceiver, TopicReceiver{
+public class ChatMessagePanel extends JPanel implements PacketListener, SubjectUpdatedListener{
 
 	private JTextPane messages = new JTextPane();
 	private Style chatStyle;
@@ -135,61 +138,82 @@ public class ChatMessagePanel extends JPanel implements MessageReceiver, TopicRe
 	}
 	
 	@Override
-	public void receiveMessage(Message message) {
+	public void processPacket(Packet XMPPPacket) {
 		
-		LOGGER.info(xStrings.getString("ChatManager.receivedMessage") + message); //$NON-NLS-1$
-		String friendlyFrom = message.getFrom();
-		if(friendlyFrom.contains("/")) //$NON-NLS-1$
-			friendlyFrom = friendlyFrom.split("/")[1]; //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("ChatManager.receivedMessage") + XMPPPacket); //$NON-NLS-1$
 		
-		String b = message.getBody();
-		
-		if(friendlyFrom.equals(xStrings.getString("ChatManager.SYSTEM"))){  //$NON-NLS-1$
+		if(XMPPPacket instanceof Message){
 			
-			//Control Messages, need to clean up message body and act accordingly
-			//phonebox@conference.elastix/waynemerricks !ChatManager.chatParticipantLeft!
-			if(b.contains("/")) //$NON-NLS-1$
-				b = b.split("/")[1]; //$NON-NLS-1$
+			Message message = (Message)XMPPPacket;
 			
-		}
-		
-		final String from = friendlyFrom;
-		final String body = b + "\n"; //$NON-NLS-1$
-		
-		SwingUtilities.invokeLater(new Runnable(){
-			public void run(){
+			String friendlyFrom = message.getFrom();
+			if(friendlyFrom.contains("/")) //$NON-NLS-1$
+				friendlyFrom = friendlyFrom.split("/")[1]; //$NON-NLS-1$
+			
+			String b = message.getBody();
+			
+			if(friendlyFrom.equals(xStrings.getString("ChatManager.SYSTEM"))){  //$NON-NLS-1$
 				
-				try{
-					
-					if(from.equals(myNickName))
-						setTextColour(Color.RED);
-					else if(from.equals("SYSTEM")) //$NON-NLS-1$
-						setTextColour(GREEN);
-					else
-						setTextColour(Color.BLUE);
-					
-					StyledDocument doc = messages.getStyledDocument();
-					doc.insertString(doc.getLength(), from + ": ", chatStyle); //$NON-NLS-1$
-					
-					//Add Message in normal black
-					if(!from.equals("SYSTEM")) //$NON-NLS-1$
-						setTextColour(Color.BLACK);
-					doc.insertString(doc.getLength(), body, chatStyle);
-					
-				}catch(BadLocationException e){
-					LOGGER.severe(xStrings.getString("ChatManager.errorInsertingMessage")); //$NON-NLS-1$
-					e.printStackTrace();
-				}
+				//Control Messages, need to clean up message body and act accordingly
+				//phonebox@conference.elastix/waynemerricks !ChatManager.chatParticipantLeft!
+				if(b.contains("/")) //$NON-NLS-1$
+					b = b.split("/")[1]; //$NON-NLS-1$
 				
 			}
-		});
+			
+			final String from = friendlyFrom;
+			final String body = b + "\n"; //$NON-NLS-1$
+			
+			SwingUtilities.invokeLater(new Runnable(){
+				public void run(){
+					
+					try{
+						
+						if(from.equals(myNickName))
+							setTextColour(Color.RED);
+						else if(from.equals("SYSTEM")) //$NON-NLS-1$
+							setTextColour(GREEN);
+						else
+							setTextColour(Color.BLUE);
+						
+						StyledDocument doc = messages.getStyledDocument();
+						doc.insertString(doc.getLength(), from + ": ", chatStyle); //$NON-NLS-1$
+						
+						//Add Message in normal black
+						if(!from.equals("SYSTEM")) //$NON-NLS-1$
+							setTextColour(Color.BLACK);
+						doc.insertString(doc.getLength(), body, chatStyle);
+						
+					}catch(BadLocationException e){
+						LOGGER.severe(xStrings.getString("ChatManager.errorInsertingMessage")); //$NON-NLS-1$
+						e.printStackTrace();
+					}
+					
+				}
+			});
+			
+		}
 		
 	}
 
 	@Override
-	public void receiveTopic(String newTopic) {
+	public void subjectUpdated(String subject, String from) {
 		
-		final String t = newTopic;
+		LOGGER.info(xStrings.getString("ChatManager.logSettingTopic") + subject); //$NON-NLS-1$
+		
+		/*
+		 * Can't set subject to "" as XMPP server ignores the change.  This causes a bug when the subject is 
+		 * set to the same subject as you get an XMPP error.  
+		 * 
+		 * To work around this, topic is set to a greeter message when we don't want to see it.
+		 * 
+		 * We then check if the topic is the greeter message and if so, set the topic label to ""
+		 */
+		
+		if(subject != null && subject.equals(xStrings.getString("ChatManager.emptyTopic"))) //$NON-NLS-1$
+			subject = null;
+			
+		final String t = subject;
 		
 		SwingUtilities.invokeLater(new Runnable(){
 			public void run(){
@@ -200,5 +224,5 @@ public class ChatMessagePanel extends JPanel implements MessageReceiver, TopicRe
 		});
 		
 	}
-
+	
 }
