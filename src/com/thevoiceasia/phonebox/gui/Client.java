@@ -42,6 +42,7 @@ public class Client extends JFrame implements WindowListener{
 		this.setLayout(new BorderLayout());
 		this.setTitle(xStrings.getString("Client.appTitle")); //$NON-NLS-1$
 		this.addWindowListener(this);
+		
 		this.add(new ChatWindow(chatManager, "en", "GB", "News SMS"), BorderLayout.CENTER);
 		
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -64,17 +65,10 @@ public class Client extends JFrame implements WindowListener{
 		
 	}
 	
-	public void connectChat(){
-		
-		chatManager.connect();
-		
-	}
-	
 	public static void main(String[] args){
 		
 		Client phonebox = new Client();
 		phonebox.setVisible(true);
-		phonebox.connectChat();
 		
 	}
 	
