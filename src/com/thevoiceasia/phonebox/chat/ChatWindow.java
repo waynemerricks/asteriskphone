@@ -21,20 +21,20 @@ public class ChatWindow extends JPanel {
 		 * Buttons for away/available/help me?
 		 * Create new scrollpane box to compartmentalise functionality
 		 * 
-		 */
-		/*
 		 * Contains ConversationPanel
 		 *   ChatInputPanel (autohide?)
 		 *   UserStatusPanel (toggle hide)
 		 */
 		ChatMessagePanel messages = new ChatMessagePanel(language, country, myNickName);
-		chatManager.addMessageReceiver(messages);
-		chatManager.addTopicReceiver(messages);
-		
+		chatManager.connect();
+		chatManager.getChatRoom().addMessageListener(messages);//Messages needs to know about new message packets
+		chatManager.getChatRoom().addSubjectUpdatedListener(messages);//Messages also needs to know about topic changes
+		messages.subjectUpdated(chatManager.getChatRoom().getSubject(), "");//Send the current topic to messages //$NON-NLS-1$
+
 		this.setLayout(new BorderLayout());
-		this.add(new ChatShortcutBar(language, country, chatManager), BorderLayout.NORTH);
+		this.add(new ChatShortcutBar(language, country, chatManager.getChatRoom()), BorderLayout.NORTH);
 		this.add(messages, BorderLayout.CENTER);
-		this.add(new ChatInputPanel(language, country, chatManager), BorderLayout.SOUTH);
+		this.add(new ChatInputPanel(language, country, chatManager.getChatRoom()), BorderLayout.SOUTH);
 		this.add(new UserStatusPanel(), BorderLayout.EAST);
 		
 	}
