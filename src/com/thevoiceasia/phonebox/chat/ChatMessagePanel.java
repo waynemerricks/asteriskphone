@@ -85,6 +85,10 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 		
 	}
 	
+	public JTextPane getTextPane(){
+		return messages;
+	}
+	
 	/**
 	 * Sets the chat window text colour for the next string to be inserted
 	 * @param c
@@ -231,9 +235,9 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 	/** ParticipantStatusListener methods **/
 	@Override
 	public void joined(String participant) {
-
+		
 		LOGGER.info(participant + " " + xStrings.getString("ChatManager.chatParticipantJoined"));  //$NON-NLS-1$//$NON-NLS-2$
-
+		
 		/*
 		 * If you send a message with a custom from that isn't your user name, you will get silently kicked from the server
 		 * So these are created and sent internally.
@@ -242,14 +246,14 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 		joinedMessage.addBody(language, participant + " " + xStrings.getString("ChatManager.chatParticipantJoined"));  //$NON-NLS-1$//$NON-NLS-2$
 		joinedMessage.setFrom(xStrings.getString("ChatManager.SYSTEM")); //$NON-NLS-1$
 		processPacket(joinedMessage);
-
+		
 	}
 
 	@Override
 	public void left(String participant) {
 
 		LOGGER.info(participant + " " + xStrings.getString("ChatManager.chatParticipantLeft"));  //$NON-NLS-1$//$NON-NLS-2$
-
+		
 		/*
 		 * If you send a message with a custom from that isn't your user name, you will get silently kicked from the server
 		 * So these are created and sent internally.
@@ -258,16 +262,16 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 		leftMessage.addBody(language, participant + " " + xStrings.getString("ChatManager.chatParticipantLeft")); //$NON-NLS-1$//$NON-NLS-2$
 		leftMessage.setFrom(xStrings.getString("ChatManager.SYSTEM")); //$NON-NLS-1$
 		processPacket(leftMessage);
-
+		
 	}
-
+	
 	@Override
 	public void kicked(String participant, String actor, String reason) {
-
+		
 		left(participant);
-
+		
 	}
-
+	
 	/** UNUSED ParticipantStatusListener methods **/
 	@Override
 	public void adminGranted(String participant) {}
