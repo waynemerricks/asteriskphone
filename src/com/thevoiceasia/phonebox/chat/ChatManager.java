@@ -1,7 +1,6 @@
 package com.thevoiceasia.phonebox.chat;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -12,13 +11,11 @@ import org.jivesoftware.smack.Connection;
 import org.jivesoftware.smack.SmackConfiguration;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smackx.muc.DiscussionHistory;
 import org.jivesoftware.smackx.muc.MultiUserChat;
-import org.jivesoftware.smackx.muc.ParticipantStatusListener;
 import org.jivesoftware.smackx.muc.UserStatusListener;
 
-public class ChatManager implements UserStatusListener, ParticipantStatusListener {
+public class ChatManager implements UserStatusListener {
 
 	//XMPP Settings
 	private String XMPPUserName, XMPPPassword, XMPPNickName, XMPPServerHostName, XMPPRoomName;
@@ -31,37 +28,11 @@ public class ChatManager implements UserStatusListener, ParticipantStatusListene
 	//ChatManager vars
 	private boolean hasErrors = false; //Error Flag used internally
 	private I18NStrings xStrings; //Link to external string resources
-	private String language;
-	private HashMap<String, Integer> roomRoster = new HashMap<String, Integer>();
 	
 	/** STATICS **/
 	private static final int XMPP_CHAT_HISTORY = 600; //Chat Messages in the last x seconds
 	private static final Logger LOGGER = Logger.getLogger(ChatManager.class.getName());//Logger
 	private static final Level LOG_LEVEL = Level.INFO;
-	
-	/**
-	 * Create ChatManager with default locale (en, GB)
-	 * 
-	 * Will login to the XMPP server given with the following details
-	 * @param userName
-	 * @param password
-	 * @param serverHostName
-	 * @param roomName
-	 */
-	public ChatManager(String userName, String password, String nickName, 
-			String serverHostName, String roomName){
-		
-		//Get I18N handle for external strings
-		xStrings = new I18NStrings("en", "GB"); //$NON-NLS-1$ //$NON-NLS-2$
-		this.XMPPUserName = userName;
-		this.XMPPPassword = password;
-		this.XMPPServerHostName = serverHostName;
-		this.XMPPRoomName = roomName;
-		this.XMPPChatHistory = XMPP_CHAT_HISTORY;
-		this.XMPPNickName = nickName;
-		setupLogging();
-		
-	}
 	
 	/**
 	 * Create ChatManager with given locale
@@ -80,7 +51,6 @@ public class ChatManager implements UserStatusListener, ParticipantStatusListene
 		
 		//Get I18N handle for external strings
 		xStrings = new I18NStrings(language, country);
-		this.language = language;
 		this.XMPPUserName = userName;
 		this.XMPPPassword = password;
 		this.XMPPServerHostName = serverHostName;
@@ -366,89 +336,6 @@ public class ChatManager implements UserStatusListener, ParticipantStatusListene
 	public void banned(String actor, String reason) {}
 	/** END UNUSED userStatusListener methods **/
 
-	/** ParticipantStatusListener methods **/
-	@Override
-	public void joined(String participant) {
-		
-		LOGGER.info(participant + " " + xStrings.getString("chatParticipantJoined"));  //$NON-NLS-1$//$NON-NLS-2$
-		int presence = 0;
-		
-		if(phoneboxChat.getOccupantPresence(participant).isAvailable())
-			presence = 2;
-		else if(phoneboxChat.getOccupantPresence(participant).isAway())
-			presence = 1;
-		
-		roomRoster.put(participant, presence);
-		
-		Message joinedMessage = new Message();
-		joinedMessage.addBody(language, participant + " " + xStrings.getString("ChatManager.chatParticipantJoined"));  //$NON-NLS-1$//$NON-NLS-2$
-		joinedMessage.setFrom(xStrings.getString("ChatManager.SYSTEM")); //$NON-NLS-1$
-		//processPacket(joinedMessage);
-		//TODO Notify listeners
-		
-	}
-
-	@Override
-	public void left(String participant) {
-
-		LOGGER.info(participant + " " + xStrings.getString("chatParticipantLeft"));  //$NON-NLS-1$//$NON-NLS-2$
-		roomRoster.remove(participant);
-		
-		Message leftMessage = new Message();
-		leftMessage.addBody(language, participant + " " + xStrings.getString("ChatManager.chatParticipantLeft")); //$NON-NLS-1$//$NON-NLS-2$
-		leftMessage.setFrom(xStrings.getString("ChatManager.SYSTEM")); //$NON-NLS-1$
-		//processPacket(leftMessage);
-		//TODO Notify listeners
-		
-	}
 	
-	@Override
-	public void kicked(String participant, String actor, String reason) {
-		
-		left(participant);
-		
-	}
-
-	@Override
-	public void nicknameChanged(String participant, String newNick) {
-		// TODO Auto-generated method stub
-		LOGGER.info(xStrings.getString("ChatManager.nickNameChanged") + " " + participant + " " + newNick); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		
-	}
-
-	/** UNUSED ParticipantStatusListener methods **/
-	@Override
-	public void banned(String participant, String actor, String reason) {}
-
-	@Override
-	public void adminGranted(String participant) {}
-
-	@Override
-	public void adminRevoked(String participant) {}
-
-	@Override
-	public void membershipGranted(String participant) {}
-
-	@Override
-	public void membershipRevoked(String participant) {}
-
-	@Override
-	public void moderatorGranted(String participant) {}
-
-	@Override
-	public void moderatorRevoked(String participant) {}
-
-	@Override
-	public void ownershipGranted(String participant) {}
-
-	@Override
-	public void ownershipRevoked(String participant) {}
-
-	@Override
-	public void voiceGranted(String participant) {}
-
-	@Override
-	public void voiceRevoked(String participant) {}
-	/** END UNUSED ParticipantStatusListener methods **/
 	
 }
