@@ -20,7 +20,7 @@ public class Client extends JFrame implements WindowListener{
 
 	//Class Vars
 	private ChatManager chatManager;
-	private I18NStrings xStrings;
+	private static I18NStrings xStrings;
 	
 	//Statics
 	private static final Logger LOGGER = Logger.getLogger(Client.class.getName());//Logger
@@ -38,7 +38,7 @@ public class Client extends JFrame implements WindowListener{
 		//TESTING
 		/** Build GUI **/
 		setLookandFeel();
-		this.setSize(320, 400);
+		this.setSize(340, 400);
 		this.setLayout(new BorderLayout());
 		this.setTitle(xStrings.getString("Client.appTitle")); //$NON-NLS-1$
 		this.addWindowListener(this);
@@ -65,10 +65,44 @@ public class Client extends JFrame implements WindowListener{
 		
 	}
 	
+	public boolean hasErrors(){
+		
+		return chatManager.hasErrors();
+		
+	}
+	
+	private static Exception getLoadException(){
+		
+		return new Exception(xStrings.getString("Client.onLoadError"));
+		
+	}
+	
+	
 	public static void main(String[] args){
 		
 		Client phonebox = new Client();
-		phonebox.setVisible(true);
+		
+		if(!phonebox.hasErrors())
+			phonebox.setVisible(true);
+		else{
+			Exception e = getLoadException();
+			showError(e, e.getMessage());
+			System.exit(1);
+		}
+		
+	}
+	
+	/**
+	 * Logs an error message and displays friendly message to user
+	 * @param e
+	 * @param friendlyErrorMessage
+	 */
+	private static void showError(Exception e, String friendlyErrorMessage){
+		
+		System.err.println(xStrings.getString("ChatManager.errorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
+		e.printStackTrace();
+		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("ChatManager.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
+		LOGGER.severe(friendlyErrorMessage);
 		
 	}
 	
