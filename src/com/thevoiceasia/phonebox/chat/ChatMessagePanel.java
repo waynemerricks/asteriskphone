@@ -17,6 +17,7 @@ import javax.swing.text.StyledDocument;
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
+import org.jivesoftware.smackx.muc.ParticipantStatusListener;
 import org.jivesoftware.smackx.muc.SubjectUpdatedListener;
 
 import com.thevoiceasia.phonebox.gui.Client;
@@ -25,16 +26,17 @@ import com.thevoiceasia.phonebox.gui.Client;
  * 
  * Has an addMessage(String) method to add messages to the panel (for a simple
  * XMPP chat program but obviously this part is protocol agnostic)
- * @author waynemerricks
+ * @author Wayne Merricks
  *
  */
-public class ChatMessagePanel extends JPanel implements PacketListener, SubjectUpdatedListener{
+public class ChatMessagePanel extends JPanel implements PacketListener, SubjectUpdatedListener, ParticipantStatusListener{
 
 	private JTextPane messages = new JTextPane();
 	private Style chatStyle;
 	private String myNickName;
 	private JLabel topic = new JLabel();
 	private I18NStrings xStrings;
+	private String language;
 	
 	private static final Logger LOGGER = Logger.getLogger(Client.class.getName());//Logger
 	private static final Level LOG_LEVEL = Level.INFO;
@@ -52,6 +54,7 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 		
 		super();
 		this.myNickName = myNickName;
+		this.language = language;
 		this.setLayout(new BorderLayout());
 		setupLogging();
 		
@@ -224,5 +227,82 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 		});
 		
 	}
+
+	/** ParticipantStatusListener methods **/
+	@Override
+	public void joined(String participant) {
+
+		LOGGER.info(participant + " " + xStrings.getString("ChatManager.chatParticipantJoined"));  //$NON-NLS-1$//$NON-NLS-2$
+
+		/*
+		 * If you send a message with a custom from that isn't your user name, you will get silently kicked from the server
+		 * So these are created and sent internally.
+		 */
+		Message joinedMessage = new Message();
+		joinedMessage.addBody(language, participant + " " + xStrings.getString("ChatManager.chatParticipantJoined"));  //$NON-NLS-1$//$NON-NLS-2$
+		joinedMessage.setFrom(xStrings.getString("ChatManager.SYSTEM")); //$NON-NLS-1$
+		processPacket(joinedMessage);
+
+	}
+
+	@Override
+	public void left(String participant) {
+
+		LOGGER.info(participant + " " + xStrings.getString("ChatManager.chatParticipantLeft"));  //$NON-NLS-1$//$NON-NLS-2$
+
+		/*
+		 * If you send a message with a custom from that isn't your user name, you will get silently kicked from the server
+		 * So these are created and sent internally.
+		 */
+		Message leftMessage = new Message();
+		leftMessage.addBody(language, participant + " " + xStrings.getString("ChatManager.chatParticipantLeft")); //$NON-NLS-1$//$NON-NLS-2$
+		leftMessage.setFrom(xStrings.getString("ChatManager.SYSTEM")); //$NON-NLS-1$
+		processPacket(leftMessage);
+
+	}
+
+	@Override
+	public void kicked(String participant, String actor, String reason) {
+
+		left(participant);
+
+	}
+
+	/** UNUSED ParticipantStatusListener methods **/
+	@Override
+	public void adminGranted(String participant) {}
+
+	@Override
+	public void adminRevoked(String participant) {}
+
+	@Override
+	public void banned(String participant, String actor, String reason) {}
+
+	@Override
+	public void membershipGranted(String participant) {}
+
+	@Override
+	public void membershipRevoked(String participant) {}
+
+	@Override
+	public void moderatorGranted(String participant) {}
+
+	@Override
+	public void moderatorRevoked(String participant) {}
+
+	@Override
+	public void nicknameChanged(String participant, String newNick) {}
+
+	@Override
+	public void ownershipGranted(String participant) {}
+
+	@Override
+	public void ownershipRevoked(String participant) {}
+
+	@Override
+	public void voiceGranted(String participant) {}
+
+	@Override
+	public void voiceRevoked(String participant) {}
 	
 }
