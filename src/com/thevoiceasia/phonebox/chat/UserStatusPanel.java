@@ -44,7 +44,7 @@ public class UserStatusPanel extends JPanel implements ParticipantStatusListener
 	private JScrollPane onlineScroll;
 	
 	private static final long serialVersionUID = 1L;
-	private static final Logger LOGGER = Logger.getLogger(ChatManager.class.getName());//Logger
+	private static final Logger LOGGER = Logger.getLogger(UserStatusPanel.class.getName());//Logger
 	private static final Level LOG_LEVEL = Level.INFO;
 	private static final Color GREEN = new Color(109, 154, 11);
 	
