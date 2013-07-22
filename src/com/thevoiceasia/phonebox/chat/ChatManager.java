@@ -7,6 +7,7 @@ import java.util.logging.Logger;
 
 import javax.swing.JOptionPane;
 
+import org.jivesoftware.smack.AccountManager;
 import org.jivesoftware.smack.Connection;
 import org.jivesoftware.smack.SmackConfiguration;
 import org.jivesoftware.smack.XMPPConnection;
@@ -58,6 +59,41 @@ public class ChatManager implements UserStatusListener {
 		this.XMPPChatHistory = XMPP_CHAT_HISTORY;
 		this.XMPPNickName = nickName;
 		setupLogging();
+		
+	}
+	
+	/**
+	 * Helper method to create a new XMPP user based on the current credentials
+	 * Will fail if user already exists and flag hasErrors
+	 */
+	public void createUser(){
+		
+		LOGGER.info(xStrings.getString("ChatManager.creatingXMPPUser") + XMPPUserName); //$NON-NLS-1$
+		XMPPConnection setupConnection = new XMPPConnection(XMPPServerHostName);
+		
+		try {
+			setupConnection.connect();
+		} catch (XMPPException e1) {
+			// TODO Auto-generated catch block
+			hasErrors = true;
+			e1.printStackTrace();
+		}
+		
+		if(!hasErrors){
+			
+			AccountManager XMPPAccounts = new AccountManager(setupConnection);
+			
+			try {
+				XMPPAccounts.createAccount("waynemerricks", "N3wssmsas1a");
+				LOGGER.info(xStrings.getString("ChatManager.createdXMPPUser") + XMPPUserName); //$NON-NLS-1$
+				setupConnection.disconnect();
+				LOGGER.info(xStrings.getString("ChatManager.setupDisconnected")); //$NON-NLS-1$
+			} catch (XMPPException e) {
+				showError(e, xStrings.getString("ChatManager.errorCreatingXMPPUser") + XMPPUserName); //$NON-NLS-1$
+				LOGGER.severe(xStrings.getString("ChatManager.ErrorCreatingXMPPUser") + XMPPUserName); //$NON-NLS-1$
+			}
+			
+		}
 		
 	}
 	

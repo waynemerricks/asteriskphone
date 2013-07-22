@@ -23,4 +23,18 @@ public class I18NStrings {
 			return '!' + key + '!';
 		}
 	}
+	
+	public static String getString(String key, String language, String country){
+		
+		Locale currentLocale = new Locale(language, country);
+		ResourceBundle resource = ResourceBundle.getBundle(BUNDLE_NAME, currentLocale);
+		
+		try {
+			return resource.getString(key);
+		} catch (MissingResourceException e) {
+			return '!' + key + '!';
+		}
+		
+	}
+	
 }

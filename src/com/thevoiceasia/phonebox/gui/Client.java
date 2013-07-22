@@ -79,9 +79,9 @@ public class Client extends JFrame implements WindowListener{
 			
 			if(!databaseManager.hasErrors()){
 				
-				databaseManager.populateUserSettings();
+				boolean createUser = databaseManager.populateUserSettings();
 				userSettings = databaseManager.getUserSettings();
-			
+				
 				//Chat Connection Manager
 				chatManager = new ChatManager(userSettings.get("XMPPLogin") + "@" +  //$NON-NLS-1$ //$NON-NLS-2$
 						userSettings.get("XMPPDomain"), //$NON-NLS-1$ 
@@ -95,7 +95,21 @@ public class Client extends JFrame implements WindowListener{
 				if(chatManager.hasErrors())
 					hasErrors = true;
 				else{
-					//Asterisk Manager TODO
+					
+					if(createUser){
+						
+						chatManager.createUser();
+						
+						if(chatManager.hasErrors())
+							hasErrors = true;
+						else{
+							
+							//Asterisk TODO
+							
+						}
+						
+					}
+					
 				}
 				
 			}

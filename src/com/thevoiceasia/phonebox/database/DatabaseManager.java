@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashMap;
@@ -12,6 +13,7 @@ import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -19,6 +21,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import javax.swing.JOptionPane;
+
 
 /**
  * Provides project wide access to MySQL backend
@@ -78,12 +81,13 @@ public class DatabaseManager {
 	 * 
 	 * GLOBAL is superceded by Machine which is superceded by userName in turn
 	 * @param owner
-	 * @return
+	 * @return true if we found settings, false if not
 	 */
-	private void getSettingsFromDB(String owner){
+	private boolean getSettingsFromDB(String owner){
 		
 		Statement statement = null;
 		ResultSet resultSet = null;
+		boolean gotSettings = false;
 		
 		try{
 			
@@ -96,6 +100,7 @@ public class DatabaseManager {
 		    	
 		    	settings.put(resultSet.getString("option_name"),  //$NON-NLS-1$
 		    			resultSet.getString("option_value")); //$NON-NLS-1$
+		    	gotSettings = true;
 		    	
 		    }
 		    
@@ -119,12 +124,130 @@ public class DatabaseManager {
 		    
 		}
 		
+		return gotSettings;
+		
+	}
+	
+	/**
+	 * Creates a new user with the given user name.
+	 * Auto generates a random password and adds it to the config
+	 * DB.
+	 * @param userName
+	 * @return false if could not create user
+	 */
+	private boolean createUser(String userName){
+		
+		boolean success = false;
+		settings.put("XMPPLogin", userName); //$NON-NLS-1$
+		settings.put("nickName", userName); //$NON-NLS-1$
+		
+		String password = generatePassword();
+		
+		if(password != null){
+		
+			settings.put("password", password); //$NON-NLS-1$
+			
+			success = addNewXMPPUser(userName, password);
+			
+		}
+		
+		return success;
+		
+	}
+	
+	/**
+	 * Executes an SQL Update or Insert Statement
+	 * @param updateStatement SQL to perform
+	 * @return success or fail (true/false)
+	 */
+	private boolean executeUpdate(String updateStatement){
+		
+		boolean updated = false;
+		
+		String[] tokens = updateStatement.split(" "); //$NON-NLS-1$
+		
+		if(tokens[0].equals("UPDATE") || tokens[0].equals("INSERT")){  //$NON-NLS-1$//$NON-NLS-2$
+			
+			Statement query = null;
+			
+			try{
+	            query = databaseConnection.createStatement();
+                query.executeUpdate(updateStatement);
+                updated = true;
+            }catch(SQLException e){
+            	
+            	showError(e, xStrings.getString("DatabaseManager.errorUpdatingDB")); //$NON-NLS-1$
+            	
+            }finally{
+	            if(query != null)
+	            	try{
+	            		query.close();
+	            	}catch(Exception e){}
+	        }
+			
+		}
+		
+		return updated;
+		
+	}
+	
+	/**
+	 * Adds a new XMPP user to the database
+	 * @param userName
+	 * @param password
+	 * @return true if successful
+	 */
+	private boolean addNewXMPPUser(String userName, String password) {
+		
+		LOGGER.info(xStrings.getString("DatabaseManager.addNewXMPPUser")); //$NON-NLS-1$
+		
+		return executeUpdate("INSERT INTO clientsettings (option_owner, option_name, option_value)" + //$NON-NLS-1$
+				" VALUES ('" + userName +"', 'XMPPLogin', '" + userName + "'), " + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						"('" + userName + "', 'password', '" + password + "'), " +  //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$
+						"('" + userName + "', 'nickName', '" + userName + "')");  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
+		
+	}
+
+	/**
+	 * Generates a random password 20 bytes long using Java's SecureRandom class
+	 * Then encodes to a string using UTF-8
+	 * @return
+	 */
+	private String generatePassword(){
+		
+		/*
+		 * Generate random password.  Only for internal use with XMPP server.
+		 * 
+		 * Potential risk as password is stored in plain text however it is only for
+		 * this service as a way of automating new machine deployments so its not a concern for me.
+		 * 
+		 * If this is a problem, need to re-implement with encryption (not hashing) so that
+		 * the password can be decrypted before being sent to the XMPP server.
+		 */
+		String password = null;
+		
+		SecureRandom random = new SecureRandom();
+		byte[] randomPassword = new byte[20];
+		random.nextBytes(randomPassword);
+		
+		try {
+			password = new String(randomPassword, "UTF-8"); //$NON-NLS-1$
+		} catch (UnsupportedEncodingException e) {
+			showError(e, xStrings.getString("DatabaseManager.errorGeneratingPassword")); //$NON-NLS-1$
+			hasErrors = true;
+		}
+		
+		return password;
+		
 	}
 	
 	/**
 	 * Grabs settings from the database and puts them in a nice HashMap
+	 * @return false if user needs to be created on chat server
 	 */
-	public void populateUserSettings(){
+	public boolean populateUserSettings(){
+		
+		boolean gotUser = false;
 		
 		try {
 			String machineName = InetAddress.getLocalHost().getHostName();
@@ -132,7 +255,13 @@ public class DatabaseManager {
 			
 			getSettingsFromDB("GLOBAL"); //$NON-NLS-1$
 			getSettingsFromDB(machineName);
-			getSettingsFromDB(userName);
+				
+			if(!getSettingsFromDB(userName)){
+				if(!createUser(userName))
+					showError(new Exception(xStrings.getString("DatabaseManager.errorCreatingUser")), //$NON-NLS-1$
+							xStrings.getString("DatabaseManager.errorCreatingUser")); //$NON-NLS-1$
+			}else
+				gotUser = true;
 			
 		} catch (UnknownHostException e) {
 
@@ -140,6 +269,8 @@ public class DatabaseManager {
 			hasErrors = true;
 			
 		}
+		
+		return gotUser;
 		
 	}
 	
