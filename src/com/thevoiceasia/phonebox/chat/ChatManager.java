@@ -59,6 +59,7 @@ public class ChatManager implements UserStatusListener {
 		this.XMPPNickName = nickName;
 		setupLogging();
 		
+		System.out.println(XMPPUserName + ":" + XMPPPassword + ":" + XMPPServerHostName);
 	}
 	
 	/**
