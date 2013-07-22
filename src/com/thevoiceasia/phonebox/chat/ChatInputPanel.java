@@ -29,7 +29,7 @@ public class ChatInputPanel extends JPanel implements ActionListener, KeyListene
 	private JTextArea message;
 	private I18NStrings xStrings; //Link to external string resources
 	private MultiUserChat chatRoom;
-	private static final Logger LOGGER = Logger.getLogger(ChatManager.class.getName());//Logger
+	private static final Logger LOGGER = Logger.getLogger(ChatInputPanel.class.getName());//Logger
 	private static final Level LOG_LEVEL = Level.INFO;
 	
 	/**
