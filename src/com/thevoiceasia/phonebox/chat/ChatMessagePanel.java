@@ -20,7 +20,6 @@ import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smackx.muc.ParticipantStatusListener;
 import org.jivesoftware.smackx.muc.SubjectUpdatedListener;
 
-import com.thevoiceasia.phonebox.gui.Client;
 /**
  * Simple class which sets up a JPanel in border layout with a JScrollPane
  * 
@@ -38,7 +37,7 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 	private I18NStrings xStrings;
 	private String language;
 	
-	private static final Logger LOGGER = Logger.getLogger(Client.class.getName());//Logger
+	private static final Logger LOGGER = Logger.getLogger(ChatMessagePanel.class.getName());//Logger
 	private static final Level LOG_LEVEL = Level.INFO;
 	private static final Color GREEN = new Color(109, 154, 11);
 	private static final long serialVersionUID = 1L;
