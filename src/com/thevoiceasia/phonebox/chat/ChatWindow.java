@@ -46,31 +46,36 @@ public class ChatWindow extends JPanel implements MouseListener {
 		 */
 		ChatMessagePanel messages = new ChatMessagePanel(language, country, myNickName);
 		chatManager.connect();
-		chatManager.getChatRoom().addMessageListener(messages);//Messages needs to know about new message packets
-		chatManager.getChatRoom().addSubjectUpdatedListener(messages);//Messages also needs to know about topic changes
-		chatManager.getChatRoom().addParticipantStatusListener(messages);//And when people are joining/leaving
-		messages.subjectUpdated(chatManager.getChatRoom().getSubject(), "");//Send the current topic to messages //$NON-NLS-1$
-		messages.getTextPane().addMouseListener(this);
 		
-		this.setLayout(new BorderLayout());
-		this.add(new ChatShortcutBar(language, country, chatManager.getChatRoom()), BorderLayout.NORTH);
-		this.add(messages, BorderLayout.CENTER);
-		this.add(new ChatInputPanel(language, country, chatManager.getChatRoom()), BorderLayout.SOUTH);
+		if(!chatManager.hasErrors()){
 		
-		userStatus = new UserStatusPanel(language, country, chatManager.getChatRoom());
-		chatManager.getChatRoom().addParticipantStatusListener(userStatus);
-		chatManager.getChatRoom().addParticipantListener(userStatus);
-		userStatus.getTextPane().addMouseListener(new MouseListener(){
-			public void mouseClicked(MouseEvent evt){
-				hideUserStatus();
-			}
-
-			public void mouseEntered(MouseEvent e) { }
-			public void mouseExited(MouseEvent e) { }
-			public void mousePressed(MouseEvent e) { }
-			public void mouseReleased(MouseEvent e) { }
+			chatManager.getChatRoom().addMessageListener(messages);//Messages needs to know about new message packets
+			chatManager.getChatRoom().addSubjectUpdatedListener(messages);//Messages also needs to know about topic changes
+			chatManager.getChatRoom().addParticipantStatusListener(messages);//And when people are joining/leaving
+			messages.subjectUpdated(chatManager.getChatRoom().getSubject(), "");//Send the current topic to messages //$NON-NLS-1$
+			messages.getTextPane().addMouseListener(this);
 			
-		});
+			this.setLayout(new BorderLayout());
+			this.add(new ChatShortcutBar(language, country, chatManager.getChatRoom()), BorderLayout.NORTH);
+			this.add(messages, BorderLayout.CENTER);
+			this.add(new ChatInputPanel(language, country, chatManager.getChatRoom()), BorderLayout.SOUTH);
+			
+			userStatus = new UserStatusPanel(language, country, chatManager.getChatRoom());
+			chatManager.getChatRoom().addParticipantStatusListener(userStatus);
+			chatManager.getChatRoom().addParticipantListener(userStatus);
+			userStatus.getTextPane().addMouseListener(new MouseListener(){
+				public void mouseClicked(MouseEvent evt){
+					hideUserStatus();
+				}
+	
+				public void mouseEntered(MouseEvent e) { }
+				public void mouseExited(MouseEvent e) { }
+				public void mousePressed(MouseEvent e) { }
+				public void mouseReleased(MouseEvent e) { }
+			
+			});
+		
+		}
 		
 	}
 
