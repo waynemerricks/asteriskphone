@@ -68,6 +68,7 @@ public class ChatManager implements UserStatusListener {
 	 */
 	public void createUser(){
 		
+		//TODO alphanumeric password
 		LOGGER.info(xStrings.getString("ChatManager.creatingXMPPUser") + XMPPUserName); //$NON-NLS-1$
 		XMPPConnection setupConnection = new XMPPConnection(XMPPServerHostName);
 		
@@ -84,7 +85,7 @@ public class ChatManager implements UserStatusListener {
 			AccountManager XMPPAccounts = new AccountManager(setupConnection);
 			
 			try {
-				XMPPAccounts.createAccount("waynemerricks", "N3wssmsas1a");
+				XMPPAccounts.createAccount(XMPPUserName.split("@")[0], XMPPPassword); //$NON-NLS-1$
 				LOGGER.info(xStrings.getString("ChatManager.createdXMPPUser") + XMPPUserName); //$NON-NLS-1$
 				setupConnection.disconnect();
 				LOGGER.info(xStrings.getString("ChatManager.setupDisconnected")); //$NON-NLS-1$

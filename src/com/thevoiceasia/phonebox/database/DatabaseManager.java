@@ -143,7 +143,7 @@ public class DatabaseManager {
 		
 		String password = generatePassword();
 		
-		if(password != null){
+		if(password != null && password != ""){
 		
 			settings.put("password", password); //$NON-NLS-1$
 			
@@ -224,18 +224,12 @@ public class DatabaseManager {
 		 * If this is a problem, need to re-implement with encryption (not hashing) so that
 		 * the password can be decrypted before being sent to the XMPP server.
 		 */
-		String password = null;
+		String password = "";
 		
 		SecureRandom random = new SecureRandom();
-		byte[] randomPassword = new byte[20];
-		random.nextBytes(randomPassword);
 		
-		try {
-			password = new String(randomPassword, "UTF-8"); //$NON-NLS-1$
-		} catch (UnsupportedEncodingException e) {
-			showError(e, xStrings.getString("DatabaseManager.errorGeneratingPassword")); //$NON-NLS-1$
-			hasErrors = true;
-		}
+		for(int i = 0; i < 20; i++)
+			password += (char)random.nextInt();
 		
 		return password;
 		
