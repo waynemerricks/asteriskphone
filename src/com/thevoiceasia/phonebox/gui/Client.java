@@ -79,7 +79,7 @@ public class Client extends JFrame implements WindowListener{
 			
 			if(!databaseManager.hasErrors()){
 				
-				boolean createUser = databaseManager.populateUserSettings();
+				boolean createUser = !databaseManager.populateUserSettings();
 				userSettings = databaseManager.getUserSettings();
 				
 				//Chat Connection Manager
