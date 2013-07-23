@@ -94,21 +94,37 @@ public class UserStatusPanel extends JPanel implements ParticipantStatusListener
 				
 			}
 			
-			/*
-			 * Need to delay online list update until GUI is ready
-			 * Don't like an arbitrary wait but its the best I can think of atm
-			 * FIXME
-			 */
-			new Thread(){
-				public void run(){
+		}
+		
+		updateRosterDelayed();
+		
+	}
+	
+	/**
+	 * Helper method, polls for panel visible every second.  
+	 * Then runs update roster.
+	 */
+	private void updateRosterDelayed(){
+		
+		new Thread(){
+			
+			public void run(){
+				
+				boolean interrupted = false;
+				
+				while(!isVisible()){
+					
 					try {
 						sleep(1000);
-						updateRoster();
 					} catch (InterruptedException e) {}
+					
 				}
-			}.start();
-			
-		}
+				
+				if(!interrupted)
+					updateRoster();	
+				
+			}
+		}.start();
 		
 	}
 	
