@@ -57,7 +57,7 @@ public class Client extends JFrame implements WindowListener{
 			this.addWindowListener(this);
 			
 			//Chat Module
-			this.add(new ChatWindow(chatManager, language, country, userSettings.get("nickName")), BorderLayout.CENTER); //$NON-NLS-1$
+			this.add(new ChatWindow(chatManager, language, country, userSettings.get("nickName"), userSettings.get("isStudio")), BorderLayout.CENTER); //$NON-NLS-1$ //$NON-NLS-2$
 			
 			if(chatManager.hasErrors())
 				hasErrors = true;

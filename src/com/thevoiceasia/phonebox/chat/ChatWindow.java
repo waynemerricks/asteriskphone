@@ -26,10 +26,16 @@ public class ChatWindow extends JPanel implements MouseListener {
 	 * @param language
 	 * @param country
 	 * @param myNickName
+	 * @param isStudio true for yes, enables extra buttons and topic label
 	 */
-	public ChatWindow(ChatManager chatManager, String language, String country, String myNickName){
+	public ChatWindow(ChatManager chatManager, String language, String country, String myNickName, String isStudio){
 		
 		super();
+		
+		boolean studio = false;
+		
+		if(isStudio != null && isStudio.equals("true")) //$NON-NLS-1$
+			studio = true;
 		
 		/*
 		 * Auto connect to elastix xmpp
@@ -50,13 +56,14 @@ public class ChatWindow extends JPanel implements MouseListener {
 		if(!chatManager.hasErrors()){
 		
 			chatManager.getChatRoom().addMessageListener(messages);//Messages needs to know about new message packets
+			chatManager.getChatRoom().addMessageListener(chatManager);//ChatManager needs to monitor messages for presence
 			chatManager.getChatRoom().addSubjectUpdatedListener(messages);//Messages also needs to know about topic changes
 			chatManager.getChatRoom().addParticipantStatusListener(messages);//And when people are joining/leaving
 			messages.subjectUpdated(chatManager.getChatRoom().getSubject(), "");//Send the current topic to messages //$NON-NLS-1$
 			messages.getTextPane().addMouseListener(this);
 			
 			this.setLayout(new BorderLayout());
-			this.add(new ChatShortcutBar(language, country, chatManager.getChatRoom()), BorderLayout.NORTH);
+			this.add(new ChatShortcutBar(language, country, chatManager.getChatRoom(), studio), BorderLayout.NORTH);
 			this.add(messages, BorderLayout.CENTER);
 			this.add(new ChatInputPanel(language, country, chatManager.getChatRoom()), BorderLayout.SOUTH);
 			

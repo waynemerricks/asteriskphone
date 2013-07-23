@@ -38,18 +38,20 @@ public class ChatShortcutBar extends JPanel implements ActionListener {
 	private JToggleButton callToggle, breakToggle, helpToggle;
 	private ButtonGroup shortCutGroup;
 	private MultiUserChat chatRoom;
-	private boolean callPressed = false, breakPressed = false, helpPressed = false;
+	private boolean callPressed = false, breakPressed = false, helpPressed = false, isStudio;
 	
 	/**
 	 * Shortcut bar for pre-canned phrases on the chat box
 	 * @param language for use with I18N
 	 * @param country for use with I18N
 	 * @param chatRoom Room to send messages and other changes to
+	 * @param isStudio if true enables studio specific behaviour
 	 */
-	public ChatShortcutBar(String language, String country, MultiUserChat chatRoom){
+	public ChatShortcutBar(String language, String country, MultiUserChat chatRoom, boolean isStudio){
 		
 		xStrings = new I18NStrings(language, country);
 		this.chatRoom = chatRoom;
+		this.isStudio = isStudio;
 		
 		this.setLayout(new GridLayout(1, 4, 5, 5));
 		
@@ -62,6 +64,7 @@ public class ChatShortcutBar extends JPanel implements ActionListener {
 		callToggle.setToolTipText(xStrings.getString("ChatManager.buttonNoCallsToolTip")); //$NON-NLS-1$
 		callToggle.setActionCommand("nocalls"); //$NON-NLS-1$
 		callToggle.addActionListener(this);
+		callToggle.setEnabled(isStudio);
 		this.add(callToggle);
 		
 		breakToggle = new JToggleButton(createImageIcon("images/backsoon.png", "backsoon"), false);  //$NON-NLS-1$//$NON-NLS-2$
@@ -190,7 +193,9 @@ public class ChatShortcutBar extends JPanel implements ActionListener {
 			helpPressed = false;
 			LOGGER.info(xStrings.getString("ChatManager.logSetNoCalls")); //$NON-NLS-1$
 			sendMessage(xStrings.getString("ChatManager.chatNoCalls")); //$NON-NLS-1$
-			changeTopic(xStrings.getString("ChatManager.subjectNoCalls")); //$NON-NLS-1$
+			
+			if(isStudio)
+				changeTopic(xStrings.getString("ChatManager.subjectNoCalls")); //$NON-NLS-1$
 			
 		}else if(callPressed){
 			
@@ -199,7 +204,9 @@ public class ChatShortcutBar extends JPanel implements ActionListener {
 			callToggle.setSelected(false);
 			LOGGER.info(xStrings.getString("ChatManager.logSetCalls")); //$NON-NLS-1$
 			sendMessage(xStrings.getString("ChatManager.chatResumeCalls")); //$NON-NLS-1$
-			changeTopic(xStrings.getString("ChatManager.emptyTopic")); //$NON-NLS-1$
+			
+			if(isStudio)
+				changeTopic(xStrings.getString("ChatManager.emptyTopic")); //$NON-NLS-1$
 			
 		}
 			
@@ -217,7 +224,9 @@ public class ChatShortcutBar extends JPanel implements ActionListener {
 			helpPressed = false;
 			LOGGER.info(xStrings.getString("ChatManager.logSetBackSoon")); //$NON-NLS-1$
 			sendMessage(xStrings.getString("ChatManager.chatBackSoon")); //$NON-NLS-1$
-			changeTopic(xStrings.getString("ChatManager.subjectBackSoon")); //$NON-NLS-1$
+			
+			if(isStudio)
+				changeTopic(xStrings.getString("ChatManager.subjectBackSoon")); //$NON-NLS-1$
 			
 		}else if(breakPressed){
 			
@@ -225,8 +234,10 @@ public class ChatShortcutBar extends JPanel implements ActionListener {
 			shortCutGroup.clearSelection();
 			breakToggle.setSelected(false);
 			LOGGER.info(xStrings.getString("ChatManager.logSetReturned")); //$NON-NLS-1$
-			sendMessage(xStrings.getString("ChatManager.chatResumeCalls")); //$NON-NLS-1$
-			changeTopic(xStrings.getString("ChatManager.emptyTopic")); //$NON-NLS-1$
+			sendMessage(xStrings.getString("ChatManager.chatReturned")); //$NON-NLS-1$
+			
+			if(isStudio)
+				changeTopic(xStrings.getString("ChatManager.emptyTopic")); //$NON-NLS-1$
 			
 		}
 		
@@ -244,7 +255,9 @@ public class ChatShortcutBar extends JPanel implements ActionListener {
 			breakPressed = false;
 			LOGGER.info(xStrings.getString("ChatManager.logSetHelpMe")); //$NON-NLS-1$
 			sendMessage(xStrings.getString("ChatManager.chatHelpMe")); //$NON-NLS-1$
-			changeTopic(xStrings.getString("ChatManager.subjectHelp")); //$NON-NLS-1$
+			
+			if(isStudio)
+				changeTopic(xStrings.getString("ChatManager.subjectHelp")); //$NON-NLS-1$
 			
 		}else if(helpPressed){
 			
@@ -253,7 +266,9 @@ public class ChatShortcutBar extends JPanel implements ActionListener {
 			helpToggle.setSelected(false);
 			LOGGER.info(xStrings.getString("ChatManager.logSetPanicOver")); //$NON-NLS-1$
 			sendMessage(xStrings.getString("ChatManager.chatCrisisOver")); //$NON-NLS-1$
-			changeTopic(xStrings.getString("ChatManager.emptyTopic")); //$NON-NLS-1$
+			
+			if(isStudio)
+				changeTopic(xStrings.getString("ChatManager.emptyTopic")); //$NON-NLS-1$
 			
 		}
 		
