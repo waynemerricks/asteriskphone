@@ -51,9 +51,9 @@ public class ChatInputPanel extends JPanel implements ActionListener, KeyListene
 		message.setWrapStyleWord(true);
 		message.addKeyListener(this);
 		
-		String sendButtonText = xStrings.getString("ChatManager.buttonSend");  //$NON-NLS-1$
+		String sendButtonText = xStrings.getString("ChatInputPanel.buttonSend");  //$NON-NLS-1$
 		JButton send = new JButton(sendButtonText);
-		send.setToolTipText(xStrings.getString("ChatManager.buttonSendToolTip")); //$NON-NLS-1$
+		send.setToolTipText(xStrings.getString("ChatInputPanel.buttonSendToolTip")); //$NON-NLS-1$
 		send.setMnemonic(sendButtonText.substring(0,1).toLowerCase().toCharArray()[0]);
 		send.addActionListener(this);
 		
@@ -68,13 +68,14 @@ public class ChatInputPanel extends JPanel implements ActionListener, KeyListene
 	public void setupLogging(){
 		
 		LOGGER.setLevel(LOG_LEVEL);
+		LOGGER.info(xStrings.getString("ChatInputPanel.logSetupLogging")); //$NON-NLS-1$
 		
 		try{
 			LOGGER.addHandler(new FileHandler("chatLog.log")); //$NON-NLS-1$
 		}catch(IOException e){
 			
 			e.printStackTrace();
-			showWarning(e, xStrings.getString("ChatManager.logCreateError")); //$NON-NLS-1$
+			showWarning(e, xStrings.getString("ChatInputPanel.loggerCreateError")); //$NON-NLS-1$
 			
 		}
 		
@@ -84,6 +85,8 @@ public class ChatInputPanel extends JPanel implements ActionListener, KeyListene
 	 * Sends a message to the chat room based on the text in the input box
 	 */
 	private void sendMessage(){
+		
+		LOGGER.info(xStrings.getString("ChatInputPanel.logSendingMessage")); //$NON-NLS-1$
 		
 		try {
 			
@@ -96,9 +99,9 @@ public class ChatInputPanel extends JPanel implements ActionListener, KeyListene
 			});
 			
 		}catch(XMPPException e){
-			showWarning(e, xStrings.getString("ChatManager.chatRoomError")); //$NON-NLS-1$
+			showWarning(e, xStrings.getString("ChatInputPanel.chatRoomError")); //$NON-NLS-1$
 		}catch(IllegalStateException e){
-			showWarning(e, xStrings.getString("ChatManager.duplicateLoginError")); //$NON-NLS-1$
+			showWarning(e, xStrings.getString("ChatInputPanel.duplicateLoginError")); //$NON-NLS-1$
 		}
 		
 	}
@@ -110,9 +113,9 @@ public class ChatInputPanel extends JPanel implements ActionListener, KeyListene
 	 */
 	private void showWarning(Exception e, String friendlyErrorMessage){
 		
-		System.err.println(xStrings.getString("ChatManager.errorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
+		System.err.println(xStrings.getString("ChatInputPanel.logErrorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
 		e.printStackTrace();
-		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("ChatManager.errorBoxTitle"), JOptionPane.WARNING_MESSAGE); //$NON-NLS-1$
+		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("ChatInputPanel.errorBoxTitle"), JOptionPane.WARNING_MESSAGE); //$NON-NLS-1$
 		LOGGER.warning(friendlyErrorMessage);
 		
 	}

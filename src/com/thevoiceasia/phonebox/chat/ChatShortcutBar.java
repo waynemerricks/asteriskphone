@@ -61,14 +61,14 @@ public class ChatShortcutBar extends JPanel implements ActionListener {
 		 * Send Help
 		 */
 		callToggle = new JToggleButton(createImageIcon("images/nocalls.png", "nocalls"), false); //$NON-NLS-1$ //$NON-NLS-2$
-		callToggle.setToolTipText(xStrings.getString("ChatManager.buttonNoCallsToolTip")); //$NON-NLS-1$
+		callToggle.setToolTipText(xStrings.getString("ChatShortcutBar.buttonNoCallsToolTip")); //$NON-NLS-1$
 		callToggle.setActionCommand("nocalls"); //$NON-NLS-1$
 		callToggle.addActionListener(this);
 		callToggle.setEnabled(isStudio);
 		this.add(callToggle);
 		
 		breakToggle = new JToggleButton(createImageIcon("images/backsoon.png", "backsoon"), false);  //$NON-NLS-1$//$NON-NLS-2$
-		breakToggle.setToolTipText(xStrings.getString("ChatManager.buttonBackSoonToolTip")); //$NON-NLS-1$
+		breakToggle.setToolTipText(xStrings.getString("ChatShortcutBar.buttonBackSoonToolTip")); //$NON-NLS-1$
 		breakToggle.setActionCommand("backsoon"); //$NON-NLS-1$
 		breakToggle.addActionListener(this);
 		this.add(breakToggle);
@@ -77,7 +77,7 @@ public class ChatShortcutBar extends JPanel implements ActionListener {
 		this.add(new JLabel());
 		
 		helpToggle = new JToggleButton(createImageIcon("images/helpme.png", "help"));  //$NON-NLS-1$//$NON-NLS-2$
-		helpToggle.setToolTipText(xStrings.getString("ChatManager.buttonHelpToolTip")); //$NON-NLS-1$
+		helpToggle.setToolTipText(xStrings.getString("ChatShortcutBar.buttonHelpToolTip")); //$NON-NLS-1$
 		helpToggle.setActionCommand("help"); //$NON-NLS-1$
 		helpToggle.addActionListener(this);
 		this.add(helpToggle);
@@ -96,13 +96,14 @@ public class ChatShortcutBar extends JPanel implements ActionListener {
 	public void setupLogging(){
 		
 		LOGGER.setLevel(LOG_LEVEL);
+		LOGGER.info(xStrings.getString("ChatShortcutBar.logSetupLogging")); //$NON-NLS-1$
 		
 		try{
 			LOGGER.addHandler(new FileHandler("chatLog.log")); //$NON-NLS-1$
 		}catch(IOException e){
 			
 			e.printStackTrace();
-			showWarning(e, xStrings.getString("ChatManager.logCreateError")); //$NON-NLS-1$
+			showWarning(e, xStrings.getString("ChatShortcutBar.loggerCreateError")); //$NON-NLS-1$
 			
 		}
 		
@@ -115,9 +116,9 @@ public class ChatShortcutBar extends JPanel implements ActionListener {
 	 */
 	private void showWarning(Exception e, String friendlyErrorMessage){
 		
-		System.err.println(xStrings.getString("ChatManager.errorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
+		System.err.println(xStrings.getString("ChatShortcutBar.logErrorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
 		e.printStackTrace();
-		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("ChatManager.errorBoxTitle"), JOptionPane.WARNING_MESSAGE); //$NON-NLS-1$
+		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("ChatShortcutBar.errorBoxTitle"), JOptionPane.WARNING_MESSAGE); //$NON-NLS-1$
 		LOGGER.warning(friendlyErrorMessage);
 		
 	}
@@ -138,7 +139,7 @@ public class ChatShortcutBar extends JPanel implements ActionListener {
 			icon = new ImageIcon(imgURL, description);
 		else{
 			
-			LOGGER.warning(xStrings.getString("ChatManager.loadIconError")); //$NON-NLS-1$
+			LOGGER.warning(xStrings.getString("ChatShortcutBar.logLoadIconError")); //$NON-NLS-1$
 			
 		}
 		
@@ -153,12 +154,12 @@ public class ChatShortcutBar extends JPanel implements ActionListener {
 	private void sendMessage(String message){
 		
 		try {
-			LOGGER.info(xStrings.getString("ChatManager.sendRoomMessage") + message); //$NON-NLS-1$
+			LOGGER.info(xStrings.getString("ChatShortcutBar.logSendRoomMessage") + message); //$NON-NLS-1$
 			chatRoom.sendMessage(message);
 		}catch(XMPPException e){
-			showWarning(e, xStrings.getString("ChatManager.chatRoomError")); //$NON-NLS-1$
+			showWarning(e, xStrings.getString("ChatShortcutBar.chatRoomError")); //$NON-NLS-1$
 		}catch(IllegalStateException e){
-			showWarning(e, xStrings.getString("ChatManager.duplicateLoginError")); //$NON-NLS-1$
+			showWarning(e, xStrings.getString("ChatShortcutBar.duplicateLoginError")); //$NON-NLS-1$
 		}
 		
 	}
@@ -170,12 +171,12 @@ public class ChatShortcutBar extends JPanel implements ActionListener {
 	private void changeTopic(String topic){
 		
 		try {
-			LOGGER.info(xStrings.getString("ChatManager.changeRoomTopic")); //$NON-NLS-1$
+			LOGGER.info(xStrings.getString("ChatShortcutBar.logChangeRoomTopic")); //$NON-NLS-1$
 			chatRoom.changeSubject(topic);
 		}catch(XMPPException e){
-			showWarning(e, xStrings.getString("ChatManager.changeSubjectError")); //$NON-NLS-1$
+			showWarning(e, xStrings.getString("ChatShortcutBar.changeSubjectError")); //$NON-NLS-1$
 		}catch(IllegalStateException e){
-			showWarning(e, xStrings.getString("ChatManager.duplicateLoginError")); //$NON-NLS-1$
+			showWarning(e, xStrings.getString("ChatShortcutBar.duplicateLoginError")); //$NON-NLS-1$
 		}
 		
 	}
@@ -191,22 +192,22 @@ public class ChatShortcutBar extends JPanel implements ActionListener {
 			callPressed = true;
 			breakPressed = false;
 			helpPressed = false;
-			LOGGER.info(xStrings.getString("ChatManager.logSetNoCalls")); //$NON-NLS-1$
-			sendMessage(xStrings.getString("ChatManager.chatNoCalls")); //$NON-NLS-1$
+			LOGGER.info(xStrings.getString("ChatShortcutBar.logSetNoCalls")); //$NON-NLS-1$
+			sendMessage(xStrings.getString("ChatShortcutBar.chatNoCalls")); //$NON-NLS-1$
 			
 			if(isStudio)
-				changeTopic(xStrings.getString("ChatManager.subjectNoCalls")); //$NON-NLS-1$
+				changeTopic(xStrings.getString("ChatShortcutBar.subjectNoCalls")); //$NON-NLS-1$
 			
 		}else if(callPressed){
 			
 			callPressed = false;
 			shortCutGroup.clearSelection();
 			callToggle.setSelected(false);
-			LOGGER.info(xStrings.getString("ChatManager.logSetCalls")); //$NON-NLS-1$
-			sendMessage(xStrings.getString("ChatManager.chatResumeCalls")); //$NON-NLS-1$
+			LOGGER.info(xStrings.getString("ChatShortcutBar.logSetCalls")); //$NON-NLS-1$
+			sendMessage(xStrings.getString("ChatShortcutBar.chatResumeCalls")); //$NON-NLS-1$
 			
 			if(isStudio)
-				changeTopic(xStrings.getString("ChatManager.emptyTopic")); //$NON-NLS-1$
+				changeTopic(xStrings.getString("ChatShortcutBar.emptyTopic")); //$NON-NLS-1$
 			
 		}
 			
@@ -222,22 +223,22 @@ public class ChatShortcutBar extends JPanel implements ActionListener {
 			breakPressed = true;
 			callPressed = false;
 			helpPressed = false;
-			LOGGER.info(xStrings.getString("ChatManager.logSetBackSoon")); //$NON-NLS-1$
-			sendMessage(xStrings.getString("ChatManager.chatBackSoon")); //$NON-NLS-1$
+			LOGGER.info(xStrings.getString("ChatShortcutBar.logSetBackSoon")); //$NON-NLS-1$
+			sendMessage(xStrings.getString("ChatShortcutBar.chatBackSoon")); //$NON-NLS-1$
 			
 			if(isStudio)
-				changeTopic(xStrings.getString("ChatManager.subjectBackSoon")); //$NON-NLS-1$
+				changeTopic(xStrings.getString("ChatShortcutBar.subjectBackSoon")); //$NON-NLS-1$
 			
 		}else if(breakPressed){
 			
 			breakPressed = false;
 			shortCutGroup.clearSelection();
 			breakToggle.setSelected(false);
-			LOGGER.info(xStrings.getString("ChatManager.logSetReturned")); //$NON-NLS-1$
-			sendMessage(xStrings.getString("ChatManager.chatReturned")); //$NON-NLS-1$
+			LOGGER.info(xStrings.getString("ChatShortcutBar.logSetReturned")); //$NON-NLS-1$
+			sendMessage(xStrings.getString("ChatShortcutBar.chatReturned")); //$NON-NLS-1$
 			
 			if(isStudio)
-				changeTopic(xStrings.getString("ChatManager.emptyTopic")); //$NON-NLS-1$
+				changeTopic(xStrings.getString("ChatShortcutBar.emptyTopic")); //$NON-NLS-1$
 			
 		}
 		
@@ -253,22 +254,22 @@ public class ChatShortcutBar extends JPanel implements ActionListener {
 			helpPressed = true;
 			callPressed = false;
 			breakPressed = false;
-			LOGGER.info(xStrings.getString("ChatManager.logSetHelpMe")); //$NON-NLS-1$
-			sendMessage(xStrings.getString("ChatManager.chatHelpMe")); //$NON-NLS-1$
+			LOGGER.info(xStrings.getString("ChatShortcutBar.logSetHelpMe")); //$NON-NLS-1$
+			sendMessage(xStrings.getString("ChatShortcutBar.chatHelpMe")); //$NON-NLS-1$
 			
 			if(isStudio)
-				changeTopic(xStrings.getString("ChatManager.subjectHelp")); //$NON-NLS-1$
+				changeTopic(xStrings.getString("ChatShortcutBar.subjectHelp")); //$NON-NLS-1$
 			
 		}else if(helpPressed){
 			
 			helpPressed = false;
 			shortCutGroup.clearSelection();
 			helpToggle.setSelected(false);
-			LOGGER.info(xStrings.getString("ChatManager.logSetPanicOver")); //$NON-NLS-1$
-			sendMessage(xStrings.getString("ChatManager.chatCrisisOver")); //$NON-NLS-1$
+			LOGGER.info(xStrings.getString("ChatShortcutBar.logSetPanicOver")); //$NON-NLS-1$
+			sendMessage(xStrings.getString("ChatShortcutBar.chatCrisisOver")); //$NON-NLS-1$
 			
 			if(isStudio)
-				changeTopic(xStrings.getString("ChatManager.emptyTopic")); //$NON-NLS-1$
+				changeTopic(xStrings.getString("ChatShortcutBar.emptyTopic")); //$NON-NLS-1$
 			
 		}
 		

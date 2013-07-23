@@ -52,6 +52,7 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 	public ChatMessagePanel(String language, String country, String myNickName){
 		
 		super();
+		xStrings = new I18NStrings(language, country);
 		this.myNickName = myNickName;
 		this.language = language;
 		this.setLayout(new BorderLayout());
@@ -59,7 +60,6 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 		
 		//Setup TextArea
 		messages.setEditable(false);
-		xStrings = new I18NStrings(language, country);
 		chatStyle = messages.addStyle("chatStyle", null); //$NON-NLS-1$
 		
 		//Setup Topic
@@ -70,7 +70,7 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 		topic.setFont(t);
 		topic.setHorizontalTextPosition(JLabel.CENTER);
 		topic.setHorizontalAlignment(JLabel.CENTER);
-		topic.setText(xStrings.getString("ChatManager.topicLabel")); //$NON-NLS-1$
+		topic.setText(xStrings.getString("ChatMessagePanel.topicLabel")); //$NON-NLS-1$
 		
 		JPanel north = new JPanel(new BorderLayout());
 		north.add(topic, BorderLayout.SOUTH);
@@ -84,6 +84,10 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 		
 	}
 	
+	/**
+	 * Helper method to return the messages text panel
+	 * @return
+	 */
 	public JTextPane getTextPane(){
 		return messages;
 	}
@@ -103,6 +107,8 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 	 */
 	public void clear(){
 		
+		LOGGER.info(xStrings.getString("ChatMessagePanel.logClear")); //$NON-NLS-1$
+		
 		SwingUtilities.invokeLater(new Runnable(){
 			public void run(){
 				messages.setText(null);
@@ -117,13 +123,14 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 	private void setupLogging(){
 		
 		LOGGER.setLevel(LOG_LEVEL);
+		LOGGER.info(xStrings.getString("UserStatusPanel")); //$NON-NLS-1$
 		
 		try{
 			LOGGER.addHandler(new FileHandler("chatLog.log")); //$NON-NLS-1$
 		}catch(IOException e){
 			
 			e.printStackTrace();
-			showWarning(e, xStrings.getString("ChatManager.logCreateError")); //$NON-NLS-1$
+			showWarning(e, xStrings.getString("ChatMessagePanel.loggerCreateError")); //$NON-NLS-1$
 			
 		}
 		
@@ -136,9 +143,9 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 	 */
 	private void showWarning(Exception e, String friendlyErrorMessage){
 		
-		System.err.println(xStrings.getString("ChatManager.errorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
+		System.err.println(xStrings.getString("ChatMessagePanel.logErrorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
 		e.printStackTrace();
-		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("ChatManager.errorBoxTitle"), JOptionPane.WARNING_MESSAGE); //$NON-NLS-1$
+		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("ChatMessagePanel.errorBoxTitle"), JOptionPane.WARNING_MESSAGE); //$NON-NLS-1$
 		LOGGER.warning(friendlyErrorMessage);
 		
 	}
@@ -146,7 +153,7 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 	@Override
 	public void processPacket(Packet XMPPPacket) {
 		
-		LOGGER.info(xStrings.getString("ChatManager.receivedMessage") + XMPPPacket); //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("ChatMessagePanel.logReceivedMessage") + XMPPPacket); //$NON-NLS-1$
 		
 		if(XMPPPacket instanceof Message){
 			
@@ -158,7 +165,7 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 			
 			String b = message.getBody();
 			
-			if(friendlyFrom.equals(xStrings.getString("ChatManager.SYSTEM"))){  //$NON-NLS-1$
+			if(friendlyFrom.equals(xStrings.getString("ChatMessagePanel.SYSTEM"))){  //$NON-NLS-1$
 				
 				//Control Messages, need to clean up message body and act accordingly
 				//phonebox@conference.elastix/waynemerricks !ChatManager.chatParticipantLeft!
@@ -191,7 +198,7 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 						doc.insertString(doc.getLength(), body, chatStyle);
 						
 					}catch(BadLocationException e){
-						LOGGER.severe(xStrings.getString("ChatManager.errorInsertingMessage")); //$NON-NLS-1$
+						LOGGER.severe(xStrings.getString("ChatMessagePanel.logErrorInsertingMessage")); //$NON-NLS-1$
 						e.printStackTrace();
 					}
 					
@@ -205,7 +212,7 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 	@Override
 	public void subjectUpdated(String subject, String from) {
 		
-		LOGGER.info(xStrings.getString("ChatManager.logSettingTopic") + subject); //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("ChatMessagePanel.logSettingTopic") + subject); //$NON-NLS-1$
 		
 		/*
 		 * Can't set subject to "" as XMPP server ignores the change.  This causes a bug when the subject is 
@@ -216,7 +223,7 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 		 * We then check if the topic is the greeter message and if so, set the topic label to ""
 		 */
 		
-		if(subject != null && subject.equals(xStrings.getString("ChatManager.emptyTopic"))) //$NON-NLS-1$
+		if(subject != null && subject.equals(xStrings.getString("ChatMessagePanel.emptyTopic"))) //$NON-NLS-1$
 			subject = null;
 			
 		final String t = subject;
@@ -235,15 +242,15 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 	@Override
 	public void joined(String participant) {
 		
-		LOGGER.info(participant + " " + xStrings.getString("ChatManager.chatParticipantJoined"));  //$NON-NLS-1$//$NON-NLS-2$
+		LOGGER.info(participant + " " + xStrings.getString("ChatMessagePanel.chatParticipantJoined"));  //$NON-NLS-1$//$NON-NLS-2$
 		
 		/*
 		 * If you send a message with a custom from that isn't your user name, you will get silently kicked from the server
 		 * So these are created and sent internally.
 		 */
 		Message joinedMessage = new Message();
-		joinedMessage.addBody(language, participant + " " + xStrings.getString("ChatManager.chatParticipantJoined"));  //$NON-NLS-1$//$NON-NLS-2$
-		joinedMessage.setFrom(xStrings.getString("ChatManager.SYSTEM")); //$NON-NLS-1$
+		joinedMessage.addBody(language, participant + " " + xStrings.getString("ChatMessagePanel.chatParticipantJoined"));  //$NON-NLS-1$//$NON-NLS-2$
+		joinedMessage.setFrom(xStrings.getString("ChatMessagePanel.SYSTEM")); //$NON-NLS-1$
 		processPacket(joinedMessage);
 		
 	}
@@ -251,15 +258,15 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 	@Override
 	public void left(String participant) {
 
-		LOGGER.info(participant + " " + xStrings.getString("ChatManager.chatParticipantLeft"));  //$NON-NLS-1$//$NON-NLS-2$
+		LOGGER.info(participant + " " + xStrings.getString("ChatMessagePanel.chatParticipantLeft"));  //$NON-NLS-1$//$NON-NLS-2$
 		
 		/*
 		 * If you send a message with a custom from that isn't your user name, you will get silently kicked from the server
 		 * So these are created and sent internally.
 		 */
 		Message leftMessage = new Message();
-		leftMessage.addBody(language, participant + " " + xStrings.getString("ChatManager.chatParticipantLeft")); //$NON-NLS-1$//$NON-NLS-2$
-		leftMessage.setFrom(xStrings.getString("ChatManager.SYSTEM")); //$NON-NLS-1$
+		leftMessage.addBody(language, participant + " " + xStrings.getString("ChatMessagePanel.chatParticipantLeft")); //$NON-NLS-1$//$NON-NLS-2$
+		leftMessage.setFrom(xStrings.getString("ChatMessagePanel.SYSTEM")); //$NON-NLS-1$
 		processPacket(leftMessage);
 		
 	}

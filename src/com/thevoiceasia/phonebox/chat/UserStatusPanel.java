@@ -117,18 +117,20 @@ public class UserStatusPanel extends JPanel implements ParticipantStatusListener
 	}
 	
 	/**
-	 * Clears all text in the chat window
+	 * Clears all the users in the online list
 	 */
 	private void clear(){
+		
+		LOGGER.info(xStrings.getString("UserStatusPanel.logClearOnlineList")); //$NON-NLS-1$
 		
 		setTextColour(Color.BLACK);
 		StyledDocument doc = onlineList.getStyledDocument();
 				
 		try{
 			doc.remove(0, doc.getLength());
-			doc.insertString(doc.getLength(), xStrings.getString("ChatManager.onlineTitle") + "\n", listStyle); //$NON-NLS-1$ //$NON-NLS-2$
+			doc.insertString(doc.getLength(), xStrings.getString("UserStatusPanel.onlineTitle") + "\n", listStyle); //$NON-NLS-1$ //$NON-NLS-2$
 		}catch(BadLocationException e){
-			LOGGER.severe(xStrings.getString("ChatManager.errorClearingOnlineList")); //$NON-NLS-1$
+			LOGGER.severe(xStrings.getString("UserStatusPanel.logErrorClearingOnlineList")); //$NON-NLS-1$
 			e.printStackTrace();
 		}
 		
@@ -140,13 +142,14 @@ public class UserStatusPanel extends JPanel implements ParticipantStatusListener
 	public void setupLogging(){
 		
 		LOGGER.setLevel(LOG_LEVEL);
+		LOGGER.info(xStrings.getString("UserStatusPanel.logSetupLogging")); //$NON-NLS-1$
 		
 		try{
 			LOGGER.addHandler(new FileHandler("chatLog.log")); //$NON-NLS-1$
 		}catch(IOException e){
 			
 			e.printStackTrace();
-			showWarning(e, xStrings.getString("ChatManager.logCreateError")); //$NON-NLS-1$
+			showWarning(e, xStrings.getString("UserStatusPanel.loggerCreateError")); //$NON-NLS-1$
 			
 		}
 		
@@ -159,9 +162,9 @@ public class UserStatusPanel extends JPanel implements ParticipantStatusListener
 	 */
 	private void showWarning(Exception e, String friendlyErrorMessage){
 		
-		System.err.println(xStrings.getString("ChatManager.errorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
+		System.err.println(xStrings.getString("UserStatusPanel.logErrorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
 		e.printStackTrace();
-		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("ChatManager.errorBoxTitle"), JOptionPane.WARNING_MESSAGE); //$NON-NLS-1$
+		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("UserStatusPanel.errorBoxTitle"), JOptionPane.WARNING_MESSAGE); //$NON-NLS-1$
 		LOGGER.warning(friendlyErrorMessage);
 		
 	}
@@ -202,9 +205,9 @@ public class UserStatusPanel extends JPanel implements ParticipantStatusListener
 						try{
 							StyledDocument doc = onlineList.getStyledDocument();
 							doc.insertString(doc.getLength(), user.getKey() + "\n", listStyle); //$NON-NLS-1$
-							LOGGER.info(xStrings.getString("ChatManager.updatedOnlineList") + user.getKey() + user.getValue()); //$NON-NLS-1$
+							LOGGER.info(xStrings.getString("UserStatusPanel.logUpdatedOnlineList") + user.getKey() + user.getValue()); //$NON-NLS-1$
 						}catch(BadLocationException e){
-							LOGGER.severe(xStrings.getString("ChatManager.errorUpdatingOnlineList") + user.getKey()); //$NON-NLS-1$
+							LOGGER.severe(xStrings.getString("UserStatusPanel.logErrorUpdatingOnlineList") + user.getKey()); //$NON-NLS-1$
 							e.printStackTrace();
 						}
 						
@@ -221,7 +224,7 @@ public class UserStatusPanel extends JPanel implements ParticipantStatusListener
 	@Override
 	public void joined(String participant) {
 		
-		LOGGER.info(participant + " " + xStrings.getString("ChatManager.chatParticipantJoined"));  //$NON-NLS-1$//$NON-NLS-2$
+		LOGGER.info(participant + " " + xStrings.getString("UserStatusPanel.logChatParticipantJoined"));  //$NON-NLS-1$//$NON-NLS-2$
 		String friendlyParticipant = participant;
 		
 		if(friendlyParticipant.contains("/")) //$NON-NLS-1$
@@ -241,7 +244,7 @@ public class UserStatusPanel extends JPanel implements ParticipantStatusListener
 	@Override
 	public void left(String participant) {
 
-		LOGGER.info(participant + " " + xStrings.getString("ChatManager.chatParticipantLeft"));  //$NON-NLS-1$//$NON-NLS-2$
+		LOGGER.info(participant + " " + xStrings.getString("UserStatusPanel.logChatParticipantLeft"));  //$NON-NLS-1$//$NON-NLS-2$
 		String friendlyParticipant = participant;
 		
 		if(friendlyParticipant.contains("/")) //$NON-NLS-1$
@@ -262,7 +265,7 @@ public class UserStatusPanel extends JPanel implements ParticipantStatusListener
 	@Override
 	public void nicknameChanged(String participant, String newNick) {
 		// TODO Might be interested in this but no docs in Smack API so just guessing at terms
-		LOGGER.info(xStrings.getString("ChatManager.nickNameChanged") + " " + participant + " " + newNick); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		LOGGER.info(xStrings.getString("UserStatusPanel.logNickNameChanged") + " " + participant + " " + newNick); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		
 	}
 
@@ -307,7 +310,7 @@ public class UserStatusPanel extends JPanel implements ParticipantStatusListener
 		if(XMPPPacket instanceof Presence){
 			
 			Presence p = (Presence)XMPPPacket;
-			LOGGER.info(xStrings.getString("ChatManager.presenceUpdate") + p.getFrom() + ": " + p.getMode()); //$NON-NLS-1$ //$NON-NLS-2$
+			LOGGER.info(xStrings.getString("UserStatusPanel.logPresenceUpdate") + p.getFrom() + ": " + p.getMode()); //$NON-NLS-1$ //$NON-NLS-2$
 			String friendlyFrom = p.getFrom();
 			
 			if(friendlyFrom.contains("/")) //$NON-NLS-1$

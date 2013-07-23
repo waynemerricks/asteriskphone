@@ -72,7 +72,7 @@ public class ChatManager implements UserStatusListener, PacketListener {
 	 */
 	public void createUser(){
 		
-		LOGGER.info(xStrings.getString("ChatManager.creatingXMPPUser") + XMPPUserName); //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("ChatManager.logCreatingXMPPUser") + XMPPUserName); //$NON-NLS-1$
 		XMPPConnection setupConnection = new XMPPConnection(XMPPServerHostName);
 		
 		try {
@@ -88,12 +88,12 @@ public class ChatManager implements UserStatusListener, PacketListener {
 			
 			try {
 				XMPPAccounts.createAccount(XMPPUserName.split("@")[0], XMPPPassword); //$NON-NLS-1$
-				LOGGER.info(xStrings.getString("ChatManager.createdXMPPUser") + XMPPUserName); //$NON-NLS-1$
+				LOGGER.info(xStrings.getString("ChatManager.logCreatedXMPPUser") + XMPPUserName); //$NON-NLS-1$
 				setupConnection.disconnect();
-				LOGGER.info(xStrings.getString("ChatManager.setupDisconnected")); //$NON-NLS-1$
+				LOGGER.info(xStrings.getString("ChatManager.logSetupDisconnected")); //$NON-NLS-1$
 			} catch (XMPPException e) {
 				showError(e, xStrings.getString("ChatManager.errorCreatingXMPPUser") + XMPPUserName); //$NON-NLS-1$
-				LOGGER.severe(xStrings.getString("ChatManager.ErrorCreatingXMPPUser") + XMPPUserName); //$NON-NLS-1$
+				LOGGER.severe(xStrings.getString("ChatManager.errorCreatingXMPPUser") + XMPPUserName); //$NON-NLS-1$
 			}
 			
 		}
@@ -124,13 +124,14 @@ public class ChatManager implements UserStatusListener, PacketListener {
 	public void setupLogging(){
 		
 		LOGGER.setLevel(LOG_LEVEL);
+		LOGGER.info("ChatManager.logSetupLogging"); //$NON-NLS-1$
 		
 		try{
 			LOGGER.addHandler(new FileHandler("chatLog.log")); //$NON-NLS-1$
 		}catch(IOException e){
 			
 			e.printStackTrace();
-			showWarning(e, xStrings.getString("ChatManager.logCreateError")); //$NON-NLS-1$
+			showWarning(e, xStrings.getString("ChatManager.loggerCreateError")); //$NON-NLS-1$
 			
 		}
 		
@@ -154,7 +155,7 @@ public class ChatManager implements UserStatusListener, PacketListener {
 	 */
 	public void setLocale(String language, String country){
 		
-		LOGGER.info(xStrings.getString("ChatManager.setLocale") + " " + language + ", " + country);   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		LOGGER.info(xStrings.getString("ChatManager.logSetLocale") + " " + language + ", " + country);   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		xStrings = new I18NStrings(language, country);
 		
 	}
@@ -165,8 +166,8 @@ public class ChatManager implements UserStatusListener, PacketListener {
 	 */
 	public void setChatHistory(int seconds){
 		
-		LOGGER.info(xStrings.getString("ChatManager.chatHistoryPrefix")+ " " + seconds +   //$NON-NLS-1$//$NON-NLS-2$
-				xStrings.getString("ChatManager.chatHistorySuffix")); //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("ChatManager.logChatHistoryPrefix")+ " " + seconds +   //$NON-NLS-1$//$NON-NLS-2$
+				xStrings.getString("ChatManager.logChatHistorySuffix")); //$NON-NLS-1$
 		
 		XMPPChatHistory = seconds;
 		
@@ -282,6 +283,7 @@ public class ChatManager implements UserStatusListener, PacketListener {
 	 */
 	public void sendMessage(String msg){
 		
+		LOGGER.info(xStrings.getString("ChatManager.logSendMessage")); //$NON-NLS-1$
 		try{
 			phoneboxChat.sendMessage(msg);
 		}catch(XMPPException e){
@@ -299,7 +301,7 @@ public class ChatManager implements UserStatusListener, PacketListener {
 	 */
 	private void showError(Exception e, String friendlyErrorMessage){
 		
-		System.err.println(xStrings.getString("ChatManager.errorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
+		System.err.println(xStrings.getString("ChatManager.logErrorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
 		e.printStackTrace();
 		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("ChatManager.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
 		LOGGER.severe(friendlyErrorMessage);
@@ -313,7 +315,7 @@ public class ChatManager implements UserStatusListener, PacketListener {
 	 */
 	private void showWarning(Exception e, String friendlyErrorMessage){
 		
-		System.err.println(xStrings.getString("ChatManager.errorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
+		System.err.println(xStrings.getString("ChatManager.logErrorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
 		e.printStackTrace();
 		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("ChatManager.errorBoxTitle"), JOptionPane.WARNING_MESSAGE); //$NON-NLS-1$
 		LOGGER.warning(friendlyErrorMessage);
@@ -350,10 +352,10 @@ public class ChatManager implements UserStatusListener, PacketListener {
 	private void setPresenceAvailable(){
 		
 		Presence presence = new Presence(Presence.Type.available, 
-				xStrings.getString("ChatManager.Available"), 1, //$NON-NLS-1$
+				xStrings.getString("ChatManager.available"), 1, //$NON-NLS-1$
 				Presence.Mode.available); 
 		presence.setTo(XMPPRoomName + "/" + XMPPUserName.split("@")[0]);  //$NON-NLS-1$//$NON-NLS-2$
-		LOGGER.info(xStrings.getString("ChatManager.sendingPresence") +  //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("ChatManager.logSendingPresence") +  //$NON-NLS-1$
 				presence.getFrom() + ": " + presence.getMode()); //$NON-NLS-1$
 		XMPPServerConnection.sendPacket(presence);
 		
@@ -362,10 +364,10 @@ public class ChatManager implements UserStatusListener, PacketListener {
 	private void setPresenceAway(){
 		
 		Presence presence = new Presence(Presence.Type.available, 
-				xStrings.getString("ChatManager.Away"), 0, //$NON-NLS-1$
+				xStrings.getString("ChatManager.away"), 0, //$NON-NLS-1$
 						Presence.Mode.away); 
 		presence.setTo(XMPPRoomName + "/" + XMPPUserName.split("@")[0]);  //$NON-NLS-1$//$NON-NLS-2$
-		LOGGER.info(xStrings.getString("ChatManager.sendingPresence") +  //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("ChatManager.logSendingPresence") +  //$NON-NLS-1$
 				presence.getFrom() + ": " + presence.getMode()); //$NON-NLS-1$
 		XMPPServerConnection.sendPacket(presence);
 		
