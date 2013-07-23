@@ -159,7 +159,7 @@ public class ChatShortcutBar extends JPanel implements ActionListener {
 		}catch(XMPPException e){
 			showWarning(e, xStrings.getString("ChatShortcutBar.chatRoomError")); //$NON-NLS-1$
 		}catch(IllegalStateException e){
-			showWarning(e, xStrings.getString("ChatShortcutBar.duplicateLoginError")); //$NON-NLS-1$
+			showWarning(e, xStrings.getString("ChatShortcutBar.serverGoneError")); //$NON-NLS-1$
 		}
 		
 	}
@@ -176,7 +176,7 @@ public class ChatShortcutBar extends JPanel implements ActionListener {
 		}catch(XMPPException e){
 			showWarning(e, xStrings.getString("ChatShortcutBar.changeSubjectError")); //$NON-NLS-1$
 		}catch(IllegalStateException e){
-			showWarning(e, xStrings.getString("ChatShortcutBar.duplicateLoginError")); //$NON-NLS-1$
+			showWarning(e, xStrings.getString("ChatShortcutBar.serverGoneError")); //$NON-NLS-1$
 		}
 		
 	}

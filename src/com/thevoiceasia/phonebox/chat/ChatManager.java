@@ -289,7 +289,7 @@ public class ChatManager implements UserStatusListener, PacketListener {
 		}catch(XMPPException e){
 			showWarning(e, xStrings.getString("ChatManager.chatRoomError")); //$NON-NLS-1$
 		}catch(IllegalStateException e){
-			showWarning(e, xStrings.getString("ChatManager.duplicateLoginError")); //$NON-NLS-1$
+			showWarning(e, xStrings.getString("ChatManager.serverGoneError")); //$NON-NLS-1$
 		}
 		
 	}

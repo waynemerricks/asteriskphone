@@ -101,7 +101,7 @@ public class ChatInputPanel extends JPanel implements ActionListener, KeyListene
 		}catch(XMPPException e){
 			showWarning(e, xStrings.getString("ChatInputPanel.chatRoomError")); //$NON-NLS-1$
 		}catch(IllegalStateException e){
-			showWarning(e, xStrings.getString("ChatInputPanel.duplicateLoginError")); //$NON-NLS-1$
+			showWarning(e, xStrings.getString("ChatInputPanel.ServerGoneError")); //$NON-NLS-1$
 		}
 		
 	}
