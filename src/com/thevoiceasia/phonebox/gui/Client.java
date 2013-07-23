@@ -62,6 +62,8 @@ public class Client extends JFrame implements WindowListener{
 			
 			if(chatManager.hasErrors())
 				hasErrors = true;
+			else
+				chatManager.startIdleDetectThread();
 		
 		}
 		
@@ -91,7 +93,8 @@ public class Client extends JFrame implements WindowListener{
 						userSettings.get("XMPPServer"), //$NON-NLS-1$
 						userSettings.get("XMPPRoom"), //$NON-NLS-1$
 						userSettings.get("language"), //$NON-NLS-1$
-						userSettings.get("country")); //$NON-NLS-1$
+						userSettings.get("country"), //$NON-NLS-1$
+						Integer.parseInt(userSettings.get("idleTimeout"))); //$NON-NLS-1$
 				
 				if(chatManager.hasErrors())
 					hasErrors = true;

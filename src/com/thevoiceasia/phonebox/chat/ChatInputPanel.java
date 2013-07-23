@@ -6,6 +6,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.IOException;
+import java.util.Date;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -20,7 +21,9 @@ import javax.swing.SwingUtilities;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 
-public class ChatInputPanel extends JPanel implements ActionListener, KeyListener{
+import com.thevoiceasia.phonebox.misc.LastActionTimer;
+
+public class ChatInputPanel extends JPanel implements ActionListener, KeyListener, LastActionTimer{
 
 	/*
 	 * Panel for chat input, possibly buttons for shortcuts
@@ -29,6 +32,8 @@ public class ChatInputPanel extends JPanel implements ActionListener, KeyListene
 	private JTextArea message;
 	private I18NStrings xStrings; //Link to external string resources
 	private MultiUserChat chatRoom;
+	private long lastActionTime;
+	
 	private static final Logger LOGGER = Logger.getLogger(ChatInputPanel.class.getName());//Logger
 	private static final Level LOG_LEVEL = Level.INFO;
 	
@@ -59,6 +64,8 @@ public class ChatInputPanel extends JPanel implements ActionListener, KeyListene
 		
 		this.add(new JScrollPane(message), BorderLayout.CENTER);
 		this.add(send, BorderLayout.EAST);
+		
+		lastActionTime = new Date().getTime();
 		
 	}
 	
@@ -124,7 +131,9 @@ public class ChatInputPanel extends JPanel implements ActionListener, KeyListene
 	public void actionPerformed(ActionEvent evt) {
 		
 		//Only one action performed by the send button so lets sort it
+		lastActionTime = new Date().getTime();
 		sendMessage();
+		
 		
 	}
 
@@ -132,6 +141,8 @@ public class ChatInputPanel extends JPanel implements ActionListener, KeyListene
 	@Override
 	public void keyReleased(KeyEvent evt) {
 
+		lastActionTime = new Date().getTime();
+		
 		if(evt.getKeyCode() == KeyEvent.VK_ENTER){
 			evt.consume();
 			sendMessage();
@@ -154,6 +165,10 @@ public class ChatInputPanel extends JPanel implements ActionListener, KeyListene
 			evt.consume();
 		
 	}
-	
+
+	@Override
+	public long getLastActionTime() {
+		return lastActionTime;
+	}
 
 }

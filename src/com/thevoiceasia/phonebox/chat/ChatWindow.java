@@ -3,19 +3,23 @@ package com.thevoiceasia.phonebox.chat;
 import java.awt.BorderLayout;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.Date;
 
 import javax.swing.JPanel;
+
+import com.thevoiceasia.phonebox.misc.LastActionTimer;
 
 /**
  * Panel containing all the XMPP Chat Components
  * @author Wayne Merricks
  *
  */
-public class ChatWindow extends JPanel implements MouseListener {
+public class ChatWindow extends JPanel implements MouseListener, LastActionTimer {
 
 	/** CLASS VARS **/
 	private UserStatusPanel userStatus;
 	private boolean statusVisible = false;
+	private long lastActionTime;
 	
 	/** STATICS **/
 	private static final long serialVersionUID = 1L;
@@ -63,15 +67,20 @@ public class ChatWindow extends JPanel implements MouseListener {
 			messages.getTextPane().addMouseListener(this);
 			
 			this.setLayout(new BorderLayout());
-			this.add(new ChatShortcutBar(language, country, chatManager.getChatRoom(), studio), BorderLayout.NORTH);
+			ChatShortcutBar shortcuts = new ChatShortcutBar(language, country, chatManager.getChatRoom(), studio);
+			chatManager.addActionTimeRecorder(shortcuts, shortcuts.getClass().getName());
+			this.add(shortcuts, BorderLayout.NORTH);
 			this.add(messages, BorderLayout.CENTER);
-			this.add(new ChatInputPanel(language, country, chatManager.getChatRoom()), BorderLayout.SOUTH);
+			ChatInputPanel input = new ChatInputPanel(language, country, chatManager.getChatRoom());
+			chatManager.addActionTimeRecorder(input, input.getClass().getName());
+			this.add(input, BorderLayout.SOUTH);
 			
 			userStatus = new UserStatusPanel(language, country, chatManager.getChatRoom());
 			chatManager.getChatRoom().addParticipantStatusListener(userStatus);
 			chatManager.getChatRoom().addParticipantListener(userStatus);
 			userStatus.getTextPane().addMouseListener(new MouseListener(){
 				public void mouseClicked(MouseEvent evt){
+					lastActionTime = new Date().getTime();
 					hideUserStatus();
 				}
 	
@@ -83,6 +92,9 @@ public class ChatWindow extends JPanel implements MouseListener {
 			});
 		
 		}
+		
+		lastActionTime = new Date().getTime();
+		chatManager.addActionTimeRecorder(this, ChatWindow.class.getName());
 		
 	}
 
@@ -101,6 +113,7 @@ public class ChatWindow extends JPanel implements MouseListener {
 	@Override
 	public void mouseClicked(MouseEvent evt) {
 		
+		lastActionTime = new Date().getTime();
 		if(!statusVisible){
 			showUserStatus();
 		}else{
@@ -120,5 +133,10 @@ public class ChatWindow extends JPanel implements MouseListener {
 
 	@Override
 	public void mouseReleased(MouseEvent evt) {}
+
+	@Override
+	public long getLastActionTime() {
+		return lastActionTime;
+	}
 
 }

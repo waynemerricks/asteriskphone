@@ -1,6 +1,8 @@
 package com.thevoiceasia.phonebox.chat;
 
 import java.io.IOException;
+import java.util.Date;
+import java.util.Vector;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -20,11 +22,13 @@ import org.jivesoftware.smackx.muc.DiscussionHistory;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.UserStatusListener;
 
+import com.thevoiceasia.phonebox.misc.LastActionTimer;
+
 public class ChatManager implements UserStatusListener, PacketListener {
 
 	//XMPP Settings
 	private String XMPPUserName, XMPPPassword, XMPPNickName, XMPPServerHostName, XMPPRoomName;
-	private int XMPPChatHistory;
+	private int XMPPChatHistory, idleTimeout;
 	
 	//XMPP Connections/Rooms
 	private Connection XMPPServerConnection;
@@ -33,6 +37,9 @@ public class ChatManager implements UserStatusListener, PacketListener {
 	//ChatManager vars
 	private boolean hasErrors = false; //Error Flag used internally
 	private I18NStrings xStrings; //Link to external string resources
+	private Vector<LastActionTimer> actionTimers = new Vector<LastActionTimer>();
+	private boolean available = true;
+	private IdleCheckThread idleCheckThread;
 	
 	/** STATICS **/
 	private static final int XMPP_CHAT_HISTORY = 600; //Chat Messages in the last x seconds
@@ -52,7 +59,7 @@ public class ChatManager implements UserStatusListener, PacketListener {
 	 * @param country
 	 */
 	public ChatManager(String userName, String password, String nickName, 
-			String serverHostName, String roomName, String language, String country){
+			String serverHostName, String roomName, String language, String country, int idleTimeout){
 		
 		//Get I18N handle for external strings
 		xStrings = new I18NStrings(language, country);
@@ -62,9 +69,62 @@ public class ChatManager implements UserStatusListener, PacketListener {
 		this.XMPPRoomName = roomName;
 		this.XMPPChatHistory = XMPP_CHAT_HISTORY;
 		this.XMPPNickName = nickName;
+		this.idleTimeout = idleTimeout;
 		setupLogging();
 		
 	}
+	
+	
+	public void startIdleDetectThread(){
+	
+		LOGGER.info(xStrings.getString("ChatManager.logStartIdleDetect")); //$NON-NLS-1$
+		idleCheckThread = new IdleCheckThread(this);
+		idleCheckThread.start();
+		
+	}
+	
+	/**
+	 * Notifies this ChatManager that here is an object that receives user input
+	 * as such this object has a time since last action variable.
+	 * 
+	 * This is used for a simple idle timer so that status is set to away if required
+	 * @param lastAction
+	 */
+	public void addActionTimeRecorder(LastActionTimer lastActionTimer, String name){
+		
+		LOGGER.info(xStrings.getString("ChatManager.logAddActionTimer") + name); //$NON-NLS-1$
+		actionTimers.add(lastActionTimer);
+		
+	}
+	
+	public void checkIdle(){
+		
+		LOGGER.info(xStrings.getString("ChatManager.logCheckingIdle")); //$NON-NLS-1$
+		
+		if(actionTimers.size() > 0){
+			
+			int i = 0;
+			boolean alive = false;
+			long now = new Date().getTime();
+			
+			while(!alive && i < actionTimers.size()){
+			
+				if(now - actionTimers.get(i).getLastActionTime() < idleTimeout)
+					alive = true;
+					
+				i++;
+				
+			}
+			
+			if(!alive && available)
+				setPresenceAway();
+			else if(alive && !available)
+				setPresenceAvailable();
+			
+		}
+		
+	}
+	
 	
 	/**
 	 * Helper method to create a new XMPP user based on the current credentials
@@ -241,6 +301,20 @@ public class ChatManager implements UserStatusListener, PacketListener {
 	 */
 	public void disconnect() throws IllegalStateException{
 		
+		
+		if(idleCheckThread != null && idleCheckThread.isAlive()){
+		
+			LOGGER.info(xStrings.getString("ChatManager.logStopIdleDetect")); //$NON-NLS-1$
+			idleCheckThread.interrupt();	
+			
+			try {
+				idleCheckThread.join();//Should only be a few millis wait
+			} catch (InterruptedException e) {}
+			
+			LOGGER.info(xStrings.getString("ChatManager.logIdleDetectStopped")); //$NON-NLS-1$
+			
+		}
+		
 		//Leave joined XMPP rooms, not strictly necessary as disconnect will handle this
 		if(phoneboxChat != null){
 			
@@ -351,6 +425,7 @@ public class ChatManager implements UserStatusListener, PacketListener {
 	
 	private void setPresenceAvailable(){
 		
+		available = true;
 		Presence presence = new Presence(Presence.Type.available, 
 				xStrings.getString("ChatManager.available"), 1, //$NON-NLS-1$
 				Presence.Mode.available); 
@@ -363,6 +438,7 @@ public class ChatManager implements UserStatusListener, PacketListener {
 	
 	private void setPresenceAway(){
 		
+		available = false;
 		Presence presence = new Presence(Presence.Type.available, 
 				xStrings.getString("ChatManager.away"), 0, //$NON-NLS-1$
 						Presence.Mode.away); 

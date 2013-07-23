@@ -5,6 +5,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Date;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -19,6 +20,8 @@ import javax.swing.JToggleButton;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 
+import com.thevoiceasia.phonebox.misc.LastActionTimer;
+
 /**
  * Creates a simple shortcut bar as a JPanel that has several ToggleButtons.
  * 
@@ -26,7 +29,7 @@ import org.jivesoftware.smackx.muc.MultiUserChat;
  * @author Wayne Merricks
  *
  */
-public class ChatShortcutBar extends JPanel implements ActionListener {
+public class ChatShortcutBar extends JPanel implements ActionListener, LastActionTimer {
 
 	/** STATICS **/
 	private static final Logger LOGGER = Logger.getLogger(ChatShortcutBar.class.getName());//Logger
@@ -39,6 +42,7 @@ public class ChatShortcutBar extends JPanel implements ActionListener {
 	private ButtonGroup shortCutGroup;
 	private MultiUserChat chatRoom;
 	private boolean callPressed = false, breakPressed = false, helpPressed = false, isStudio;
+	private long lastActionTime;
 	
 	/**
 	 * Shortcut bar for pre-canned phrases on the chat box
@@ -87,6 +91,8 @@ public class ChatShortcutBar extends JPanel implements ActionListener {
 		shortCutGroup.add(callToggle);
 		shortCutGroup.add(breakToggle);
 		shortCutGroup.add(helpToggle);
+		
+		lastActionTime = new Date().getTime();
 		
 	}
 
@@ -282,6 +288,8 @@ public class ChatShortcutBar extends JPanel implements ActionListener {
 	 */
 	public void actionPerformed(ActionEvent evt) {
 		
+		lastActionTime = new Date().getTime();
+		
 		if(evt.getActionCommand().equals("nocalls")) //$NON-NLS-1$
 			noCallsPressed();
 		else if(evt.getActionCommand().equals("backsoon")) //$NON-NLS-1$
@@ -289,6 +297,11 @@ public class ChatShortcutBar extends JPanel implements ActionListener {
 		else if(evt.getActionCommand().equals("help")) //$NON-NLS-1$
 			helpPressed();
 		
+	}
+
+	@Override
+	public long getLastActionTime() {
+		return lastActionTime;
 	}
 	
 }
