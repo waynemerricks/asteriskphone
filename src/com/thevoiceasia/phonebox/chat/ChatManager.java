@@ -349,16 +349,24 @@ public class ChatManager implements UserStatusListener, PacketListener {
 	
 	private void setPresenceAvailable(){
 		
-		Presence presence = new Presence(Presence.Type.available, "", 0, Presence.Mode.available); //$NON-NLS-1$
-		presence.setFrom(XMPPServerConnection.getUser());
+		Presence presence = new Presence(Presence.Type.available, 
+				xStrings.getString("ChatManager.Available"), 1, //$NON-NLS-1$
+				Presence.Mode.available); 
+		presence.setTo(XMPPRoomName + "/" + XMPPUserName.split("@")[0]);  //$NON-NLS-1$//$NON-NLS-2$
+		LOGGER.info(xStrings.getString("ChatManager.sendingPresence") +  //$NON-NLS-1$
+				presence.getFrom() + ": " + presence.getMode()); //$NON-NLS-1$
 		XMPPServerConnection.sendPacket(presence);
 		
 	}
 	
 	private void setPresenceAway(){
 		
-		Presence presence = new Presence(Presence.Type.available, "", 0, Presence.Mode.away); //$NON-NLS-1$
-		presence.setFrom(XMPPServerConnection.getUser());
+		Presence presence = new Presence(Presence.Type.available, 
+				xStrings.getString("ChatManager.Away"), 0, //$NON-NLS-1$
+						Presence.Mode.away); 
+		presence.setTo(XMPPRoomName + "/" + XMPPUserName.split("@")[0]);  //$NON-NLS-1$//$NON-NLS-2$
+		LOGGER.info(xStrings.getString("ChatManager.sendingPresence") +  //$NON-NLS-1$
+				presence.getFrom() + ": " + presence.getMode()); //$NON-NLS-1$
 		XMPPServerConnection.sendPacket(presence);
 		
 	}
