@@ -57,7 +57,8 @@ public class Client extends JFrame implements WindowListener{
 			this.addWindowListener(this);
 			
 			//Chat Module
-			this.add(new ChatWindow(chatManager, language, country, userSettings.get("nickName"), userSettings.get("isStudio")), BorderLayout.CENTER); //$NON-NLS-1$ //$NON-NLS-2$
+			this.add(new ChatWindow(chatManager, language, country, userSettings.get("nickName"), //$NON-NLS-1$
+					userSettings.get("isStudio")), BorderLayout.CENTER); //$NON-NLS-1$ 
 			
 			if(chatManager.hasErrors())
 				hasErrors = true;
@@ -142,8 +143,6 @@ public class Client extends JFrame implements WindowListener{
 	
 	public static void main(String[] args){
 		
-		
-		
 		if(args.length == 2){
 			
 			I18NStrings xStrings = new I18NStrings(args[0], args[1]);
@@ -155,7 +154,7 @@ public class Client extends JFrame implements WindowListener{
 				
 				Exception e = new Exception(xStrings.getString("Client.onLoadError")); //$NON-NLS-1$
 
-				System.err.println(xStrings.getString("Client.errorPrefix") + e.getMessage()); //$NON-NLS-1$
+				System.err.println(xStrings.getString("Client.logErrorPrefix") + e.getMessage()); //$NON-NLS-1$
 				e.printStackTrace();
 				JOptionPane.showMessageDialog(null, e.getMessage(), xStrings.getString("Client.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
 				LOGGER.severe(e.getMessage());
@@ -169,7 +168,7 @@ public class Client extends JFrame implements WindowListener{
 			I18NStrings xStrings = new I18NStrings("en", "GB");  //$NON-NLS-1$//$NON-NLS-2$
 			Exception e = new Exception(xStrings.getString("Client.usageError")); //$NON-NLS-1$
 
-			System.err.println(xStrings.getString("Client.errorPrefix") + e.getMessage()); //$NON-NLS-1$
+			System.err.println(xStrings.getString("Client.logErrorPrefix") + e.getMessage()); //$NON-NLS-1$
 			e.printStackTrace();
 			JOptionPane.showMessageDialog(null, e.getMessage(), xStrings.getString("Client.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
 			LOGGER.severe(e.getMessage());
@@ -188,13 +187,14 @@ public class Client extends JFrame implements WindowListener{
 	private void setupLogging(){
 		
 		LOGGER.setLevel(LOG_LEVEL);
+		LOGGER.info(xStrings.getString("Client.logSetupLogging")); //$NON-NLS-1$
 		
 		try{
 			LOGGER.addHandler(new FileHandler("clientLog.log")); //$NON-NLS-1$
 		}catch(IOException e){
 			
 			e.printStackTrace();
-			showWarning(e, xStrings.getString("Client.logCreateError")); //$NON-NLS-1$
+			showWarning(e, xStrings.getString("Client.loggerCreateError")); //$NON-NLS-1$
 			
 		}
 		
@@ -207,7 +207,7 @@ public class Client extends JFrame implements WindowListener{
 	 */
 	private void showWarning(Exception e, String friendlyErrorMessage){
 		
-		System.err.println(xStrings.getString("ChatManager.errorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
+		System.err.println(xStrings.getString("ChatManager.logErrorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
 		e.printStackTrace();
 		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("ChatManager.errorBoxTitle"), JOptionPane.WARNING_MESSAGE); //$NON-NLS-1$
 		LOGGER.warning(friendlyErrorMessage);
@@ -218,7 +218,7 @@ public class Client extends JFrame implements WindowListener{
 	public void windowClosing(WindowEvent arg0) {
 		
 		LOGGER.info(xStrings.getString("Client.appTitle") + " " +  //$NON-NLS-1$ //$NON-NLS-2$
-				xStrings.getString("Client.applicationClosing")); //$NON-NLS-1$
+				xStrings.getString("Client.logApplicationClosing")); //$NON-NLS-1$
 		
 		//Clean up and free connections/memory
 		try{
