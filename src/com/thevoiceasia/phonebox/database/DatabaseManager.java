@@ -5,7 +5,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashMap;
@@ -143,7 +143,7 @@ public class DatabaseManager {
 		
 		String password = generatePassword();
 		
-		if(password != null && password != ""){
+		if(password != null && password != ""){ //$NON-NLS-1$
 		
 			settings.put("password", password); //$NON-NLS-1$
 			
@@ -224,14 +224,9 @@ public class DatabaseManager {
 		 * If this is a problem, need to re-implement with encryption (not hashing) so that
 		 * the password can be decrypted before being sent to the XMPP server.
 		 */
-		String password = "";
-		
 		SecureRandom random = new SecureRandom();
 		
-		for(int i = 0; i < 20; i++)
-			password += (char)random.nextInt();
-		
-		return password;
+		return new BigInteger(130, random).toString(32);
 		
 	}
 	
