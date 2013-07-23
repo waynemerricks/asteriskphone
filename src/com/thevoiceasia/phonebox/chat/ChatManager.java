@@ -9,14 +9,18 @@ import javax.swing.JOptionPane;
 
 import org.jivesoftware.smack.AccountManager;
 import org.jivesoftware.smack.Connection;
+import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.SmackConfiguration;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smack.packet.Packet;
+import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smackx.muc.DiscussionHistory;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.UserStatusListener;
 
-public class ChatManager implements UserStatusListener {
+public class ChatManager implements UserStatusListener, PacketListener {
 
 	//XMPP Settings
 	private String XMPPUserName, XMPPPassword, XMPPNickName, XMPPServerHostName, XMPPRoomName;
@@ -68,16 +72,14 @@ public class ChatManager implements UserStatusListener {
 	 */
 	public void createUser(){
 		
-		//TODO alphanumeric password
 		LOGGER.info(xStrings.getString("ChatManager.creatingXMPPUser") + XMPPUserName); //$NON-NLS-1$
 		XMPPConnection setupConnection = new XMPPConnection(XMPPServerHostName);
 		
 		try {
 			setupConnection.connect();
-		} catch (XMPPException e1) {
-			// TODO Auto-generated catch block
+		} catch (XMPPException e) {
 			hasErrors = true;
-			e1.printStackTrace();
+			showError(e, xStrings.getString("ChatManager.setupUserConnectionFailure")); //$NON-NLS-1$
 		}
 		
 		if(!hasErrors){
@@ -218,12 +220,6 @@ public class ChatManager implements UserStatusListener {
 					phoneboxChat.join(XMPPNickName, XMPPPassword, chatHistory, 
 							SmackConfiguration.getPacketReplyTimeout());
 					LOGGER.info(xStrings.getString("ChatManager.logJoinedRoom")); //$NON-NLS-1$
-					//phoneboxChat.addUserStatusListener(this);
-					//LOGGER.info(xStrings.getString("ChatManager.logAddedUserStatusListener")); //$NON-NLS-1$
-					//phoneboxChat.addParticipantStatusListener(this);
-					//LOGGER.info(xStrings.getString("ChatManager.logAddedParticipantStatusListener")); //$NON-NLS-1$
-					//phoneboxChat.addParticipantListener(this);
-					//LOGGER.info(xStrings.getString("ChatManager.logAddedParticipantListener")); //$NON-NLS-1$
 					
 				}catch(XMPPException e){
 					
@@ -324,6 +320,49 @@ public class ChatManager implements UserStatusListener {
 		
 	}
 
+	/** PacketListener methods **/
+	@Override
+	public void processPacket(Packet XMPPPacket) {
+		
+		if(XMPPPacket instanceof Message){
+			
+			Message message = (Message)XMPPPacket;
+			String friendlyFrom = message.getFrom();
+			if(friendlyFrom.contains("/")) //$NON-NLS-1$
+				friendlyFrom = friendlyFrom.split("/")[1]; //$NON-NLS-1$
+			
+			String b = message.getBody();
+			
+			//Check for status change
+			if(friendlyFrom.equals(XMPPNickName)){
+				
+				if(b.equals(xStrings.getString("ChatManager.chatReturned"))) //$NON-NLS-1$
+					setPresenceAvailable();
+				else if(b.equals(xStrings.getString("ChatManager.chatBackSoon"))) //$NON-NLS-1$
+					setPresenceAway();
+				
+			}
+			
+		}
+		
+	}
+	
+	private void setPresenceAvailable(){
+		
+		Presence presence = new Presence(Presence.Type.available, "", 0, Presence.Mode.available); //$NON-NLS-1$
+		presence.setFrom(XMPPServerConnection.getUser());
+		XMPPServerConnection.sendPacket(presence);
+		
+	}
+	
+	private void setPresenceAway(){
+		
+		Presence presence = new Presence(Presence.Type.available, "", 0, Presence.Mode.away); //$NON-NLS-1$
+		presence.setFrom(XMPPServerConnection.getUser());
+		XMPPServerConnection.sendPacket(presence);
+		
+	}
+	
 	/** UserStatusListener methods **/
 	@Override
 	public void kicked(String actor, String reason) {
@@ -372,7 +411,5 @@ public class ChatManager implements UserStatusListener {
 	@Override
 	public void banned(String actor, String reason) {}
 	/** END UNUSED userStatusListener methods **/
-
-	
 	
 }
