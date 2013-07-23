@@ -70,7 +70,7 @@ public class DatabaseManager {
 		if(hasErrors)
 			LOGGER.severe(xStrings.getString("DatabaseManager.DBSetupError")); //$NON-NLS-1$
 		else
-			LOGGER.info(xStrings.getString("DatabaseManager.DBSetupSuccess")); //$NON-NLS-1$
+			LOGGER.info(xStrings.getString("DatabaseManager.logDBSetupSuccess")); //$NON-NLS-1$
 		
 	}
 	
@@ -199,7 +199,7 @@ public class DatabaseManager {
 	 */
 	private boolean addNewXMPPUser(String userName, String password) {
 		
-		LOGGER.info(xStrings.getString("DatabaseManager.addNewXMPPUser")); //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("DatabaseManager.logAddNewXMPPUser")); //$NON-NLS-1$
 		
 		return executeUpdate("INSERT INTO clientsettings (option_owner, option_name, option_value)" + //$NON-NLS-1$
 				" VALUES ('" + userName +"', 'XMPPLogin', '" + userName + "'), " + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -225,6 +225,7 @@ public class DatabaseManager {
 		 * the password can be decrypted before being sent to the XMPP server.
 		 */
 		SecureRandom random = new SecureRandom();
+		LOGGER.info(xStrings.getString("DatabaseManager.logGeneratingPassword")); //$NON-NLS-1$
 		
 		return new BigInteger(130, random).toString(32);
 		
@@ -237,6 +238,7 @@ public class DatabaseManager {
 	public boolean populateUserSettings(){
 		
 		boolean gotUser = false;
+		LOGGER.info(xStrings.getString("DatabaseManager.logPopulatingUserSettings")); //$NON-NLS-1$
 		
 		try {
 			String machineName = InetAddress.getLocalHost().getHostName();
@@ -280,11 +282,11 @@ public class DatabaseManager {
 		
 		if(connected){
 			
-			LOGGER.info("DatabaseManager.disconnecting"); //$NON-NLS-1$
+			LOGGER.info("DatabaseManager.logDisconnecting"); //$NON-NLS-1$
 			try {
 				
 				databaseConnection.close();
-				LOGGER.info("DatabaseManager.disconnected"); //$NON-NLS-1$
+				LOGGER.info("DatabaseManager.logDisconnected"); //$NON-NLS-1$
 				connected = false;
 				
 			} catch (SQLException e) {
@@ -320,7 +322,7 @@ public class DatabaseManager {
 		
 		if(!connected){
 			
-			LOGGER.info(xStrings.getString("DatabaseManager.connecting")); //$NON-NLS-1$
+			LOGGER.info(xStrings.getString("DatabaseManager.logConnecting")); //$NON-NLS-1$
 			
 			if(!hasErrors){
 				
@@ -331,7 +333,7 @@ public class DatabaseManager {
 							database.get("host") + "/" + database.get("database") + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 							"?user=" + database.get("user") + "&password=" + database.get("password"));  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 					
-					LOGGER.info(xStrings.getString("DatabaseManager.connected")); //$NON-NLS-1$
+					LOGGER.info(xStrings.getString("DatabaseManager.logConnected")); //$NON-NLS-1$
 					connected = true;
 					
 				}catch(SQLException e){
@@ -421,7 +423,7 @@ public class DatabaseManager {
 		}catch(IOException e){
 			
 			e.printStackTrace();
-			showWarning(e, xStrings.getString("DatabaseManager.logCreateError") + "databaseLog.log"); //$NON-NLS-1$ //$NON-NLS-2$
+			showWarning(e, xStrings.getString("DatabaseManager.loggerCreateError") + "databaseLog.log"); //$NON-NLS-1$ //$NON-NLS-2$
 			
 		}
 		
@@ -434,7 +436,7 @@ public class DatabaseManager {
 	 */
 	private void showError(Exception e, String friendlyErrorMessage){
 		
-		System.err.println(xStrings.getString("DatabaseManager.errorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
+		System.err.println(xStrings.getString("DatabaseManager.logErrorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
 		e.printStackTrace();
 		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("DatabaseManager.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
 		LOGGER.severe(friendlyErrorMessage);
@@ -448,7 +450,7 @@ public class DatabaseManager {
 	 */
 	private void showWarning(Exception e, String friendlyErrorMessage){
 		
-		System.err.println(xStrings.getString("DatabaseManager.errorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
+		System.err.println(xStrings.getString("DatabaseManager.logErrorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
 		e.printStackTrace();
 		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("DatabaseManager.errorBoxTitle"), JOptionPane.WARNING_MESSAGE); //$NON-NLS-1$
 		LOGGER.warning(friendlyErrorMessage);
