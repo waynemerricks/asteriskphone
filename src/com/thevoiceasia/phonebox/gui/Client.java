@@ -12,6 +12,7 @@ import java.util.logging.Logger;
 
 import javax.swing.*;
 
+import com.thevoiceasia.phonebox.asterisk.AsteriskManager;
 import com.thevoiceasia.phonebox.chat.ChatManager;
 import com.thevoiceasia.phonebox.chat.ChatWindow;
 import com.thevoiceasia.phonebox.database.DatabaseManager;
@@ -23,6 +24,8 @@ public class Client extends JFrame implements WindowListener{
 	//Class Vars
 	private ChatManager chatManager;
 	private DatabaseManager databaseManager;
+	private AsteriskManager asteriskManager;
+	
 	private String language, country;
 	private boolean hasErrors = false;
 	private HashMap<String, String> userSettings;
@@ -104,11 +107,21 @@ public class Client extends JFrame implements WindowListener{
 						
 						chatManager.createUser();
 						
+					}else{
+						
 						if(chatManager.hasErrors())
 							hasErrors = true;
 						else{
 							
 							//Asterisk TODO
+							LOGGER.info(xStrings.getString("Client.creatingAsteriskManager")); //$NON-NLS-1$
+							asteriskManager = new AsteriskManager();
+							LOGGER.info(xStrings.getString("Client.asteriskConnecting")); //$NON-NLS-1$
+							asteriskManager.connect();
+							LOGGER.info(xStrings.getString("Client.asteriskShowChannels")); //$NON-NLS-1$
+							asteriskManager.showChannels();
+							LOGGER.info(xStrings.getString("Client.asteriskShowQueues")); //$NON-NLS-1$
+							asteriskManager.showQueues();
 							
 						}
 						
@@ -226,6 +239,8 @@ public class Client extends JFrame implements WindowListener{
 		//Clean up and free connections/memory
 		try{
 			chatManager.disconnect();
+			databaseManager.disconnect();
+			asteriskManager.disconnect();
 		}catch(IllegalStateException e){
 			/*
 			 * This only happens if program was logged in twice as the same user,
@@ -236,6 +251,8 @@ public class Client extends JFrame implements WindowListener{
 		}
 		
 		chatManager = null;
+		databaseManager = null;
+		asteriskManager = null;
 		
 	}
 
