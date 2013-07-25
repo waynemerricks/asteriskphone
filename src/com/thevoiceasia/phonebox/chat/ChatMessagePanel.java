@@ -38,7 +38,7 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 	private String language;
 	
 	private static final Logger LOGGER = Logger.getLogger(ChatMessagePanel.class.getName());//Logger
-	private static final Level LOG_LEVEL = Level.INFO;
+	private static final Level LOG_LEVEL = Level.WARNING;
 	private static final Color GREEN = new Color(109, 154, 11);
 	private static final long serialVersionUID = 1L;
 

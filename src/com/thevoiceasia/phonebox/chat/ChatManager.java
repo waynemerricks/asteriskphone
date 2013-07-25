@@ -44,7 +44,7 @@ public class ChatManager implements UserStatusListener, PacketListener {
 	/** STATICS **/
 	private static final int XMPP_CHAT_HISTORY = 600; //Chat Messages in the last x seconds
 	private static final Logger LOGGER = Logger.getLogger(ChatManager.class.getName());//Logger
-	private static final Level LOG_LEVEL = Level.INFO;
+	private static final Level LOG_LEVEL = Level.WARNING;
 	
 	/**
 	 * Create ChatManager with given locale

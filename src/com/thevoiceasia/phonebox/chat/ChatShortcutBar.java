@@ -33,7 +33,7 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 
 	/** STATICS **/
 	private static final Logger LOGGER = Logger.getLogger(ChatShortcutBar.class.getName());//Logger
-	private static final Level LOG_LEVEL = Level.INFO;
+	private static final Level LOG_LEVEL = Level.WARNING;
 	private static final long serialVersionUID = 1L;
 	
 	/** CLASS VARS **/

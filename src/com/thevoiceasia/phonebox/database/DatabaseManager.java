@@ -38,7 +38,7 @@ public class DatabaseManager {
 	
 	//STATICS
 	private static final Logger LOGGER = Logger.getLogger(DatabaseManager.class.getName());//Logger
-	private static final Level LOG_LEVEL = Level.INFO;
+	private static final Level LOG_LEVEL = Level.WARNING;
 	private static I18NStrings xStrings;
 	
 	public DatabaseManager(File settingsFile, String language, String country){

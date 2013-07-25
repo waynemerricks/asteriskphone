@@ -35,7 +35,7 @@ public class ChatInputPanel extends JPanel implements ActionListener, KeyListene
 	private long lastActionTime;
 	
 	private static final Logger LOGGER = Logger.getLogger(ChatInputPanel.class.getName());//Logger
-	private static final Level LOG_LEVEL = Level.INFO;
+	private static final Level LOG_LEVEL = Level.WARNING;
 	
 	/**
 	 * Creates a basic text input panel with a send button.
