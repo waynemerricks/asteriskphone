@@ -56,6 +56,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		for (AsteriskChannel asteriskChannel : asteriskServer.getChannels()) {
             System.out.println(asteriskChannel);
             asteriskChannel.addPropertyChangeListener(this);
+            
         }
 		
 	}
