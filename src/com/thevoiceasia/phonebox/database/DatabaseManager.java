@@ -33,6 +33,8 @@ public class DatabaseManager {
 	// CLASS VARS
 	private boolean hasErrors = false, connected = false;
 	private Connection databaseConnection;
+	private Connection databaseWriteConnection;
+	
 	private HashMap<String, String> settings = new HashMap<String, String>();
 	private HashMap<String, String> database = new HashMap<String, String>();
 	
@@ -171,7 +173,12 @@ public class DatabaseManager {
 			Statement query = null;
 			
 			try{
-	            query = databaseConnection.createStatement();
+				
+				if(hasWriteConnection())
+					query = databaseWriteConnection.createStatement();
+				else
+					query = databaseConnection.createStatement();
+				
                 query.executeUpdate(updateStatement);
                 updated = true;
             }catch(SQLException e){
@@ -287,6 +294,14 @@ public class DatabaseManager {
 				
 				databaseConnection.close();
 				LOGGER.info("DatabaseManager.logDisconnected"); //$NON-NLS-1$
+				
+				if(hasWriteConnection()){
+					
+					databaseWriteConnection.close();
+					LOGGER.info("DatabaseManager.logWriteDisconnected"); //$NON-NLS-1$
+					
+				}
+					
 				connected = false;
 				
 			} catch (SQLException e) {
@@ -312,6 +327,19 @@ public class DatabaseManager {
 		
 	}
 	
+	/**
+	 * Returns the MySQL Write Connection, does not check if the connection is live.
+	 * 
+	 * Make sure connect is called first and completed without error.
+	 * 
+	 * @return
+	 */
+	public Connection getWriteConnection(){
+		
+		return databaseWriteConnection;
+		
+	}
+	
 	
 	/**
 	 * Connects to the DB, will alert if there are errors.
@@ -334,6 +362,19 @@ public class DatabaseManager {
 							"?user=" + database.get("user") + "&password=" + database.get("password"));  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 					
 					LOGGER.info(xStrings.getString("DatabaseManager.logConnected")); //$NON-NLS-1$
+					
+					if(hasWriteConnection()){
+						
+						//Connect to separate write DB too
+						databaseWriteConnection = DriverManager.getConnection("jdbc:mysql://" +  //$NON-NLS-1$
+								settings.get("writeDBHost") + "/" + database.get("writeDBDatabase") + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+								"?user=" + database.get("writeDBUser") +  //$NON-NLS-1$ //$NON-NLS-2$
+								"&password=" + database.get("writeDBPassword"));  //$NON-NLS-1$//$NON-NLS-2$
+						
+						LOGGER.info(xStrings.getString("DatabaseManager.logWriteConnected")); //$NON-NLS-1$
+						
+					}
+					
 					connected = true;
 					
 				}catch(SQLException e){
@@ -352,6 +393,25 @@ public class DatabaseManager {
 				showError(new Exception(xStrings.getString("DatabaseManager.DBSetupError")), xStrings.getString("DatabaseManager.DBSetupError"));  //$NON-NLS-1$//$NON-NLS-2$
 		
 		}
+	}
+	
+	/**
+	 * Helper method that checks if we have a separate DB for inserting/updating
+	 * which in theory means we have a read only connection to the local DB
+	 * @return true if we need to separate out connections
+	 */
+	private boolean hasWriteConnection(){
+		
+		boolean writeConnection = false;
+		
+		if(settings.get("writeDBHost") != null && //$NON-NLS-1$
+				settings.get("writeDBUser") != null && //$NON-NLS-1$
+				settings.get("writeDBPass") != null && //$NON-NLS-1$
+				settings.get("writeDBDatabase") != null)  //$NON-NLS-1$
+			writeConnection = true;
+		
+		return writeConnection;
+		
 	}
 	
 	/**
