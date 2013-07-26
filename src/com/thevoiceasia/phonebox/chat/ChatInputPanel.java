@@ -47,6 +47,7 @@ public class ChatInputPanel extends JPanel implements ActionListener, KeyListene
 		
 		super();
 		xStrings = new I18NStrings(language, country);
+		setupLogging();
 		this.chatRoom = chatRoom;
 		
 		this.setLayout(new BorderLayout());
