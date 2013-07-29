@@ -12,17 +12,21 @@ import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 
 import org.asteriskjava.live.AsteriskChannel;
+import org.asteriskjava.live.CallerId;
 
 import com.thevoiceasia.phonebox.chat.I18NStrings;
 import com.thevoiceasia.phonebox.database.DatabaseManager;
-
+//TODO SAVE ME TO DB
 public class PhoneCall {
 
 	/** CLASS VARS **/
 	private AsteriskChannel channel;
 	private Vector<Person> people = new Vector<Person>();
+	private int activePerson = 0;
+	
 	private DatabaseManager database;
 	private I18NStrings xStrings; //Link to external string resources
+	private Vector<Integer> numberIDs = new Vector<Integer>(); 
 	
 	/** STATICS **/
 	private static final Logger LOGGER = Logger.getLogger(PhoneCall.class.getName());//Logger
@@ -39,6 +43,58 @@ public class PhoneCall {
 		
 	}
 	
+	/**
+	 * Returns the active person this object is related to
+	 * This is because there could be 5 people with the same phone number
+	 * if there is a local call box or even a shared phone in the family
+	 * @return The Active Person Object (the first object is active by default)
+	 */
+	public Person getActivePerson(){
+		
+		return people.get(activePerson);
+		
+	}
+	
+	/**
+	 * Sets the active person associated with this call from the list of people
+	 * pulled out of the DB with this same callerid number.
+	 * @param personID personID to set active
+	 * @return true if we found a match/false if this id didn't exist in the list
+	 */
+	public boolean setActivePerson(int personID){
+		
+		boolean found = false;
+		int i = 0;
+		
+		while(i < people.size() && !found){
+			
+			if(people.get(i).id == personID){
+				
+				found = true;
+				activePerson = i;
+				
+			}
+			
+			i++;
+			
+		}
+		
+		return found;
+		
+	}
+	
+	//TODO add a conversation via Person object
+	//TODO phonecall track status
+	//TODO generate ringing 
+	//TODO generate answered by
+	//TODO generate parked by
+	//TODO generate hangup [by]
+	/*
+	 * This should allow us to track life cycle of call from ring to answer to hangup
+	 * across as many people who deal with it as possible.
+	 * 
+	 * Timestamp each event to track time.
+	 */
 	/**
 	 * Set the Logger object
 	 */
@@ -64,14 +120,21 @@ public class PhoneCall {
 		ResultSet resultSet = null, personResultSet = null;
 		
 		try{
-			
-			String SQL = "SELECT person_id FROM phonenumbers WHERE phone_number='"  //$NON-NLS-1$
+			//TODO Think about one number for multiple people
+			/*
+			 * May need to create multiples if number already has a person ID that isn't this one
+			 * Incorporate a TIMESTAMP to figure out latest called from person.
+			 */
+			String SQL = "SELECT numbers_id, person_id FROM phonenumbers WHERE phone_number='"  //$NON-NLS-1$
 					+ channel.getCallerId() + "'"; //$NON-NLS-1$
 			statement = database.getConnection().createStatement();
 		    resultSet = statement.executeQuery(SQL);
+		    
 		    boolean first = true;
 		    
 		    while(resultSet.next()){
+		    	
+		    	numberIDs.add(resultSet.getInt("numbers_id")); //$NON-NLS-1$
 		    	
 		    	if(first){
 		    		SQL = "" + resultSet.getInt("person_id"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -90,7 +153,9 @@ public class PhoneCall {
 		    	
 		    	while(personResultSet.next()){
 		    		
-		    		Person person = new Person(personResultSet.getInt("person_id")); //$NON-NLS-1$
+		    		Person person = new Person(personResultSet.getInt("person_id"), //$NON-NLS-1$
+		    				database.getUserSettings().get("language"),  //$NON-NLS-1$
+		    				database.getUserSettings().get("country")); //$NON-NLS-1$
 		    		
 		    		//Alert level e.g. person banned or warning because they're awkward
 		    		person.alert = personResultSet.getString("alert_level"); //$NON-NLS-1$
@@ -164,10 +229,34 @@ public class PhoneCall {
 		    		/* No person exists so this is a new caller, need to create an entry in person
 		    		 * and update entry in phonenumbers
 		    		 */
-		    		//TODO
+		    		Person newPerson = new Person(database.getUserSettings().get("language"),  //$NON-NLS-1$
+		    				database.getUserSettings().get("country")); //$NON-NLS-1$
+			    	
+			    	newPerson.createNewDBEntry(database.getWriteConnection());
+		    		newPerson = populatePersonWithDefaults(newPerson);
+		    		
+		    		//Attach this person to the given number records
+		    		for(int i = 0; i < numberIDs.size(); i++)
+		    			attachNumberToPerson(numberIDs.get(i), newPerson.id);
+		    		
+		    		//Add this person to the people Vector
+		    		people.add(newPerson);
 		    		
 		    	}
 		    	
+		    }else{
+		    	
+		    	Person newPerson = new Person(database.getUserSettings().get("language"),  //$NON-NLS-1$
+	    				database.getUserSettings().get("country")); //$NON-NLS-1$
+		    	
+		    	newPerson.createNewDBEntry(database.getWriteConnection());
+	    		newPerson = populatePersonWithDefaults(newPerson);
+	    		
+	    		createNumberRecord(channel.getCallerId(), newPerson.id);
+	    		
+	    		//Add this person to the people Vector
+	    		people.add(newPerson);
+	    		
 		    }
 		    
 		}catch (SQLException e){
@@ -203,6 +292,99 @@ public class PhoneCall {
 		    }
 		    
 		}	
+		
+	}
+	
+	/**
+	 * Creates a new record in the phonenumbers table with the given number
+	 * and person id attached
+	 * @param callerId uses callerId.getNumber() to return phone number of caller
+	 * @param personID personID in the person table to attach to this record
+	 * @return
+	 */
+	private int createNumberRecord(CallerId callerId, int personID) {
+		
+		int id = -1;
+		
+		Statement statement = null;
+		
+		String SQL = "INSERT INTO phonenumbers(phone_number, person_id) VALUES("  //$NON-NLS-1$
+				+ callerId.getNumber() + ", " + personID + ")";  //$NON-NLS-1$ //$NON-NLS-2$
+		
+		try{
+			
+			statement = database.getWriteConnection().createStatement();
+			id = statement.executeUpdate(SQL, Statement.RETURN_GENERATED_KEYS);
+	        numberIDs.add(id);
+	        
+		}catch(SQLException e){
+        	
+        	showError(e, xStrings.getString("Person.errorCreatingNewPerson")); //$NON-NLS-1$
+        	
+        }finally{
+            if(statement != null)
+            	try{
+            		statement.close();
+            	}catch(Exception e){}
+        }
+		
+		return id;
+	}
+	
+	
+	/**
+	 * Puts the given personID into the number record for the given numberID 
+	 * @param numberID numbers_id in phonenumbers table
+	 * @param personID person_id in person table
+	 */
+	private void attachNumberToPerson(Integer numberID, int personID) {
+		//TODO Think about one number for multiple people
+		/*
+		 * May need to create multiples if number already has a person ID that isn't this one
+		 * Incorporate a TIMESTAMP to figure out latest called from person.
+		 */
+		String SQL = "UPDATE phonenumbers SET person_id = " + personID +  //$NON-NLS-1$
+				" WHERE numbers_id = " + numberID; //$NON-NLS-1$
+		
+		Statement query = null;
+		try{	
+			
+			query = database.getWriteConnection().createStatement();
+			query.executeUpdate(SQL);
+	        
+	    }catch(SQLException e){
+	    	
+	    	showError(e, xStrings.getString("PhoneCall.errorAttachingNumber" + numberID + ":" + personID)); //$NON-NLS-1$ //$NON-NLS-2$
+	    	
+	    }finally{
+	        if(query != null)
+	        	try{
+	        		query.close();
+	        	}catch(Exception e){}
+	    }
+		
+	}
+
+	
+	/**
+	 * Sets all the internal Person attributes to their defaults
+	 * Used when creating a new Person
+	 * @param person 
+	 * @return Person object with default values
+	 */
+	private Person populatePersonWithDefaults(Person person){
+		
+		person.alert = xStrings.getString("PhoneCall.alertNormal"); //$NON-NLS-1$
+		person.name.equals(xStrings.getString("PhoneCall.unknownCaller")); //$NON-NLS-1$
+		person.gender = xStrings.getString("PhoneCall.genderUnknown"); //$NON-NLS-1$
+		person.location = xStrings.getString("PhoneCall.locationUnknown"); //$NON-NLS-1$
+		person.postalAddress = ""; //$NON-NLS-1$
+		person.postCode = ""; //$NON-NLS-1$
+		person.email = ""; //$NON-NLS-1$
+		person.language = ""; //$NON-NLS-1$
+		person.religion = ""; //$NON-NLS-1$
+		
+		return person;
 		
 	}
 	
