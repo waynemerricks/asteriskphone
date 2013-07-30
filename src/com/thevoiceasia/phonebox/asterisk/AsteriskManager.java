@@ -26,8 +26,8 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	public AsteriskManager(){
 		
 		//Turn off AsteriskJava logger
-		ASTERISK_LOGGER.setLevel(Level.SEVERE);
-		asteriskServer = new DefaultAsteriskServer("10.43.10.91", "phonemanager", "P0l0m1nt");
+		ASTERISK_LOGGER.setLevel(Level.SEVERE);//TODO read settings properly
+		asteriskServer = new DefaultAsteriskServer("10.43.10.91", "phonemanager", "P0l0m1nt");  //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$
 		
 	}
 	
