@@ -328,6 +328,19 @@ public class DatabaseManager {
 	}
 	
 	/**
+	 * Returns the MySQL Read Only Connection, does not check if the connection is live.
+	 * 
+	 * Make sure connect is called first and completed without error.
+	 * 
+	 * @return
+	 */
+	public Connection getReadConnection(){
+		
+		return databaseConnection;
+		
+	}
+	
+	/**
 	 * Returns the MySQL Write Connection, does not check if the connection is live.
 	 * 
 	 * Make sure connect is called first and completed without error.
