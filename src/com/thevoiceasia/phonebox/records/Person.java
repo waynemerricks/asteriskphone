@@ -1,9 +1,11 @@
 package com.thevoiceasia.phonebox.records;
 
 import java.io.IOException;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Connection;
+import java.util.Vector;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -11,14 +13,14 @@ import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 
 import com.thevoiceasia.phonebox.chat.I18NStrings;
-//TODO SAVE ME TO DB
+
 public class Person {
 
 	/** CLASS VARS **/
 	public int id;
 	public String alert, gender, name, location, postalAddress, 
 		postCode, email, language, religion, currentConversation;
-	
+	private Vector<Conversation> conversationHistory = new Vector<Conversation>();
 	private I18NStrings xStrings; //Link to external string resources
 	
 	
@@ -34,6 +36,122 @@ public class Person {
 		
 		this.id = id;
 		xStrings = new I18NStrings(language, country);
+		
+	}
+	
+	/**
+	 * Returns char representation of alert level 
+	 * @return N = Normal, W = Warning, B = Banned
+	 */
+	private char getShortAlertLevel(){
+		
+		char shortAlert = 'N';
+		
+		if(alert.equals(xStrings.getString("PhoneCall.alertWarning"))) //$NON-NLS-1$
+			shortAlert = 'W';
+		else if(alert.equals(xStrings.getString("PhoneCall.alertBanned"))) //$NON-NLS-1$
+			shortAlert = 'B';
+		
+		return shortAlert;
+		
+	}
+	
+	/**
+	 * Returns char representation of gender
+	 * @return U = Unknown, M = Male, F = Female
+	 */
+	private char getShortGender(){
+	
+		char shortGender = 'U';
+		if(gender.equals(xStrings.getString("PhoneCall.genderMale"))) //$NON-NLS-1$
+			shortGender = 'M';
+		else if(gender.equals(xStrings.getString("PhoneCall.genderFemale"))) //$NON-NLS-1$
+			shortGender = 'F';
+			
+		return shortGender;
+		
+	}
+	
+	private boolean saveConversationToDB(Connection dbConnection){
+	
+		boolean saved = false;
+		
+		PreparedStatement statement = null;
+		
+		String SQL = "INSERT INTO conversations(person_id, conversation) VALUES (?, ?)"; //$NON-NLS-1$
+		
+		try{
+			
+			statement = dbConnection.prepareStatement(SQL);
+			statement.setInt(1, id);
+			statement.setString(2, currentConversation);
+			
+			statement.executeUpdate(SQL);
+	        saved = true;
+	        
+		}catch(SQLException e){
+        	
+        	showError(e, xStrings.getString("Person.DBSQLError") + id); //$NON-NLS-1$ 
+        	
+        }finally{
+            if(statement != null)
+            	try{
+            		statement.close();
+            	}catch(Exception e){}
+        }
+		
+		return saved;
+		
+	}
+	
+	
+	/**
+	 * Saves this persons record to the DB
+	 * @param dbConnection connection to use
+	 * @return true if succcessful
+	 */
+	public boolean saveToDB(Connection dbConnection){
+		
+		boolean saved = false;
+	
+		PreparedStatement statement = null;
+		
+		String SQL = "UPDATE person SET alert_level = ?, name = ?, gender = ?, location = ?, " + //$NON-NLS-1$
+				"postal_address = ?, post_code = ?, email_address = ?, language = ?, " + //$NON-NLS-1$
+				"religion = ? WHERE person_id = ?";  //$NON-NLS-1$
+		
+		try{
+			
+			//Save Person
+			statement = dbConnection.prepareStatement(SQL);
+			statement.setString(1, "" + getShortAlertLevel()); //$NON-NLS-1$
+			statement.setString(2, name);
+			statement.setString(3, "" + getShortGender()); //$NON-NLS-1$
+			statement.setString(4, location);
+			statement.setString(5, postalAddress);
+			statement.setString(6, postCode);
+			statement.setString(7, email);
+			statement.setString(8, language);
+			statement.setString(9, religion);
+			statement.setInt(10, id);
+			
+			statement.executeUpdate(SQL);
+	        
+			//Save Conversation
+			saved = saveConversationToDB(dbConnection);
+	        
+		}catch(SQLException e){
+        	
+        	showError(e, xStrings.getString("Person.DBSQLError") + id); //$NON-NLS-1$ 
+        	
+        }finally{
+            if(statement != null)
+            	try{
+            		statement.close();
+            	}catch(Exception e){}
+        }
+		
+		return saved;
 		
 	}
 	
@@ -56,14 +174,35 @@ public class Person {
 		
 	}
 	
-	public boolean addConversation(String conversation){
+	/**
+	 * Adds the given Conversation record to the history of conversations
+	 * @param conversation
+	 */
+	public void addConversation(Conversation conversation){
 		
-		//TODO
-		/*
-		 * Store locally, separate private method to commit to DB on a timer
-		 */
+		conversationHistory.add(conversation);
 		
-		return true;
+	}
+	
+	public Vector<Conversation> getConversationHistory(){
+		
+		return conversationHistory;
+		
+	}
+	
+	public String getCurrentConversation(){
+		
+		return currentConversation;
+		
+	}
+	
+	/**
+	 * Appends given string to the local currentConversation variable
+	 * @param conversation
+	 */
+	public void addCurrentConversation(String conversation){
+		
+		currentConversation += conversation + " "; //$NON-NLS-1$
 		
 	}
 	

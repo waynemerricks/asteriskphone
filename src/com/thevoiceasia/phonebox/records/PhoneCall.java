@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Date;
 import java.util.Vector;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
@@ -16,7 +17,7 @@ import org.asteriskjava.live.CallerId;
 
 import com.thevoiceasia.phonebox.chat.I18NStrings;
 import com.thevoiceasia.phonebox.database.DatabaseManager;
-//TODO SAVE ME TO DB
+
 public class PhoneCall {
 
 	/** CLASS VARS **/
@@ -42,6 +43,20 @@ public class PhoneCall {
 		populatePersonDetails();
 		
 	}
+	
+	/**
+	 * Saves this object to the DB.  All we're doing is saving the Person 
+	 * details attached to the call as there is no state to save for
+	 * PhoneCall itself that isn't tracked elsewhere.
+	 * 
+	 * @return true if save succeeded
+	 */
+	public boolean saveToDB(){
+		
+		return getActivePerson().saveToDB(database.getWriteConnection());
+		
+	}
+	
 	
 	/**
 	 * Returns the active person this object is related to
@@ -83,18 +98,145 @@ public class PhoneCall {
 		
 	}
 	
-	//TODO add a conversation via Person object
-	//TODO phonecall track status
-	//TODO generate ringing 
-	//TODO generate answered by
-	//TODO generate parked by
-	//TODO generate hangup [by]
-	/*
-	 * This should allow us to track life cycle of call from ring to answer to hangup
-	 * across as many people who deal with it as possible.
-	 * 
-	 * Timestamp each event to track time.
+	/**
+	 * Adds given Conversation to the activePersons history
+	 * @param conversation
 	 */
+	public void addConversationHistory(Conversation conversation){
+		
+		getActivePerson().addConversation(conversation);
+		
+	}
+	
+	/**
+	 * Adds given String to the active persons current conversation
+	 * @param conversation
+	 */
+	public void addConversation(String conversation){
+		
+		getActivePerson().addCurrentConversation(conversation);
+		
+	}
+	
+	/**
+	 * Adds a record to the DB to indicate that this PhoneCall is in the ringing state
+	 */
+	public void trackRinging(){
+		
+		Statement statement = null;
+		
+		String SQL = "INSERT INTO callhistory(phonenumber, state) VALUES("  //$NON-NLS-1$
+				+ channel.getCallerId().getNumber() + ", 'R')"; //$NON-NLS-1$
+		
+		try{
+			
+			statement = database.getWriteConnection().createStatement();
+			statement.executeUpdate(SQL);
+	        
+		}catch(SQLException e){
+        	
+        	showError(e, xStrings.getString("PhoneCall.errorTrackingRingState") //$NON-NLS-1$ 
+        			+ channel.getCallerId().getNumber());
+        	
+        }finally{
+            if(statement != null)
+            	try{
+            		statement.close();
+            	}catch(Exception e){}
+        }
+		
+	}
+	
+	/**
+	 * Adds a record to the DB to indicate that this PhoneCall is in the answered state
+	 * @param answeredBy User Name of person who answered
+	 */
+	public void trackAnswered(String answeredBy){
+		
+		Statement statement = null;
+		
+		String SQL = "INSERT INTO callhistory(phonenumber, state, operator) VALUES("  //$NON-NLS-1$
+				+ channel.getCallerId().getNumber() + ", 'A', " + answeredBy + ")"; //$NON-NLS-1$ //$NON-NLS-2$
+		
+		try{
+			
+			statement = database.getWriteConnection().createStatement();
+			statement.executeUpdate(SQL);
+	        
+		}catch(SQLException e){
+        	
+        	showError(e, xStrings.getString("PhoneCall.errorTrackingAnsweredState") //$NON-NLS-1$ 
+        			+ channel.getCallerId().getNumber());
+        	
+        }finally{
+            if(statement != null)
+            	try{
+            		statement.close();
+            	}catch(Exception e){}
+        }
+		
+	}
+	
+	/**
+	 * Adds a record to the DB to indicate that this PhoneCall is in the parked state
+	 * @param parkedBy User Name of person who parked call
+	 */
+	public void trackParked(String parkedBy){
+		
+		Statement statement = null;
+		
+		String SQL = "INSERT INTO callhistory(phonenumber, state, operator) VALUES("  //$NON-NLS-1$
+				+ channel.getCallerId().getNumber() + ", 'P', " + parkedBy + ")"; //$NON-NLS-1$ //$NON-NLS-2$
+		
+		try{
+			
+			statement = database.getWriteConnection().createStatement();
+			statement.executeUpdate(SQL);
+	        
+		}catch(SQLException e){
+        	
+        	showError(e, xStrings.getString("PhoneCall.errorTrackingParkedState") //$NON-NLS-1$ 
+        			+ channel.getCallerId().getNumber());
+        	
+        }finally{
+            if(statement != null)
+            	try{
+            		statement.close();
+            	}catch(Exception e){}
+        }
+		
+	}
+	
+	/**
+	 * Adds a record to the DB to indicate that this PhoneCall is in the hung up/ended state
+	 * @param hangupBy User Name of person who hung up the call
+	 */
+	public void trackHangup(String hangupBy){
+		
+		Statement statement = null;
+		
+		String SQL = "INSERT INTO callhistory(phonenumber, state, operator) VALUES("  //$NON-NLS-1$
+				+ channel.getCallerId().getNumber() + ", 'H', " + hangupBy + ")"; //$NON-NLS-1$ //$NON-NLS-2$
+		
+		try{
+			
+			statement = database.getWriteConnection().createStatement();
+			statement.executeUpdate(SQL);
+	        
+		}catch(SQLException e){
+        	
+        	showError(e, xStrings.getString("PhoneCall.errorTrackingHangupState") //$NON-NLS-1$ 
+        			+ channel.getCallerId().getNumber());
+        	
+        }finally{
+            if(statement != null)
+            	try{
+            		statement.close();
+            	}catch(Exception e){}
+        }
+		
+	}
+	
 	/**
 	 * Set the Logger object
 	 */
@@ -114,6 +256,9 @@ public class PhoneCall {
 		
 	}
 	
+	/**
+	 * Gets the details for the person associated with this call
+	 */
 	private void populatePersonDetails(){
 		
 		Statement statement = null, personStatement = null;
@@ -219,6 +364,9 @@ public class PhoneCall {
 		    		if(person.religion.equals("null")) //$NON-NLS-1$
 		    			person.religion = ""; //$NON-NLS-1$
 		    		
+		    		//Get the conversation history for this person
+		    		getConversationHistory(person);
+		    		
 		    		//Add to Vector
 		    		people.add(person);
 		    		
@@ -246,6 +394,7 @@ public class PhoneCall {
 		    	
 		    }else{
 		    	
+		    	//Need to create new Person and PhoneNumber record as neither exist
 		    	Person newPerson = new Person(database.getUserSettings().get("language"),  //$NON-NLS-1$
 	    				database.getUserSettings().get("country")); //$NON-NLS-1$
 		    	
@@ -265,14 +414,14 @@ public class PhoneCall {
 			
 			if (personResultSet != null) {
 		        try {
-		        	statement.close();
+		        	personResultSet.close();
 		        } catch (SQLException sqlEx) { } // ignore
 		        personResultSet = null;
 		    }
 		    
 			if (personStatement != null) {
 		        try {
-		        	resultSet.close();
+		        	personStatement.close();
 		        } catch (SQLException sqlEx) { } // ignore
 		        personStatement = null;
 		    }
@@ -295,6 +444,54 @@ public class PhoneCall {
 		
 	}
 	
+	/**
+	 * Reads any conversation history this person has from the DB
+	 * @param person
+	 */
+	private void getConversationHistory(Person person) {
+		
+		Statement statement = null;
+		ResultSet resultSet = null;
+		
+		String SQL = "SELECT time, conversation WHERE person_id = " + person.id; //$NON-NLS-1$
+		
+		try{
+			
+			statement = database.getReadConnection().createStatement();
+			resultSet = statement.executeQuery(SQL);
+	    
+			while(resultSet.next()){
+				
+				Date time = resultSet.getTimestamp("time"); //$NON-NLS-1$
+				person.addConversation(new Conversation(time, 
+						resultSet.getString("conversation"))); //$NON-NLS-1$
+				
+			}
+			
+		}catch(SQLException e){
+			
+			showError(e, xStrings.getString("PhoneCall.databaseSQLError")); //$NON-NLS-1$
+			
+		}finally {
+			
+			if (resultSet != null) {
+		        try {
+		        	resultSet.close();
+		        } catch (SQLException sqlEx) { } // ignore
+		        resultSet = null;
+		    }
+			
+			if (statement != null) {
+		        try {
+		        	statement.close();
+		        } catch (SQLException sqlEx) { } // ignore
+		        statement = null;
+		    }
+		    
+		}
+		
+	}
+
 	/**
 	 * Creates a new record in the phonenumbers table with the given number
 	 * and person id attached
