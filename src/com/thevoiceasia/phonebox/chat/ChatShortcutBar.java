@@ -54,6 +54,7 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 	public ChatShortcutBar(String language, String country, MultiUserChat chatRoom, boolean isStudio){
 		
 		xStrings = new I18NStrings(language, country);
+		setupLogging();
 		this.chatRoom = chatRoom;
 		this.isStudio = isStudio;
 		
