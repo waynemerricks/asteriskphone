@@ -3,7 +3,6 @@ package com.thevoiceasia.phonebox.gui;
 import java.awt.BorderLayout;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.logging.FileHandler;
@@ -16,8 +15,11 @@ import com.thevoiceasia.phonebox.asterisk.AsteriskManager;
 import com.thevoiceasia.phonebox.chat.ChatManager;
 import com.thevoiceasia.phonebox.chat.ChatWindow;
 import com.thevoiceasia.phonebox.database.DatabaseManager;
+import com.thevoiceasia.phonebox.database.Settings;
 
 import javax.swing.UIManager.*;
+
+import org.asteriskjava.live.ManagerCommunicationException;
 
 public class Client extends JFrame implements WindowListener{
 
@@ -75,7 +77,7 @@ public class Client extends JFrame implements WindowListener{
 	private void setupManagementObjects(){
 		
 		//Database
-		databaseManager = new DatabaseManager(new File("settings/settings.conf"), language, country); //$NON-NLS-1$
+		databaseManager = new DatabaseManager(new Settings(), language, country);
 		
 		if(databaseManager.hasErrors())
 			hasErrors = true;
@@ -117,11 +119,23 @@ public class Client extends JFrame implements WindowListener{
 							LOGGER.info(xStrings.getString("Client.creatingAsteriskManager")); //$NON-NLS-1$
 							asteriskManager = new AsteriskManager();
 							LOGGER.info(xStrings.getString("Client.asteriskConnecting")); //$NON-NLS-1$
-							asteriskManager.connect();
-							LOGGER.info(xStrings.getString("Client.asteriskShowChannels")); //$NON-NLS-1$
-							asteriskManager.showChannels();
-							LOGGER.info(xStrings.getString("Client.asteriskShowQueues")); //$NON-NLS-1$
-							asteriskManager.showQueues();
+							
+							try{
+								asteriskManager.connect();
+							}catch(ManagerCommunicationException e){
+								
+								showError(e, xStrings.getString("Client.asteriskConnectionError")); //$NON-NLS-1$
+								hasErrors = true;
+							}
+							
+							if(!hasErrors){
+								
+								LOGGER.info(xStrings.getString("Client.asteriskShowChannels")); //$NON-NLS-1$
+								asteriskManager.showChannels();
+								LOGGER.info(xStrings.getString("Client.asteriskShowQueues")); //$NON-NLS-1$
+								asteriskManager.showQueues();
+								
+							}
 							
 						}
 						
@@ -229,6 +243,22 @@ public class Client extends JFrame implements WindowListener{
 		LOGGER.warning(friendlyErrorMessage);
 		
 	}
+	
+	/**
+	 * Logs an error message and displays friendly message to user
+	 * @param e
+	 * @param friendlyErrorMessage
+	 */
+	private void showError(Exception e, String friendlyErrorMessage){
+		
+		System.err.println(xStrings.getString("Client.logErrorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
+		e.printStackTrace();
+		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("Client.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
+		LOGGER.severe(friendlyErrorMessage);
+		
+	}
+	
+	
 	
 	@Override
 	public void windowClosing(WindowEvent arg0) {

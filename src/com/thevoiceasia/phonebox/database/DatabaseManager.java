@@ -1,9 +1,5 @@
 package com.thevoiceasia.phonebox.database;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.InetAddress;
@@ -36,18 +32,18 @@ public class DatabaseManager {
 	private Connection databaseWriteConnection;
 	
 	private HashMap<String, String> settings = new HashMap<String, String>();
-	private HashMap<String, String> database = new HashMap<String, String>();
+	private Settings database;
 	
 	//STATICS
 	private static final Logger LOGGER = Logger.getLogger(DatabaseManager.class.getName());//Logger
 	private static final Level LOG_LEVEL = Level.WARNING;
 	private static I18NStrings xStrings;
 	
-	public DatabaseManager(File settingsFile, String language, String country){
+	public DatabaseManager(Settings settingsFile, String language, String country){
 		
 		xStrings = new I18NStrings(language, country);
 		setupLogging();
-		readSettingsFromFile(settingsFile);
+		database = settingsFile;
 		checkDBSettings();
 		
 	}
@@ -63,10 +59,10 @@ public class DatabaseManager {
 	 */
 	private void checkDBSettings(){
 		
-		if(!database.containsKey("host") || //$NON-NLS-1$
-				!database.containsKey("user") || //$NON-NLS-1$
-				!database.containsKey("password") || //$NON-NLS-1$
-				!database.containsKey("database")) //$NON-NLS-1$
+		if(database.getString("host").startsWith("!") || //$NON-NLS-1$ //$NON-NLS-2$
+				database.getString("user").startsWith("!") || //$NON-NLS-1$ //$NON-NLS-2$
+				database.getString("password").startsWith("!") || //$NON-NLS-1$ //$NON-NLS-2$
+				database.getString("database").startsWith("!")) //$NON-NLS-1$ //$NON-NLS-2$
 			hasErrors = true;
 		
 		if(hasErrors)
@@ -349,7 +345,12 @@ public class DatabaseManager {
 	 */
 	public Connection getWriteConnection(){
 		
-		return databaseWriteConnection;
+		Connection connection = databaseConnection;
+		
+		if(hasWriteConnection())
+			connection = databaseWriteConnection;
+		
+		return connection;
 		
 	}
 	
@@ -371,8 +372,8 @@ public class DatabaseManager {
 					
 					Class.forName("com.mysql.jdbc.Driver").newInstance(); //$NON-NLS-1$
 					databaseConnection = DriverManager.getConnection("jdbc:mysql://" +  //$NON-NLS-1$
-							database.get("host") + "/" + database.get("database") + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-							"?user=" + database.get("user") + "&password=" + database.get("password"));  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+							database.getString("host") + "/" + database.getString("database") + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+							"?user=" + database.getString("user") + "&password=" + database.getString("password"));  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 					
 					LOGGER.info(xStrings.getString("DatabaseManager.logConnected")); //$NON-NLS-1$
 					
@@ -380,9 +381,9 @@ public class DatabaseManager {
 						
 						//Connect to separate write DB too
 						databaseWriteConnection = DriverManager.getConnection("jdbc:mysql://" +  //$NON-NLS-1$
-								settings.get("writeDBHost") + "/" + database.get("writeDBDatabase") + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-								"?user=" + database.get("writeDBUser") +  //$NON-NLS-1$ //$NON-NLS-2$
-								"&password=" + database.get("writeDBPassword"));  //$NON-NLS-1$//$NON-NLS-2$
+								settings.get("writeDBHost") + "/" + database.getString("writeDBDatabase") + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+								"?user=" + database.getString("writeDBUser") +  //$NON-NLS-1$ //$NON-NLS-2$
+								"&password=" + database.getString("writeDBPassword"));  //$NON-NLS-1$//$NON-NLS-2$
 						
 						LOGGER.info(xStrings.getString("DatabaseManager.logWriteConnected")); //$NON-NLS-1$
 						
@@ -423,63 +424,18 @@ public class DatabaseManager {
 				settings.get("writeDBDatabase") != null)  //$NON-NLS-1$
 			writeConnection = true;
 		
-		return writeConnection;
-		
-	}
-	
-	/**
-	 * Reads database settings from the given file
-	 * Expects a standard ini style file e.g. key=value
-	 * Any other lines are ignored.
-	 * 
-	 * Required for operation are the following keys:
-	 * host - database host name/ip
-	 * user - database user to use (make a user only for the database needs read/write access, don't use root)
-	 * password - password for the user above
-	 * database - database name to use
-	 * 
-	 * @param settingsFile
-	 */
-	private void readSettingsFromFile(File settingsFile) {
-		
-		try {
-			FileReader file = new FileReader(settingsFile);
-			BufferedReader in = new BufferedReader(file);
+		//Further check to see if we're not the same as read connection
+		if(writeConnection){
 			
-			String line = null;
-			
-			while((line = in.readLine()) != null){
-				
-				if(line.contains("=")){ //$NON-NLS-1$
-					
-					String[] keyPair = line.split("="); //$NON-NLS-1$
-					
-					if(keyPair.length == 2){
-						
-						database.put(keyPair[0], keyPair[1]);
-						
-					}
-					
-				}
-				
-			}
-			
-			in.close();
-			file.close();
-			
-		} catch (FileNotFoundException e) {
-			
-			e.printStackTrace();
-			showError(e, xStrings.getString("DatabaseManager.settingsFileNotFound") + settingsFile.getAbsolutePath()); //$NON-NLS-1$
-			hasErrors = true;
-			
-		} catch (IOException e) {
-			
-			e.printStackTrace();
-			showError(e, xStrings.getString("DatabaseManager.settingsFileIOException") + settingsFile.getAbsolutePath()); //$NON-NLS-1$
-			hasErrors = true;
+			if(settings.get("writeDBHost").equals(database.getString("host")) && //$NON-NLS-1$ //$NON-NLS-2$
+					settings.get("writeDBUser").equals(database.getString("user")) && //$NON-NLS-1$ //$NON-NLS-2$
+					settings.get("writeDBDatabase").equals(database.getString("database"))) //$NON-NLS-1$ //$NON-NLS-2$
+				writeConnection = false;
 			
 		}
+		
+		
+		return writeConnection;
 		
 	}
 	
