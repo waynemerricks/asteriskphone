@@ -1,9 +1,7 @@
 package com.thevoiceasia.phonebox.chat;
 
-import java.io.IOException;
 import java.util.Date;
 import java.util.Vector;
-import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -44,7 +42,6 @@ public class ChatManager implements UserStatusListener, PacketListener {
 	/** STATICS **/
 	private static final int XMPP_CHAT_HISTORY = 600; //Chat Messages in the last x seconds
 	private static final Logger LOGGER = Logger.getLogger(ChatManager.class.getName());//Logger
-	private static final Level LOG_LEVEL = Level.WARNING;
 	
 	/**
 	 * Create ChatManager with given locale
@@ -70,7 +67,6 @@ public class ChatManager implements UserStatusListener, PacketListener {
 		this.XMPPChatHistory = XMPP_CHAT_HISTORY;
 		this.XMPPNickName = nickName;
 		this.idleTimeout = idleTimeout;
-		setupLogging();
 		
 	}
 	
@@ -177,26 +173,6 @@ public class ChatManager implements UserStatusListener, PacketListener {
 	public boolean hasErrors(){
 		return hasErrors;
 	}
-	
-	/**
-	 * Set the Logger object
-	 */
-	public void setupLogging(){
-		
-		LOGGER.setLevel(LOG_LEVEL);
-		LOGGER.info("ChatManager.logSetupLogging"); //$NON-NLS-1$
-		
-		try{
-			LOGGER.addHandler(new FileHandler("chatLog.log")); //$NON-NLS-1$
-		}catch(IOException e){
-			
-			e.printStackTrace();
-			showWarning(e, xStrings.getString("ChatManager.loggerCreateError")); //$NON-NLS-1$
-			
-		}
-		
-	}
-	
 	
 	/**
 	 * Set the default logging level

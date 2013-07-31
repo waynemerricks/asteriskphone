@@ -5,10 +5,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.io.IOException;
 import java.util.Date;
-import java.util.logging.FileHandler;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.JButton;
@@ -35,7 +32,6 @@ public class ChatInputPanel extends JPanel implements ActionListener, KeyListene
 	private long lastActionTime;
 	
 	private static final Logger LOGGER = Logger.getLogger(ChatInputPanel.class.getName());//Logger
-	private static final Level LOG_LEVEL = Level.WARNING;
 	
 	/**
 	 * Creates a basic text input panel with a send button.
@@ -47,7 +43,6 @@ public class ChatInputPanel extends JPanel implements ActionListener, KeyListene
 		
 		super();
 		xStrings = new I18NStrings(language, country);
-		setupLogging();
 		this.chatRoom = chatRoom;
 		
 		this.setLayout(new BorderLayout());
@@ -67,25 +62,6 @@ public class ChatInputPanel extends JPanel implements ActionListener, KeyListene
 		this.add(send, BorderLayout.EAST);
 		
 		lastActionTime = new Date().getTime();
-		
-	}
-	
-	/**
-	 * Set the Logger object
-	 */
-	public void setupLogging(){
-		
-		LOGGER.setLevel(LOG_LEVEL);
-		LOGGER.info(xStrings.getString("ChatInputPanel.logSetupLogging")); //$NON-NLS-1$
-		
-		try{
-			LOGGER.addHandler(new FileHandler("chatLog.log")); //$NON-NLS-1$
-		}catch(IOException e){
-			
-			e.printStackTrace();
-			showWarning(e, xStrings.getString("ChatInputPanel.loggerCreateError")); //$NON-NLS-1$
-			
-		}
 		
 	}
 	

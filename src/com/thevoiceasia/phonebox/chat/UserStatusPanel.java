@@ -2,15 +2,11 @@ package com.thevoiceasia.phonebox.chat;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
-import java.util.logging.FileHandler;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
@@ -45,7 +41,6 @@ public class UserStatusPanel extends JPanel implements ParticipantStatusListener
 	
 	private static final long serialVersionUID = 1L;
 	private static final Logger LOGGER = Logger.getLogger(UserStatusPanel.class.getName());//Logger
-	private static final Level LOG_LEVEL = Level.WARNING;
 	private static final Color GREEN = new Color(109, 154, 11);
 	
 	/**
@@ -59,7 +54,6 @@ public class UserStatusPanel extends JPanel implements ParticipantStatusListener
 		this.chatRoom = chatRoom;
 		
 		xStrings = new I18NStrings(language, country);
-		setupLogging();
 		
 		this.setLayout(new BorderLayout());
 		this.add(new JSeparator(JSeparator.HORIZONTAL), BorderLayout.NORTH);
@@ -149,39 +143,6 @@ public class UserStatusPanel extends JPanel implements ParticipantStatusListener
 			LOGGER.severe(xStrings.getString("UserStatusPanel.logErrorClearingOnlineList")); //$NON-NLS-1$
 			e.printStackTrace();
 		}
-		
-	}
-	
-	/**
-	 * Set the Logger object
-	 */
-	public void setupLogging(){
-		
-		LOGGER.setLevel(LOG_LEVEL);
-		LOGGER.info(xStrings.getString("UserStatusPanel.logSetupLogging")); //$NON-NLS-1$
-		
-		try{
-			LOGGER.addHandler(new FileHandler("chatLog.log")); //$NON-NLS-1$
-		}catch(IOException e){
-			
-			e.printStackTrace();
-			showWarning(e, xStrings.getString("UserStatusPanel.loggerCreateError")); //$NON-NLS-1$
-			
-		}
-		
-	}
-	
-	/**
-	 * Logs a warning message and displays friendly message to user
-	 * @param e
-	 * @param friendlyErrorMessage
-	 */
-	private void showWarning(Exception e, String friendlyErrorMessage){
-		
-		System.err.println(xStrings.getString("UserStatusPanel.logErrorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
-		e.printStackTrace();
-		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("UserStatusPanel.errorBoxTitle"), JOptionPane.WARNING_MESSAGE); //$NON-NLS-1$
-		LOGGER.warning(friendlyErrorMessage);
 		
 	}
 	

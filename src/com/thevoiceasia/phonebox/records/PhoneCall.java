@@ -1,13 +1,10 @@
 package com.thevoiceasia.phonebox.records;
 
-import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
 import java.util.Vector;
-import java.util.logging.FileHandler;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.JOptionPane;
@@ -31,7 +28,6 @@ public class PhoneCall {
 	
 	/** STATICS **/
 	private static final Logger LOGGER = Logger.getLogger(PhoneCall.class.getName());//Logger
-	private static final Level LOG_LEVEL = Level.WARNING;
 	
 	public PhoneCall(DatabaseManager database, AsteriskChannel channel){
 		
@@ -39,7 +35,7 @@ public class PhoneCall {
 		this.channel = channel;
 		xStrings = new I18NStrings(database.getUserSettings().get("language"),  //$NON-NLS-1$
 				database.getUserSettings().get("country")); //$NON-NLS-1$
-		setupLogging();
+		
 		populatePersonDetails();
 		
 	}
@@ -234,25 +230,6 @@ public class PhoneCall {
             		statement.close();
             	}catch(Exception e){}
         }
-		
-	}
-	
-	/**
-	 * Set the Logger object
-	 */
-	public void setupLogging(){
-		
-		LOGGER.setLevel(LOG_LEVEL);
-		LOGGER.info(xStrings.getString("PhoneCall.logSetupLogging")); //$NON-NLS-1$
-		
-		try{
-			LOGGER.addHandler(new FileHandler("phonecall.log")); //$NON-NLS-1$
-		}catch(IOException e){
-			
-			e.printStackTrace();
-			showWarning(e, xStrings.getString("PhoneCall.loggerCreateError")); //$NON-NLS-1$
-			
-		}
 		
 	}
 	
@@ -596,20 +573,6 @@ public class PhoneCall {
 		e.printStackTrace();
 		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("PhoneCall.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
 		LOGGER.severe(friendlyErrorMessage);
-		
-	}
-	
-	/**
-	 * Logs a warning message and displays friendly message to user
-	 * @param e
-	 * @param friendlyErrorMessage
-	 */
-	private void showWarning(Exception e, String friendlyErrorMessage){
-		
-		System.err.println(xStrings.getString("PhoneCall.logErrorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
-		e.printStackTrace();
-		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("PhoneCall.errorBoxTitle"), JOptionPane.WARNING_MESSAGE); //$NON-NLS-1$
-		LOGGER.warning(friendlyErrorMessage);
 		
 	}
 	

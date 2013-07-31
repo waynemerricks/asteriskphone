@@ -1,12 +1,9 @@
 package com.thevoiceasia.phonebox.database;
 
-import java.io.IOException;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashMap;
-import java.util.logging.FileHandler;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import java.security.SecureRandom;
@@ -36,13 +33,11 @@ public class DatabaseManager {
 	
 	//STATICS
 	private static final Logger LOGGER = Logger.getLogger(DatabaseManager.class.getName());//Logger
-	private static final Level LOG_LEVEL = Level.WARNING;
 	private static I18NStrings xStrings;
 	
 	public DatabaseManager(Settings settingsFile, String language, String country){
 		
 		xStrings = new I18NStrings(language, country);
-		setupLogging();
 		database = settingsFile;
 		checkDBSettings();
 		
@@ -436,25 +431,6 @@ public class DatabaseManager {
 		
 		
 		return writeConnection;
-		
-	}
-	
-	/**
-	 * Set the Logger object
-	 * 
-	 */
-	private void setupLogging(){
-		
-		LOGGER.setLevel(LOG_LEVEL);
-		
-		try{
-			LOGGER.addHandler(new FileHandler("databaseLog.log")); //$NON-NLS-1$
-		}catch(IOException e){
-			
-			e.printStackTrace();
-			showWarning(e, xStrings.getString("DatabaseManager.loggerCreateError") + "databaseLog.log"); //$NON-NLS-1$ //$NON-NLS-2$
-			
-		}
 		
 	}
 	

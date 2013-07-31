@@ -3,9 +3,6 @@ package com.thevoiceasia.phonebox.chat;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
-import java.io.IOException;
-import java.util.logging.FileHandler;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.*;
@@ -38,7 +35,6 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 	private String language;
 	
 	private static final Logger LOGGER = Logger.getLogger(ChatMessagePanel.class.getName());//Logger
-	private static final Level LOG_LEVEL = Level.WARNING;
 	private static final Color GREEN = new Color(109, 154, 11);
 	private static final long serialVersionUID = 1L;
 
@@ -56,7 +52,6 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 		this.myNickName = myNickName;
 		this.language = language;
 		this.setLayout(new BorderLayout());
-		setupLogging();
 		
 		//Setup TextArea
 		messages.setEditable(false);
@@ -114,39 +109,6 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 				messages.setText(null);
 			}
 		});
-		
-	}
-	
-	/**
-	 * Set the Logger object
-	 */
-	private void setupLogging(){
-		
-		LOGGER.setLevel(LOG_LEVEL);
-		LOGGER.info(xStrings.getString("UserStatusPanel")); //$NON-NLS-1$
-		
-		try{
-			LOGGER.addHandler(new FileHandler("chatLog.log")); //$NON-NLS-1$
-		}catch(IOException e){
-			
-			e.printStackTrace();
-			showWarning(e, xStrings.getString("ChatMessagePanel.loggerCreateError")); //$NON-NLS-1$
-			
-		}
-		
-	}
-	
-	/**
-	 * Logs a warning message and displays friendly message to user
-	 * @param e
-	 * @param friendlyErrorMessage
-	 */
-	private void showWarning(Exception e, String friendlyErrorMessage){
-		
-		System.err.println(xStrings.getString("ChatMessagePanel.logErrorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
-		e.printStackTrace();
-		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("ChatMessagePanel.errorBoxTitle"), JOptionPane.WARNING_MESSAGE); //$NON-NLS-1$
-		LOGGER.warning(friendlyErrorMessage);
 		
 	}
 	

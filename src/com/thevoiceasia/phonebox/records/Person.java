@@ -1,13 +1,10 @@
 package com.thevoiceasia.phonebox.records;
 
-import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Connection;
 import java.util.Vector;
-import java.util.logging.FileHandler;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.JOptionPane;
@@ -26,7 +23,6 @@ public class Person {
 	
 	/** STATICS **/
 	private static final Logger LOGGER = Logger.getLogger(PhoneCall.class.getName());//Logger
-	private static final Level LOG_LEVEL = Level.WARNING;
 	
 	public Person(String language, String country){
 		xStrings = new I18NStrings(language, country);
@@ -156,25 +152,6 @@ public class Person {
 	}
 	
 	/**
-	 * Set the Logger object
-	 */
-	public void setupLogging(){
-		
-		LOGGER.setLevel(LOG_LEVEL);
-		LOGGER.info(xStrings.getString("Person.logSetupLogging")); //$NON-NLS-1$
-		
-		try{
-			LOGGER.addHandler(new FileHandler("phonecall.log")); //$NON-NLS-1$
-		}catch(IOException e){
-			
-			e.printStackTrace();
-			showWarning(e, xStrings.getString("Person.loggerCreateError")); //$NON-NLS-1$
-			
-		}
-		
-	}
-	
-	/**
 	 * Adds the given Conversation record to the history of conversations
 	 * @param conversation
 	 */
@@ -252,20 +229,6 @@ public class Person {
 		e.printStackTrace();
 		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("Person.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
 		LOGGER.severe(friendlyErrorMessage);
-		
-	}
-	
-	/**
-	 * Logs a warning message and displays friendly message to user
-	 * @param e
-	 * @param friendlyErrorMessage
-	 */
-	private void showWarning(Exception e, String friendlyErrorMessage){
-		
-		System.err.println(xStrings.getString("Person.logErrorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
-		e.printStackTrace();
-		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("Person.errorBoxTitle"), JOptionPane.WARNING_MESSAGE); //$NON-NLS-1$
-		LOGGER.warning(friendlyErrorMessage);
 		
 	}
 	

@@ -3,11 +3,8 @@ package com.thevoiceasia.phonebox.chat;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
 import java.net.URL;
 import java.util.Date;
-import java.util.logging.FileHandler;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.ButtonGroup;
@@ -33,7 +30,6 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 
 	/** STATICS **/
 	private static final Logger LOGGER = Logger.getLogger(ChatShortcutBar.class.getName());//Logger
-	private static final Level LOG_LEVEL = Level.WARNING;
 	private static final long serialVersionUID = 1L;
 	
 	/** CLASS VARS **/
@@ -54,7 +50,7 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 	public ChatShortcutBar(String language, String country, MultiUserChat chatRoom, boolean isStudio){
 		
 		xStrings = new I18NStrings(language, country);
-		setupLogging();
+		
 		this.chatRoom = chatRoom;
 		this.isStudio = isStudio;
 		
@@ -97,25 +93,6 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 		
 	}
 
-	/**
-	 * Set the Logger object
-	 */
-	public void setupLogging(){
-		
-		LOGGER.setLevel(LOG_LEVEL);
-		LOGGER.info(xStrings.getString("ChatShortcutBar.logSetupLogging")); //$NON-NLS-1$
-		
-		try{
-			LOGGER.addHandler(new FileHandler("chatLog.log")); //$NON-NLS-1$
-		}catch(IOException e){
-			
-			e.printStackTrace();
-			showWarning(e, xStrings.getString("ChatShortcutBar.loggerCreateError")); //$NON-NLS-1$
-			
-		}
-		
-	}
-	
 	/**
 	 * Logs a warning message and displays friendly message to user
 	 * @param e

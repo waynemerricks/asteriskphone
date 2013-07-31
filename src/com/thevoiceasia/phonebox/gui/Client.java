@@ -74,6 +74,7 @@ public class Client extends JFrame implements WindowListener{
 		
 	}
 	
+	//TODO Set logging for db and chat
 	private void setupManagementObjects(){
 		
 		//Database
