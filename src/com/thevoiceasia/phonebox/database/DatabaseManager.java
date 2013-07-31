@@ -24,7 +24,7 @@ import javax.swing.JOptionPane;
 public class DatabaseManager {
 	
 	// CLASS VARS
-	private boolean hasErrors = false, connected = false;
+	private boolean hasErrors = false, connected = false, writeConnected = false;
 	private Connection databaseConnection;
 	private Connection databaseWriteConnection;
 	
@@ -131,16 +131,24 @@ public class DatabaseManager {
 	private boolean createUser(String userName){
 		
 		boolean success = false;
-		settings.put("XMPPLogin", userName); //$NON-NLS-1$
-		settings.put("nickName", userName); //$NON-NLS-1$
 		
-		String password = generatePassword();
+		if(!writeConnected)
+			connectWrite();
 		
-		if(password != null && password != ""){ //$NON-NLS-1$
-		
-			settings.put("password", password); //$NON-NLS-1$
+		if(!hasErrors){
 			
-			success = addNewXMPPUser(userName, password);
+			settings.put("XMPPLogin", userName); //$NON-NLS-1$
+			settings.put("nickName", userName); //$NON-NLS-1$
+			
+			String password = generatePassword();
+			
+			if(password != null && password != ""){ //$NON-NLS-1$
+			
+				settings.put("password", password); //$NON-NLS-1$
+				
+				success = addNewXMPPUser(userName, password);
+				
+			}
 			
 		}
 		
@@ -245,8 +253,8 @@ public class DatabaseManager {
 			getSettingsFromDB("GLOBAL"); //$NON-NLS-1$
 			getSettingsFromDB(machineName);
 				
-			if(!getSettingsFromDB(userName)){
-				if(!createUser(userName))
+			if(!getSettingsFromDB(userName)){//If this user has no settings in DB
+				if(!createUser(userName))//try and create a new user, if not error
 					showError(new Exception(xStrings.getString("DatabaseManager.errorCreatingUser")), //$NON-NLS-1$
 							xStrings.getString("DatabaseManager.errorCreatingUser")); //$NON-NLS-1$
 			}else
@@ -286,10 +294,11 @@ public class DatabaseManager {
 				databaseConnection.close();
 				LOGGER.info("DatabaseManager.logDisconnected"); //$NON-NLS-1$
 				
-				if(hasWriteConnection()){
+				if(hasWriteConnection() && writeConnected){
 					
 					databaseWriteConnection.close();
 					LOGGER.info("DatabaseManager.logWriteDisconnected"); //$NON-NLS-1$
+					writeConnected = false;
 					
 				}
 					
@@ -332,9 +341,9 @@ public class DatabaseManager {
 	}
 	
 	/**
-	 * Returns the MySQL Write Connection, does not check if the connection is live.
+	 * Returns the MySQL Write Connection.
 	 * 
-	 * Make sure connect is called first and completed without error.
+	 * If we haven't connected yet, it will connect first
 	 * 
 	 * @return
 	 */
@@ -342,14 +351,50 @@ public class DatabaseManager {
 		
 		Connection connection = databaseConnection;
 		
-		if(hasWriteConnection())
+		if(hasWriteConnection()){
+			
+			if(!writeConnected)
+				connectWrite();
+			
 			connection = databaseWriteConnection;
+				
+		}
 		
 		return connection;
 		
 	}
 	
-	
+	/**
+	 * Separate method to connect to the write server if it is separate to read server
+	 */
+	public void connectWrite(){
+		
+		if(hasWriteConnection()){
+			
+			try{
+				//Connect to separate write DB too
+				databaseWriteConnection = DriverManager.getConnection("jdbc:mysql://" +  //$NON-NLS-1$
+						settings.get("writeDBHost") + "/" + database.getString("writeDBDatabase") + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						"?user=" + database.getString("writeDBUser") +  //$NON-NLS-1$ //$NON-NLS-2$
+						"&password=" + database.getString("writeDBPassword"));  //$NON-NLS-1$//$NON-NLS-2$
+				
+				writeConnected = true;
+				LOGGER.info(xStrings.getString("DatabaseManager.logWriteConnected")); //$NON-NLS-1$
+			}catch(SQLException e){
+				
+				showError(e, xStrings.getString("DatabaseManager.mysqlConnectionError")); //$NON-NLS-1$
+				hasErrors = true;
+				
+			}catch(Exception e){
+				
+				showError(e, xStrings.getString("DatabaseManager.mysqlDriverException")); //$NON-NLS-1$
+				hasErrors = true;
+				
+			}
+			
+		}
+		
+	}
 	/**
 	 * Connects to the DB, will alert if there are errors.
 	 * 
@@ -371,18 +416,6 @@ public class DatabaseManager {
 							"?user=" + database.getString("user") + "&password=" + database.getString("password"));  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 					
 					LOGGER.info(xStrings.getString("DatabaseManager.logConnected")); //$NON-NLS-1$
-					
-					if(hasWriteConnection()){
-						
-						//Connect to separate write DB too
-						databaseWriteConnection = DriverManager.getConnection("jdbc:mysql://" +  //$NON-NLS-1$
-								settings.get("writeDBHost") + "/" + database.getString("writeDBDatabase") + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-								"?user=" + database.getString("writeDBUser") +  //$NON-NLS-1$ //$NON-NLS-2$
-								"&password=" + database.getString("writeDBPassword"));  //$NON-NLS-1$//$NON-NLS-2$
-						
-						LOGGER.info(xStrings.getString("DatabaseManager.logWriteConnected")); //$NON-NLS-1$
-						
-					}
 					
 					connected = true;
 					
