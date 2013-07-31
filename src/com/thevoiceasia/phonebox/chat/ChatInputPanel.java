@@ -70,22 +70,26 @@ public class ChatInputPanel extends JPanel implements ActionListener, KeyListene
 	 */
 	private void sendMessage(){
 		
-		LOGGER.info(xStrings.getString("ChatInputPanel.logSendingMessage")); //$NON-NLS-1$
-		
-		try {
+		if(message.getText().trim().length() > 0){
 			
-			chatRoom.sendMessage(message.getText());
+			LOGGER.info(xStrings.getString("ChatInputPanel.logSendingMessage")); //$NON-NLS-1$
 			
-			SwingUtilities.invokeLater(new Runnable(){
-				public void run(){
-					message.setText(null);
-				}
-			});
+			try {
+				
+				chatRoom.sendMessage(message.getText());
+				
+				SwingUtilities.invokeLater(new Runnable(){
+					public void run(){
+						message.setText(null);
+					}
+				});
+				
+			}catch(XMPPException e){
+				showWarning(e, xStrings.getString("ChatInputPanel.chatRoomError")); //$NON-NLS-1$
+			}catch(IllegalStateException e){
+				showWarning(e, xStrings.getString("ChatInputPanel.ServerGoneError")); //$NON-NLS-1$
+			}
 			
-		}catch(XMPPException e){
-			showWarning(e, xStrings.getString("ChatInputPanel.chatRoomError")); //$NON-NLS-1$
-		}catch(IllegalStateException e){
-			showWarning(e, xStrings.getString("ChatInputPanel.ServerGoneError")); //$NON-NLS-1$
 		}
 		
 	}
