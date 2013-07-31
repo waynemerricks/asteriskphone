@@ -197,6 +197,9 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 							setTextColour(Color.BLACK);
 						doc.insertString(doc.getLength(), body, chatStyle);
 						
+						//Make sure chat scrolls to new message (basically scroll to the end)
+						messages.setCaretPosition(messages.getText().length());
+						
 					}catch(BadLocationException e){
 						LOGGER.severe(xStrings.getString("ChatMessagePanel.logErrorInsertingMessage")); //$NON-NLS-1$
 						e.printStackTrace();
