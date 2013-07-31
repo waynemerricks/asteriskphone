@@ -11,7 +11,6 @@ import java.util.logging.Logger;
 
 import javax.swing.*;
 
-import com.thevoiceasia.phonebox.asterisk.AsteriskManager;
 import com.thevoiceasia.phonebox.chat.ChatManager;
 import com.thevoiceasia.phonebox.chat.ChatWindow;
 import com.thevoiceasia.phonebox.database.DatabaseManager;
@@ -19,14 +18,11 @@ import com.thevoiceasia.phonebox.database.Settings;
 
 import javax.swing.UIManager.*;
 
-import org.asteriskjava.live.ManagerCommunicationException;
-
 public class Client extends JFrame implements WindowListener{
 
 	//Class Vars
 	private ChatManager chatManager;
 	private DatabaseManager databaseManager;
-	private AsteriskManager asteriskManager;
 	
 	private String language, country;
 	private boolean hasErrors = false;
@@ -125,27 +121,9 @@ public class Client extends JFrame implements WindowListener{
 							hasErrors = true;
 						else{
 							
-							//Asterisk TODO
-							LOGGER.info(xStrings.getString("Client.creatingAsteriskManager")); //$NON-NLS-1$
-							asteriskManager = new AsteriskManager();
-							LOGGER.info(xStrings.getString("Client.asteriskConnecting")); //$NON-NLS-1$
-							
-							try{
-								asteriskManager.connect();
-							}catch(ManagerCommunicationException e){
-								
-								showError(e, xStrings.getString("Client.asteriskConnectionError")); //$NON-NLS-1$
-								hasErrors = true;
-							}
-							
-							if(!hasErrors){
-								
-								LOGGER.info(xStrings.getString("Client.asteriskShowChannels")); //$NON-NLS-1$
-								asteriskManager.showChannels();
-								LOGGER.info(xStrings.getString("Client.asteriskShowQueues")); //$NON-NLS-1$
-								asteriskManager.showQueues();
-								
-							}
+							/* Asterisk TODO Want to rework this so that it uses another chat room
+							 * for control messages e.g. x calling, x answered, x hungup, x transfer etc
+							 */
 							
 						}
 						
@@ -187,6 +165,26 @@ public class Client extends JFrame implements WindowListener{
 			
 			I18NStrings xStrings = new I18NStrings(args[0], args[1]);
 			Client phonebox = new Client(args[0], args[1]);
+		
+			if(!phonebox.hasErrors())
+				phonebox.setVisible(true);
+			else{
+				
+				Exception e = new Exception(xStrings.getString("Client.onLoadError")); //$NON-NLS-1$
+
+				System.err.println(xStrings.getString("Client.logErrorPrefix") + e.getMessage()); //$NON-NLS-1$
+				e.printStackTrace();
+				JOptionPane.showMessageDialog(null, e.getMessage(), xStrings.getString("Client.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
+				LOGGER.severe(e.getMessage());
+				
+				System.exit(1);
+				
+			}
+			
+		}else if (args.length == 0){
+			
+			I18NStrings xStrings = new I18NStrings("en", "GB");  //$NON-NLS-1$//$NON-NLS-2$
+			Client phonebox = new Client("en", "GB"); //$NON-NLS-1$ //$NON-NLS-2$
 		
 			if(!phonebox.hasErrors())
 				phonebox.setVisible(true);
@@ -254,28 +252,12 @@ public class Client extends JFrame implements WindowListener{
 	 */
 	private void showWarning(Exception e, String friendlyErrorMessage){
 		
-		System.err.println(xStrings.getString("ChatManager.logErrorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
+		System.err.println(xStrings.getString("Client.logErrorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
 		e.printStackTrace();
-		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("ChatManager.errorBoxTitle"), JOptionPane.WARNING_MESSAGE); //$NON-NLS-1$
+		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("Client.errorBoxTitle"), JOptionPane.WARNING_MESSAGE); //$NON-NLS-1$
 		LOGGER.warning(friendlyErrorMessage);
 		
 	}
-	
-	/**
-	 * Logs an error message and displays friendly message to user
-	 * @param e
-	 * @param friendlyErrorMessage
-	 */
-	private void showError(Exception e, String friendlyErrorMessage){
-		
-		System.err.println(xStrings.getString("Client.logErrorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
-		e.printStackTrace();
-		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("Client.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
-		LOGGER.severe(friendlyErrorMessage);
-		
-	}
-	
-	
 	
 	@Override
 	public void windowClosing(WindowEvent arg0) {
@@ -287,7 +269,6 @@ public class Client extends JFrame implements WindowListener{
 		try{
 			chatManager.disconnect();
 			databaseManager.disconnect();
-			asteriskManager.disconnect();
 		}catch(IllegalStateException e){
 			/*
 			 * This only happens if program was logged in twice as the same user,
@@ -299,7 +280,6 @@ public class Client extends JFrame implements WindowListener{
 		
 		chatManager = null;
 		databaseManager = null;
-		asteriskManager = null;
 		
 	}
 
