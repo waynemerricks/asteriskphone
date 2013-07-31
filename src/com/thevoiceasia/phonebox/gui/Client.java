@@ -35,6 +35,13 @@ public class Client extends JFrame implements WindowListener{
 	//Statics
 	private static final Logger LOGGER = Logger.getLogger(Client.class.getName());//Logger
 	private static final Level LOG_LEVEL = Level.INFO;
+	private static final Logger CHAT_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.chat"); //$NON-NLS-1$
+	private static final Level CHAT_LOG_LEVEL = Level.WARNING;
+	private static final Logger DATABASE_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.database"); //$NON-NLS-1$
+	private static final Level DATABASE_LOG_LEVEL = Level.WARNING;
+	private static final Logger RECORDS_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.records"); //$NON-NLS-1$
+	private static final Level RECORDS_LOG_LEVEL = Level.INFO;
+	 
 	private static I18NStrings xStrings;
 	
 	public Client(String language, String country){
@@ -74,7 +81,9 @@ public class Client extends JFrame implements WindowListener{
 		
 	}
 	
-	//TODO Set logging for db and chat
+	/**
+	 * Internal setup for the manager objects
+	 */
 	private void setupManagementObjects(){
 		
 		//Database
@@ -218,10 +227,17 @@ public class Client extends JFrame implements WindowListener{
 	private void setupLogging(){
 		
 		LOGGER.setLevel(LOG_LEVEL);
+		CHAT_LOGGER.setLevel(CHAT_LOG_LEVEL);
+		DATABASE_LOGGER.setLevel(DATABASE_LOG_LEVEL);
+		RECORDS_LOGGER.setLevel(RECORDS_LOG_LEVEL);
+		
 		LOGGER.info(xStrings.getString("Client.logSetupLogging")); //$NON-NLS-1$
 		
 		try{
 			LOGGER.addHandler(new FileHandler("clientLog.log")); //$NON-NLS-1$
+			CHAT_LOGGER.addHandler(new FileHandler("chatLog.log")); //$NON-NLS-1$
+			DATABASE_LOGGER.addHandler(new FileHandler("databaseLog.log")); //$NON-NLS-1$
+			RECORDS_LOGGER.addHandler(new FileHandler("recordsLog.log")); //$NON-NLS-1$
 		}catch(IOException e){
 			
 			e.printStackTrace();
