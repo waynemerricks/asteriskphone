@@ -160,7 +160,14 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 						doc.insertString(doc.getLength(), body, chatStyle);
 						
 						//Make sure chat scrolls to new message (basically scroll to the end)
-						messages.setCaretPosition(messages.getText().length());
+						try{
+							messages.setCaretPosition(messages.getText().length());
+						}catch(IllegalArgumentException e){
+							
+							/* Stupid Windows machines throw an error here no matter what position
+							 * Lets ignore it */
+							
+						}
 						
 					}catch(BadLocationException e){
 						LOGGER.severe(xStrings.getString("ChatMessagePanel.logErrorInsertingMessage")); //$NON-NLS-1$
