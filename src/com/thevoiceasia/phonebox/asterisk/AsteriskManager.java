@@ -2,6 +2,9 @@ package com.thevoiceasia.phonebox.asterisk;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -18,15 +21,19 @@ import org.asteriskjava.live.internal.AsteriskAgentImpl;
 public class AsteriskManager implements AsteriskServerListener, PropertyChangeListener {
 
 	//STATICS
-	private static final Logger ASTERISK_LOGGER = Logger.getLogger("org.asteriskjava"); //$NON-NLS-1$
+	private static final Logger LOGGER = Logger.getLogger("org.asteriskjava"); //$NON-NLS-1$
 	
 	//CLASS VARS
 	private AsteriskServer asteriskServer;
+	private HashSet<AsteriskChannel> activeChannels = 
+			(HashSet<AsteriskChannel>)Collections.synchronizedSet(new HashSet<AsteriskChannel>());
 	
 	public AsteriskManager(){
 		
-		//Turn off AsteriskJava logger
-		ASTERISK_LOGGER.setLevel(Level.SEVERE);//TODO read settings properly
+		//Turn off AsteriskJava logger for all but SEVERE
+		LOGGER.setLevel(Level.SEVERE);
+		
+		//TODO read settings properly
 		asteriskServer = new DefaultAsteriskServer("10.43.10.91", "phonemanager", "P0l0m1nt");  //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$
 		
 	}
@@ -39,6 +46,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		
 		asteriskServer.initialize();
 		asteriskServer.addAsteriskServerListener(this);
+		getChannels();
 		
 	}
 	
@@ -51,12 +59,25 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		
 	}
 
+	/**
+	 * Gets the active Channels, adds a property change and keeps track of them via
+	 * PropertyChangeListener 
+	 */
+	private void getChannels(){
+		
+		for (AsteriskChannel asteriskChannel : asteriskServer.getChannels()) {
+            
+			asteriskChannel.addPropertyChangeListener(this);
+			activeChannels.add(asteriskChannel);
+            
+        }
+		
+	}
+	
 	public void showChannels(){
 		
 		for (AsteriskChannel asteriskChannel : asteriskServer.getChannels()) {
             System.out.println(asteriskChannel);
-            asteriskChannel.addPropertyChangeListener(this);
-            
         }
 		
 	}
@@ -73,10 +94,10 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	@Override
 	public void onNewAsteriskChannel(AsteriskChannel channel) {
 		
-		//TODO Registers a new channel, need a listener on each channel
-		System.out.println(channel);
-		channel.addPropertyChangeListener(this);
+		//TODO Registers a new channel, need a listener on each channel and keep track of them
+		LOGGER.info("");
 		
+		//TODO xStrings etc
 		
 	}
 
