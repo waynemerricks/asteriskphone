@@ -95,6 +95,10 @@ public class ChatManager implements UserStatusListener, PacketListener {
 	
 	public void checkIdle(){
 		
+		/* TODO IdleCheckThread overrides presence
+		 * If we were idle and click the away button, we are set to away (no change) but
+		 * the idle thread kicks on its periodic check and sets us available.
+		 */
 		LOGGER.info(xStrings.getString("ChatManager.logCheckingIdle")); //$NON-NLS-1$
 		
 		if(actionTimers.size() > 0){
