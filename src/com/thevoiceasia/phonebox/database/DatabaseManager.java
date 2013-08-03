@@ -62,8 +62,9 @@ public class DatabaseManager {
 		
 		if(hasErrors)
 			LOGGER.severe(xStrings.getString("DatabaseManager.DBSetupError")); //$NON-NLS-1$
-		else
+		else{
 			LOGGER.info(xStrings.getString("DatabaseManager.logDBSetupSuccess")); //$NON-NLS-1$
+		}
 		
 	}
 	
@@ -374,9 +375,9 @@ public class DatabaseManager {
 			try{
 				//Connect to separate write DB too
 				databaseWriteConnection = DriverManager.getConnection("jdbc:mysql://" +  //$NON-NLS-1$
-						settings.get("writeDBHost") + "/" + database.getString("writeDBDatabase") + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-						"?user=" + database.getString("writeDBUser") +  //$NON-NLS-1$ //$NON-NLS-2$
-						"&password=" + database.getString("writeDBPassword"));  //$NON-NLS-1$//$NON-NLS-2$
+						settings.get("writeDBHost") + "/" + settings.get("writeDBDatabase") + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						"?user=" + settings.get("writeDBUser") +  //$NON-NLS-1$ //$NON-NLS-2$
+						"&password=" + settings.get("writeDBPass"));  //$NON-NLS-1$//$NON-NLS-2$
 				
 				writeConnected = true;
 				LOGGER.info(xStrings.getString("DatabaseManager.logWriteConnected")); //$NON-NLS-1$
