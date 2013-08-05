@@ -26,11 +26,12 @@ public class Server extends Thread{
 		setupLogging();
 		
 		LOGGER.info(xStrings.getString("Server.creatingAsteriskManager")); //$NON-NLS-1$
-		asteriskManager = new AsteriskManager();
+		asteriskManager = new AsteriskManager(language, country);
 		LOGGER.info(xStrings.getString("Server.asteriskConnecting")); //$NON-NLS-1$
 		
 		try{
 			asteriskManager.connect();
+			LOGGER.info(xStrings.getString("Server.asteriskConnected")); //$NON-NLS-1$
 		}catch(ManagerCommunicationException e){
 			
 			showError(e, xStrings.getString("Server.asteriskConnectionError")); //$NON-NLS-1$
@@ -39,10 +40,11 @@ public class Server extends Thread{
 		
 		if(!hasErrors){
 			
-			LOGGER.info(xStrings.getString("Server.asteriskShowChannels")); //$NON-NLS-1$
-			asteriskManager.showChannels();
-			LOGGER.info(xStrings.getString("Server.asteriskShowQueues")); //$NON-NLS-1$
-			asteriskManager.showQueues();
+			//TODO Decide what happens here, probably nothing but if we have errors shutdown?
+			//LOGGER.info(xStrings.getString("Server.asteriskShowChannels")); //$NON-NLS-1$
+			//asteriskManager.showChannels();
+			//LOGGER.info(xStrings.getString("Server.asteriskShowQueues")); //$NON-NLS-1$
+			//asteriskManager.showQueues();
 			
 		}
 		
