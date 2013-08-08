@@ -2,6 +2,10 @@ package com.thevoiceasia.phonebox.asterisk;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -10,6 +14,7 @@ import org.asteriskjava.live.AsteriskQueue;
 import org.asteriskjava.live.AsteriskQueueEntry;
 import org.asteriskjava.live.AsteriskServer;
 import org.asteriskjava.live.AsteriskServerListener;
+import org.asteriskjava.live.CallerId;
 import org.asteriskjava.live.ChannelState;
 import org.asteriskjava.live.DefaultAsteriskServer;
 import org.asteriskjava.live.Extension;
@@ -27,17 +32,18 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	private static final String HANGUP_NORMAL = "Normal Clearing"; //$NON-NLS-1$
 	private static final String HANGUP_UNACCEPTABLE = "Channel unacceptable"; //$NON-NLS-1$
 	private static final String HANGUP_OFFLINE = "Subscriber absent"; //$NON-NLS-1$
+	private static final String HANGUP_USER_BUSY = "User busy"; //$NON-NLS-1$
 	private static final String HANGUP_ANSWERED_ELSEWHERE = "Answered elsewhere"; //$NON-NLS-1$
 	private static final String CONTEXT_MACRO_AUTO = "macro-auto-blkvm"; //$NON-NLS-1$
-	private static final String DEFAULT_CONTEXT = "from-internal"; //$NON-NLS-1$
-	private static final String SIP_PREFIX = "SIP/"; //$NON-NLS-1$
+	private static final String AUTO_ANSWER_CONTEXT = "custom-answerme"; //$NON-NLS-1$
+	private static final String SIP_PREFIX = "Local/"; //$NON-NLS-1$
 	private static final int DEFAULT_PRIORITY = 1;
 	private static final long DEFAULT_TIMEOUT = 30000L;
 	
 	//CLASS VARS
 	private AsteriskServer asteriskServer;
-	//private Set<AsteriskChannel> activeChannels = Collections.synchronizedSet(new HashSet<AsteriskChannel>());
-	private I18NStrings xStrings; 
+	private Set<AsteriskChannel> activeChannels = Collections.synchronizedSet(new HashSet<AsteriskChannel>());
+	private I18NStrings xStrings;
 	
 	public AsteriskManager(String language, String country){
 		
@@ -60,7 +66,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		asteriskServer.initialize();
 		asteriskServer.addAsteriskServerListener(this);
 		getChannels();
-		createCall("907886031657", "6002");//to, from
+		//createCall("907886031657", "5002");//to, from
 		
 	}
 	
@@ -83,6 +89,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
             
 			LOGGER.info(xStrings.getString("AsteriskManager.startupActiveChannels") + asteriskChannel.getId()); //$NON-NLS-1$
 			asteriskChannel.addPropertyChangeListener(this);
+			activeChannels.add(asteriskChannel);//TODO
 			
         }
 		
@@ -106,13 +113,26 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		
 	}
 	
+	/**
+	 * Creates a call to the given number from the given number
+	 * TODO think about caller id
+	 * @param to
+	 * @param from
+	 */
 	public void createCall(String to, String from){
 		
-		asteriskServer.originateToExtensionAsync(SIP_PREFIX + from, DEFAULT_CONTEXT, to, 
-				DEFAULT_PRIORITY, DEFAULT_TIMEOUT, this);
+		HashMap<String, String> vars = new HashMap<String, String>();
+		asteriskServer.originateToExtensionAsync(SIP_PREFIX + from + "@" + AUTO_ANSWER_CONTEXT,  //$NON-NLS-1$
+				AUTO_ANSWER_CONTEXT, to, DEFAULT_PRIORITY, DEFAULT_TIMEOUT, 
+				new CallerId(from, from), vars, this);
 		
 	}
 	
+	public void redirectCall(String channelID){
+		//TODO
+		redirect(String context, String exten, int priority)
+		
+	}
 	/** AsteriskServerListener **/
 	@Override
 	public void onNewAsteriskChannel(AsteriskChannel channel) {
@@ -160,9 +180,9 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 					AsteriskChannel ringing = (AsteriskChannel)evt.getSource();
 					
 					LOGGER.info(xStrings.getString("AsteriskManager.channelRinging") +  //$NON-NLS-1$
-							ringing.getCallerId().getNumber());
+							ringing.getCallerId().getNumber() + " " + ringing.getId()); //$NON-NLS-1$
 					sendMessage(xStrings.getString("AsteriskManager.channelRinging") +  //$NON-NLS-1$
-							ringing.getCallerId().getNumber());
+							ringing.getCallerId().getNumber() + " " + ringing.getId()); //$NON-NLS-1$
 					
 				}else if(state.getStatus() == ChannelState.RINGING.getStatus()){
 					
@@ -170,9 +190,9 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 					AsteriskChannel ringing = (AsteriskChannel)evt.getSource();
 					
 					LOGGER.info(xStrings.getString("AsteriskManager.channelRinging") +  //$NON-NLS-1$
-							ringing.getCallerId().getNumber());
+							ringing.getCallerId().getNumber() + " " + ringing.getId()); //$NON-NLS-1$
 					sendMessage(xStrings.getString("AsteriskManager.channelRinging") +  //$NON-NLS-1$
-							ringing.getCallerId().getNumber());
+							ringing.getCallerId().getNumber() + " " + ringing.getId()); //$NON-NLS-1$
 					
 				}else if(state.getStatus() == ChannelState.HUNGUP.getStatus()){
 					
@@ -194,20 +214,22 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 						logCause = xStrings.getString("AsteriskManager.channelHangupUnacceptable"); //$NON-NLS-1$
 					else if(hangupCause.equals(HANGUP_ANSWERED_ELSEWHERE))
 						logCause = xStrings.getString("AsteriskManager.channelHangupAnsweredElsewhere"); //$NON-NLS-1$
+					else if(hangupCause.equals(HANGUP_USER_BUSY))
+						logCause = xStrings.getString("AsteriskManager.channelHangupUserBusy"); //$NON-NLS-1$
 					else
 						logCause = hangupCause;
 					
-					LOGGER.info(logCause + hangup.getCallerId().getNumber());
-					sendMessage(logCause + hangup.getCallerId().getNumber());
+					LOGGER.info(logCause + hangup.getCallerId().getNumber() + " " + hangup.getId()); //$NON-NLS-1$
+					sendMessage(logCause + hangup.getCallerId().getNumber() + " " + hangup.getId()); //$NON-NLS-1$
 					
 				}else if(state.getStatus() == ChannelState.BUSY.getStatus()){
 					
 					AsteriskChannel busy = (AsteriskChannel)evt.getSource();
 					
 					LOGGER.info(xStrings.getString("AsteriskManager.channelBusy") +  //$NON-NLS-1$
-							busy.getCallerId().getNumber());
+							busy.getCallerId().getNumber() + " " + busy.getId()); //$NON-NLS-1$
 					sendMessage(xStrings.getString("AsteriskManager.channelBusy") +  //$NON-NLS-1$
-							busy.getCallerId().getNumber());
+							busy.getCallerId().getNumber() + " " + busy.getId()); //$NON-NLS-1$
 					
 				}
 				
@@ -239,11 +261,11 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 					LOGGER.info(xStrings.getString("AsteriskManager.callRingingFrom") +  //$NON-NLS-1$
 							channel.getCallerId().getNumber() + " " +  //$NON-NLS-1$
 							xStrings.getString("AsteriskManager.callRingingTo") + //$NON-NLS-1$
-							calling.getExtension());
+							calling.getExtension() + " " + channel.getId()); //$NON-NLS-1$
 					sendMessage(xStrings.getString("AsteriskManager.callRingingFrom") +  //$NON-NLS-1$
 							channel.getCallerId().getNumber() + " " +  //$NON-NLS-1$
 							xStrings.getString("AsteriskManager.callRingingTo") + //$NON-NLS-1$
-							calling.getExtension());
+							calling.getExtension() + " " + channel.getId()); //$NON-NLS-1$
 					
 				}
 				
@@ -262,11 +284,11 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 				LOGGER.info(xStrings.getString("AsteriskManager.callConnected") +  //$NON-NLS-1$
 						channel.getCallerId().getNumber() + " " + //$NON-NLS-1$
 						xStrings.getString("AsteriskManager.callConnectedTo") + //$NON-NLS-1$
-						linkedTo);
+						linkedTo + " " + channel.getId()); //$NON-NLS-1$
 				sendMessage(xStrings.getString("AsteriskManager.callRingingFrom") +  //$NON-NLS-1$
 						channel.getCallerId().getNumber() + " " + //$NON-NLS-1$
 						xStrings.getString("AsteriskManager.callConnectedTo") + //$NON-NLS-1$
-						linkedTo);
+						linkedTo + " " + channel.getId()); //$NON-NLS-1$
 				
 			}
 			
