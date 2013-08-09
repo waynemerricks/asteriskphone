@@ -8,12 +8,15 @@ import java.util.logging.Logger;
 import org.asteriskjava.live.ManagerCommunicationException;
 
 import com.thevoiceasia.phonebox.asterisk.AsteriskManager;
+import com.thevoiceasia.phonebox.database.DatabaseManager;
+import com.thevoiceasia.phonebox.database.Settings;
 
 public class Server extends Thread{
 
 	/** CLASS VARS **/
 	private AsteriskManager asteriskManager;
 	private boolean hasErrors = false;
+	private DatabaseManager databaseManager;
 	
 	/** STATICS **/
 	private static final Logger LOGGER = Logger.getLogger(Client.class.getName());//Logger
@@ -25,26 +28,44 @@ public class Server extends Thread{
 		xStrings = new I18NStrings(language, country);
 		setupLogging();
 		
-		LOGGER.info(xStrings.getString("Server.creatingAsteriskManager")); //$NON-NLS-1$
-		asteriskManager = new AsteriskManager(language, country);
-		LOGGER.info(xStrings.getString("Server.asteriskConnecting")); //$NON-NLS-1$
+		hasErrors = true;
 		
-		try{
-			asteriskManager.connect();
-			LOGGER.info(xStrings.getString("Server.asteriskConnected")); //$NON-NLS-1$
-		}catch(ManagerCommunicationException e){
-			
-			showError(e, xStrings.getString("Server.asteriskConnectionError")); //$NON-NLS-1$
-			hasErrors = true;
-		}
+		databaseManager = new DatabaseManager(new Settings(), language, country);
 		
-		if(!hasErrors){
+		if(!databaseManager.hasErrors()){
 			
-			//TODO Decide what happens here, probably nothing but if we have errors shutdown?
-			//LOGGER.info(xStrings.getString("Server.asteriskShowChannels")); //$NON-NLS-1$
-			//asteriskManager.showChannels();
-			//LOGGER.info(xStrings.getString("Server.asteriskShowQueues")); //$NON-NLS-1$
-			//asteriskManager.showQueues();
+			if(databaseManager.connect()){
+				
+				if(databaseManager.populateUserSettings()){
+					
+					LOGGER.info(xStrings.getString("Server.creatingAsteriskManager")); //$NON-NLS-1$
+					asteriskManager = new AsteriskManager(language, country,
+							databaseManager.getUserSettings().get("asteriskHost"), //$NON-NLS-1$
+							databaseManager.getUserSettings().get("asteriskUser"), //$NON-NLS-1$
+							databaseManager.getUserSettings().get("asteriskPass")); //$NON-NLS-1$
+					
+					LOGGER.info(xStrings.getString("Server.asteriskConnecting")); //$NON-NLS-1$
+					
+					try{
+						asteriskManager.connect();
+						LOGGER.info(xStrings.getString("Server.asteriskConnected")); //$NON-NLS-1$
+						
+						hasErrors = false; //Reset flag as everything is working
+						//asteriskManager.createCall("5001", "5002", "TEST 2");
+						//asteriskManager.redirectCall("1376067949.321", "5001");
+						//asteriskManager.hangupCall("1376067949.321");
+					}catch(ManagerCommunicationException e){
+						
+						showError(e, xStrings.getString("Server.asteriskConnectionError")); //$NON-NLS-1$
+						hasErrors = true;
+						
+					}
+					
+					
+				}
+					
+				
+			}
 			
 		}
 		
@@ -99,7 +120,7 @@ public class Server extends Thread{
 	
 	public void run(){
 		
-		while(true)
+		while(!hasErrors)
 			try{
 				sleep(1000);
 			}catch(InterruptedException e){
