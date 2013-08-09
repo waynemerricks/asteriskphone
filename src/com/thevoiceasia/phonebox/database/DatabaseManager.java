@@ -401,7 +401,7 @@ public class DatabaseManager {
 	 * 
 	 * Does nothing if we're already connected.
 	 */
-	public void connect(){
+	public boolean connect(){
 		
 		if(!connected){
 			
@@ -436,6 +436,9 @@ public class DatabaseManager {
 				showError(new Exception(xStrings.getString("DatabaseManager.DBSetupError")), xStrings.getString("DatabaseManager.DBSetupError"));  //$NON-NLS-1$//$NON-NLS-2$
 		
 		}
+		
+		return connected;
+		
 	}
 	
 	/**
