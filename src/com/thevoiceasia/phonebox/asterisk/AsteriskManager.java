@@ -2,10 +2,7 @@ package com.thevoiceasia.phonebox.asterisk;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -42,18 +39,27 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	
 	//CLASS VARS
 	private AsteriskServer asteriskServer;
-	private Set<AsteriskChannel> activeChannels = Collections.synchronizedSet(new HashSet<AsteriskChannel>());
+	private HashMap<String, AsteriskChannel> activeChannels = new HashMap<String, AsteriskChannel>();
 	private I18NStrings xStrings;
 	
-	public AsteriskManager(String language, String country){
+	/**
+	 * Creates a new Asterisk Manager instance that handles events and sends commands via XMPP
+	 * to any clients listening
+	 * @param language language for strings used to set locale
+	 * @param country country for strings used to set locale
+	 * @param asteriskHost host name/ip for Asterisk server
+	 * @param asteriskUser user name for Asterisk Manager Connection
+	 * @param asteriskPass password for Asterisk Manager Connection
+	 */
+	public AsteriskManager(String language, String country, String asteriskHost, 
+			String asteriskUser, String asteriskPass){
 		
 		//Turn off AsteriskJava logger for all but SEVERE
 		AST_LOGGER.setLevel(Level.SEVERE);
 		
 		xStrings = new I18NStrings(language, country);
 		
-		//TODO read settings properly
-		asteriskServer = new DefaultAsteriskServer("10.43.10.91", "phonemanager", "P0l0m1nt");  //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$
+		asteriskServer = new DefaultAsteriskServer(asteriskHost, asteriskUser, asteriskPass);
 		
 	}
 	
@@ -66,7 +72,6 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		asteriskServer.initialize();
 		asteriskServer.addAsteriskServerListener(this);
 		getChannels();
-		//createCall("907886031657", "5002");//to, from
 		
 	}
 	
@@ -89,14 +94,29 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
             
 			LOGGER.info(xStrings.getString("AsteriskManager.startupActiveChannels") + asteriskChannel.getId()); //$NON-NLS-1$
 			asteriskChannel.addPropertyChangeListener(this);
-			activeChannels.add(asteriskChannel);//TODO
+			addActiveChannel(asteriskChannel);
+			System.out.println(asteriskChannel);
 			
         }
 		
 	}
 	
-	//TODO showC + Q not required?
+	private synchronized void addActiveChannel(AsteriskChannel channel){
+	
+		activeChannels.put(channel.getId(), channel);
+		//System.out.println(activeChannels.size());
+		
+	}
+	
+	private synchronized void removeActiveChannel(String channelID){
+		
+		activeChannels.remove(channelID);
+		//System.out.println(activeChannels.size());
+		
+	}
+	
 	//Necessary when new clients join but not needed as public, rework this to send XMPP update
+	//TODO need to decide what is happening on channels and send update via XMPP
 	public void showChannels(){
 		
 		for (AsteriskChannel asteriskChannel : asteriskServer.getChannels()) {
@@ -115,24 +135,43 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	
 	/**
 	 * Creates a call to the given number from the given number
-	 * TODO think about caller id
 	 * @param to
-	 * @param from
+	 * @param fromNumber
+	 * @param fromName
 	 */
-	public void createCall(String to, String from){
+	public void createCall(String to, String fromNumber, String fromName){
 		
 		HashMap<String, String> vars = new HashMap<String, String>();
-		asteriskServer.originateToExtensionAsync(SIP_PREFIX + from + "@" + AUTO_ANSWER_CONTEXT,  //$NON-NLS-1$
-				AUTO_ANSWER_CONTEXT, to, DEFAULT_PRIORITY, DEFAULT_TIMEOUT, 
-				new CallerId(from, from), vars, this);
+		asteriskServer.originateToExtensionAsync(SIP_PREFIX + fromNumber + "@" +  //$NON-NLS-1$
+				AUTO_ANSWER_CONTEXT,  AUTO_ANSWER_CONTEXT, to, DEFAULT_PRIORITY, DEFAULT_TIMEOUT, 
+				new CallerId(fromName, fromNumber), vars, this);
 		
 	}
 	
-	public void redirectCall(String channelID){
-		//TODO
-		redirect(String context, String exten, int priority)
+	/**
+	 * Redirects the given channel to the given extension
+	 * @param channelID Channel to redirect
+	 * @param to extension to send channel to
+	 */
+	public void redirectCall(String channelID, String to){
+	
+		AsteriskChannel channel = activeChannels.get(channelID);
+		
+		if(channel != null)//null = channel not found
+			channel.redirect(AUTO_ANSWER_CONTEXT, to, DEFAULT_PRIORITY);
 		
 	}
+	
+	public void hangupCall(String channelID){
+		
+		AsteriskChannel channel = activeChannels.get(channelID);
+		
+		if(channel != null)
+			channel.hangup();
+		
+	}
+	
+	
 	/** AsteriskServerListener **/
 	@Override
 	public void onNewAsteriskChannel(AsteriskChannel channel) {
@@ -140,6 +179,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		//Registers a new channel, need a listener on each channel and keep track of them
 		LOGGER.info(xStrings.getString("AsteriskManager.newChannel") + channel.getId()); //$NON-NLS-1$
 		channel.addPropertyChangeListener(this);
+		addActiveChannel(channel);
 		
 	}
 
@@ -221,6 +261,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 					
 					LOGGER.info(logCause + hangup.getCallerId().getNumber() + " " + hangup.getId()); //$NON-NLS-1$
 					sendMessage(logCause + hangup.getCallerId().getNumber() + " " + hangup.getId()); //$NON-NLS-1$
+					removeActiveChannel(hangup.getId());
 					
 				}else if(state.getStatus() == ChannelState.BUSY.getStatus()){
 					
@@ -329,40 +370,20 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	@Override
 	public void onNewAgent(AsteriskAgentImpl agent) {}
 
+	/** UNUSED OriginateCallback **/
 	@Override
-	public void onBusy(AsteriskChannel channel) {
-		// TODO Auto-generated method stub
-		System.out.println("\nBUSY: " + channel);
-		
-	}
+	public void onBusy(AsteriskChannel channel) {}
 
 	@Override
-	public void onDialing(AsteriskChannel channel) {
-		// TODO Auto-generated method stub
-		System.out.println("\nDIALING: " + channel);
-		
-	}
+	public void onDialing(AsteriskChannel channel) {}
 
 	@Override
-	public void onFailure(LiveException exception) {
-		// TODO Auto-generated method stub
-		System.out.println("\nFAIL: " + exception);
-		
-	}
+	public void onFailure(LiveException exception) {}
 
 	@Override
-	public void onNoAnswer(AsteriskChannel channel) {
-		// TODO Auto-generated method stub
-		System.out.println("\nNO ANSWER: " + channel);
-		
-		
-	}
+	public void onNoAnswer(AsteriskChannel channel) {}
 
 	@Override
-	public void onSuccess(AsteriskChannel channel) {
-		// TODO Auto-generated method stub
-		System.out.println("\nCONNECTED: " + channel);
-		
-	}
+	public void onSuccess(AsteriskChannel channel) {}
 	
 }
