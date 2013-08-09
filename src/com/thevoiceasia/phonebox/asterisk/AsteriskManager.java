@@ -191,6 +191,11 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		
 	}
 
+	/* TODO Transfer to queue
+	 * XMPP CHAT Messages
+	 * XMPP Extension with Asterisk Info, Class it for easy messing around
+	 * XMPP Control Chat Toggle for debugging?
+	 */
 	/**
 	 * Sends control message to XMPP control chat room
 	 * @param message
