@@ -103,6 +103,7 @@ public class Client extends JFrame implements WindowListener{
 						userSettings.get("nickName"), //$NON-NLS-1$
 						userSettings.get("XMPPServer"), //$NON-NLS-1$
 						userSettings.get("XMPPRoom"), //$NON-NLS-1$
+						userSettings.get("XMPPControlRoom"), //$NON-NLS-1$
 						userSettings.get("language"), //$NON-NLS-1$
 						userSettings.get("country"), //$NON-NLS-1$
 						Integer.parseInt(userSettings.get("idleTimeout"))); //$NON-NLS-1$
