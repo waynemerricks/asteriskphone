@@ -3,6 +3,8 @@ package com.thevoiceasia.phonebox.asterisk;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.HashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,6 +22,11 @@ import org.asteriskjava.live.ManagerCommunicationException;
 import org.asteriskjava.live.MeetMeUser;
 import org.asteriskjava.live.OriginateCallback;
 import org.asteriskjava.live.internal.AsteriskAgentImpl;
+import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smackx.muc.MultiUserChat;
+
+import com.thevoiceasia.phonebox.database.DatabaseManager;
+import com.thevoiceasia.phonebox.records.PhoneCall;
 
 public class AsteriskManager implements AsteriskServerListener, PropertyChangeListener, OriginateCallback {
 
@@ -31,16 +38,23 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	private static final String HANGUP_OFFLINE = "Subscriber absent"; //$NON-NLS-1$
 	private static final String HANGUP_USER_BUSY = "User busy"; //$NON-NLS-1$
 	private static final String HANGUP_ANSWERED_ELSEWHERE = "Answered elsewhere"; //$NON-NLS-1$
-	private static final String CONTEXT_MACRO_AUTO = "macro-auto-blkvm"; //$NON-NLS-1$
-	private static final String AUTO_ANSWER_CONTEXT = "custom-answerme"; //$NON-NLS-1$
 	private static final String SIP_PREFIX = "Local/"; //$NON-NLS-1$
 	private static final int DEFAULT_PRIORITY = 1;
-	private static final long DEFAULT_TIMEOUT = 30000L;
 	
 	//CLASS VARS
 	private AsteriskServer asteriskServer;
 	private HashMap<String, AsteriskChannel> activeChannels = new HashMap<String, AsteriskChannel>();
 	private I18NStrings xStrings;
+	private String autoAnswerContext, defaultContext, contextMacroAuto, queueNumber;
+	private long defaultTimeOut;
+	private MultiUserChat controlRoom;
+	
+	/* We need to spawn threads for event response with db lookups, in order to guard against
+	 * craziness, we'll use the ExecutorService to have X threads available to use (set via
+	 * DB threadPoolMax
+	 */
+	private ExecutorService dbLookUpService; 
+	private int maxExecutorThreads;
 	
 	/**
 	 * Creates a new Asterisk Manager instance that handles events and sends commands via XMPP
@@ -51,8 +65,18 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	 * @param asteriskUser user name for Asterisk Manager Connection
 	 * @param asteriskPass password for Asterisk Manager Connection
 	 */
+	//TODO rework to pass a database to this, its not worth this many arguments to decouple
 	public AsteriskManager(String language, String country, String asteriskHost, 
-			String asteriskUser, String asteriskPass){
+			String asteriskUser, String asteriskPass, String autoAnswerContext,
+			String defaultContext, String contextMacroAuto, String queueNumber,
+			long defaultTimeOut, int maxDBThreads){
+		
+		this.autoAnswerContext = autoAnswerContext;
+		this.defaultContext = defaultContext;
+		this.contextMacroAuto = contextMacroAuto;
+		this.queueNumber = queueNumber;
+		this.defaultTimeOut = defaultTimeOut;
+		this.maxExecutorThreads = maxDBThreads;
 		
 		//Turn off AsteriskJava logger for all but SEVERE
 		AST_LOGGER.setLevel(Level.SEVERE);
@@ -64,6 +88,16 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	}
 	
 	/**
+	 * Set the room to broadcast control messages to
+	 * @param control
+	 */
+	public void setControlRoom(MultiUserChat control){
+		
+		controlRoom = control;
+		
+	}
+	
+	/**
 	 * Initialises and connects to Asterisk server
 	 * @throws ManagerCommunicationException
 	 */
@@ -71,7 +105,10 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		
 		asteriskServer.initialize();
 		asteriskServer.addAsteriskServerListener(this);
+		dbLookUpService = Executors.newFixedThreadPool(maxExecutorThreads);
+		
 		getChannels();
+		sendMessage(xStrings.getString("AsteriskManager.XMPPServerHello")); //$NON-NLS-1$
 		
 	}
 	
@@ -92,7 +129,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		
 		for (AsteriskChannel asteriskChannel : asteriskServer.getChannels()) {
             
-			LOGGER.info(xStrings.getString("AsteriskManager.startupActiveChannels") + asteriskChannel.getId()); //$NON-NLS-1$
+			LOGGER.info(xStrings.getString("AsteriskManager.startupActiveChannels") + "/" + asteriskChannel.getId()); //$NON-NLS-1$ //$NON-NLS-2$
 			asteriskChannel.addPropertyChangeListener(this);
 			addActiveChannel(asteriskChannel);
 			System.out.println(asteriskChannel);
@@ -143,7 +180,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		
 		HashMap<String, String> vars = new HashMap<String, String>();
 		asteriskServer.originateToExtensionAsync(SIP_PREFIX + fromNumber + "@" +  //$NON-NLS-1$
-				AUTO_ANSWER_CONTEXT,  AUTO_ANSWER_CONTEXT, to, DEFAULT_PRIORITY, DEFAULT_TIMEOUT, 
+				autoAnswerContext,  autoAnswerContext, to, DEFAULT_PRIORITY, defaultTimeOut, 
 				new CallerId(fromName, fromNumber), vars, this);
 		
 	}
@@ -158,7 +195,20 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		AsteriskChannel channel = activeChannels.get(channelID);
 		
 		if(channel != null)//null = channel not found
-			channel.redirect(AUTO_ANSWER_CONTEXT, to, DEFAULT_PRIORITY);
+			channel.redirect(autoAnswerContext, to, DEFAULT_PRIORITY);
+		
+	}
+
+	/**
+	 * Redirects the given channel to the on air queue specified in DB
+	 * @param channelID Channel to redirect
+	 */
+	public void redirectCallToQueue(String channelID){
+		
+		AsteriskChannel channel = activeChannels.get(channelID);
+		
+		if(channel != null)
+			channel.redirect(defaultContext, queueNumber, DEFAULT_PRIORITY);
 		
 	}
 	
@@ -177,7 +227,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	public void onNewAsteriskChannel(AsteriskChannel channel) {
 		
 		//Registers a new channel, need a listener on each channel and keep track of them
-		LOGGER.info(xStrings.getString("AsteriskManager.newChannel") + channel.getId()); //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("AsteriskManager.newChannel") + "/" + channel.getId()); //$NON-NLS-1$ //$NON-NLS-2$
 		channel.addPropertyChangeListener(this);
 		addActiveChannel(channel);
 		
@@ -186,15 +236,31 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	@Override
 	public void onNewQueueEntry(AsteriskQueueEntry entry) {
 		
-		//TODO Waiting for studio goes to queue
-		System.out.println(entry);
+		//TODO Thread me as I'm going to do a DB lookup
+		//Returns via sendNewQueueEntryMessage
+		LOGGER.info(xStrings.getString("AsteriskManager.newQueueEntry") + //$NON-NLS-1$
+				entry.getQueue().getName() + "/" + entry.getChannel().getId()); //$NON-NLS-1$
+		
+		dbLookUpService.execute(new PhoneCall(database, entry, this));
 		
 	}
 
-	/* TODO Transfer to queue
-	 * XMPP CHAT Messages
+	public void sendNewQueueEntryMessage(AsteriskQueueEntry entry){
+		
+		//Transfers from handlers goes into Studio Queue
+		String message = xStrings.getString("AsteriskManager.populatedQueueEntry") + "/" + //$NON-NLS-1$ //$NON-NLS-2$
+				entry.getQueue().getName() + "/" + entry.getChannel().getId(); //$NON-NLS-1$
+		entry.getQueue().getName();
+		
+		LOGGER.info(message);
+		sendMessage(message);
+		
+	}
+	
+	
+	
+	/* TODO Database Call Life Cycle Logging
 	 * XMPP Extension with Asterisk Info, Class it for easy messing around
-	 * XMPP Control Chat Toggle for debugging?
 	 */
 	/**
 	 * Sends control message to XMPP control chat room
@@ -202,7 +268,17 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	 */
 	private void sendMessage(String message){
 		
-		//TODO Send Control Message
+		LOGGER.info(xStrings.getString("AsteriskManager.logSendingMessage")); //$NON-NLS-1$
+		
+		try {
+				
+			controlRoom.sendMessage(message);
+			
+		}catch(XMPPException e){
+			LOGGER.severe(xStrings.getString("AsteriskManager.XMPPError")); //$NON-NLS-1$
+		}catch(IllegalStateException e){
+			LOGGER.severe(xStrings.getString("AsteriskManager.XMPPServerGoneError")); //$NON-NLS-1$
+		}
 		
 	}
 	
@@ -224,20 +300,20 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 					//This channel is dialling out and listening to it ringing
 					AsteriskChannel ringing = (AsteriskChannel)evt.getSource();
 					
-					LOGGER.info(xStrings.getString("AsteriskManager.channelRinging") +  //$NON-NLS-1$
-							ringing.getCallerId().getNumber() + " " + ringing.getId()); //$NON-NLS-1$
-					sendMessage(xStrings.getString("AsteriskManager.channelRinging") +  //$NON-NLS-1$
-							ringing.getCallerId().getNumber() + " " + ringing.getId()); //$NON-NLS-1$
+					String message = xStrings.getString("AsteriskManager.channelRinging") +  //$NON-NLS-1$
+							"/" + ringing.getCallerId().getNumber() + "/" + ringing.getId(); //$NON-NLS-1$ //$NON-NLS-2$
+					LOGGER.info(message);
+					sendMessage(message);
 					
 				}else if(state.getStatus() == ChannelState.RINGING.getStatus()){
 					
 					//Someone is ringing this channel
 					AsteriskChannel ringing = (AsteriskChannel)evt.getSource();
 					
-					LOGGER.info(xStrings.getString("AsteriskManager.channelRinging") +  //$NON-NLS-1$
-							ringing.getCallerId().getNumber() + " " + ringing.getId()); //$NON-NLS-1$
-					sendMessage(xStrings.getString("AsteriskManager.channelRinging") +  //$NON-NLS-1$
-							ringing.getCallerId().getNumber() + " " + ringing.getId()); //$NON-NLS-1$
+					String message = xStrings.getString("AsteriskManager.channelRinging") +  //$NON-NLS-1$
+							"/" + ringing.getCallerId().getNumber() + "/" + ringing.getId(); //$NON-NLS-1$ //$NON-NLS-2$
+					LOGGER.info(message);
+					sendMessage(message);
 					
 				}else if(state.getStatus() == ChannelState.HUNGUP.getStatus()){
 					
@@ -264,18 +340,20 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 					else
 						logCause = hangupCause;
 					
-					LOGGER.info(logCause + hangup.getCallerId().getNumber() + " " + hangup.getId()); //$NON-NLS-1$
-					sendMessage(logCause + hangup.getCallerId().getNumber() + " " + hangup.getId()); //$NON-NLS-1$
+					String message = logCause + "/" + hangup.getCallerId().getNumber() + "/" + hangup.getId(); //$NON-NLS-1$ //$NON-NLS-2$
+					LOGGER.info(message);
+					sendMessage(message);
 					removeActiveChannel(hangup.getId());
 					
 				}else if(state.getStatus() == ChannelState.BUSY.getStatus()){
 					
 					AsteriskChannel busy = (AsteriskChannel)evt.getSource();
 					
-					LOGGER.info(xStrings.getString("AsteriskManager.channelBusy") +  //$NON-NLS-1$
-							busy.getCallerId().getNumber() + " " + busy.getId()); //$NON-NLS-1$
-					sendMessage(xStrings.getString("AsteriskManager.channelBusy") +  //$NON-NLS-1$
-							busy.getCallerId().getNumber() + " " + busy.getId()); //$NON-NLS-1$
+					String message = xStrings.getString("AsteriskManager.channelBusy") + //$NON-NLS-1$
+							"/" + busy.getCallerId().getNumber() + "/" + busy.getId(); //$NON-NLS-1$ //$NON-NLS-2$
+					
+					LOGGER.info(message);
+					sendMessage(message);
 					
 				}
 				
@@ -300,18 +378,16 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 				Extension calling = (Extension)evt.getNewValue();
 				
 				//Check for macro-auto which is usually ring group connect
-				if(!calling.getContext().equals(CONTEXT_MACRO_AUTO)){
+				if(!calling.getContext().equals(contextMacroAuto)){
 					
 					AsteriskChannel channel = (AsteriskChannel)evt.getSource();
 					
-					LOGGER.info(xStrings.getString("AsteriskManager.callRingingFrom") +  //$NON-NLS-1$
-							channel.getCallerId().getNumber() + " " +  //$NON-NLS-1$
-							xStrings.getString("AsteriskManager.callRingingTo") + //$NON-NLS-1$
-							calling.getExtension() + " " + channel.getId()); //$NON-NLS-1$
-					sendMessage(xStrings.getString("AsteriskManager.callRingingFrom") +  //$NON-NLS-1$
-							channel.getCallerId().getNumber() + " " +  //$NON-NLS-1$
-							xStrings.getString("AsteriskManager.callRingingTo") + //$NON-NLS-1$
-							calling.getExtension() + " " + channel.getId()); //$NON-NLS-1$
+					String message = xStrings.getString("AsteriskManager.callRingingFrom") +  //$NON-NLS-1$
+							"/" + channel.getCallerId().getNumber() + "/" +  //$NON-NLS-1$ //$NON-NLS-2$
+							calling.getExtension() + "/" + channel.getId(); //$NON-NLS-1$
+					
+					LOGGER.info(message);
+					sendMessage(message);
 					
 				}
 				
@@ -327,14 +403,12 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 				
 				String linkedTo = getNumberFromChannelName(channel.getLinkedChannel().getName());
 				
-				LOGGER.info(xStrings.getString("AsteriskManager.callConnected") +  //$NON-NLS-1$
-						channel.getCallerId().getNumber() + " " + //$NON-NLS-1$
-						xStrings.getString("AsteriskManager.callConnectedTo") + //$NON-NLS-1$
-						linkedTo + " " + channel.getId()); //$NON-NLS-1$
-				sendMessage(xStrings.getString("AsteriskManager.callRingingFrom") +  //$NON-NLS-1$
-						channel.getCallerId().getNumber() + " " + //$NON-NLS-1$
-						xStrings.getString("AsteriskManager.callConnectedTo") + //$NON-NLS-1$
-						linkedTo + " " + channel.getId()); //$NON-NLS-1$
+				String message = xStrings.getString("AsteriskManager.callConnected") +  //$NON-NLS-1$
+						"/" + channel.getCallerId().getNumber() + "/" + //$NON-NLS-1$ //$NON-NLS-2$
+						linkedTo + "/" + channel.getId(); //$NON-NLS-1$
+				
+				LOGGER.info(message);
+				sendMessage(message);
 				
 			}
 			
