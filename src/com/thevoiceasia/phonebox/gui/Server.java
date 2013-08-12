@@ -8,6 +8,7 @@ import java.util.logging.Logger;
 import org.asteriskjava.live.ManagerCommunicationException;
 
 import com.thevoiceasia.phonebox.asterisk.AsteriskManager;
+import com.thevoiceasia.phonebox.chat.ChatManager;
 import com.thevoiceasia.phonebox.database.DatabaseManager;
 import com.thevoiceasia.phonebox.database.Settings;
 
@@ -17,6 +18,7 @@ public class Server extends Thread{
 	private AsteriskManager asteriskManager;
 	private boolean hasErrors = false;
 	private DatabaseManager databaseManager;
+	private ChatManager chatManager;
 	
 	/** STATICS **/
 	private static final Logger LOGGER = Logger.getLogger(Client.class.getName());//Logger
@@ -36,34 +38,68 @@ public class Server extends Thread{
 			
 			if(databaseManager.connect()){
 				
-				if(databaseManager.populateUserSettings()){
+				boolean createUser = !databaseManager.populateUserSettings();
+				
+				chatManager = new ChatManager(databaseManager.getUserSettings()
+						.get("XMPPLogin") + "@" +  //$NON-NLS-1$ //$NON-NLS-2$
+					databaseManager.getUserSettings().get("XMPPDomain"), //$NON-NLS-1$ 
+					databaseManager.getUserSettings().get("password"), //$NON-NLS-1$
+					databaseManager.getUserSettings().get("nickName"), //$NON-NLS-1$
+					databaseManager.getUserSettings().get("XMPPServer"), //$NON-NLS-1$
+					null,
+					databaseManager.getUserSettings().get("XMPPControlRoom"), //$NON-NLS-1$
+					databaseManager.getUserSettings().get("language"), //$NON-NLS-1$
+					databaseManager.getUserSettings().get("country"), //$NON-NLS-1$
+					Integer.parseInt(databaseManager.getUserSettings()
+							.get("idleTimeout"))); //$NON-NLS-1$
+				
+				if(createUser){
 					
-					LOGGER.info(xStrings.getString("Server.creatingAsteriskManager")); //$NON-NLS-1$
-					asteriskManager = new AsteriskManager(language, country,
+					chatManager.createUser();
+					
+				}
+				
+				if(!chatManager.hasErrors()){
+					
+					chatManager.connect();
+
+					if(chatManager.hasErrors())
+						hasErrors = true;
+					else{
+							
+						//Create and Connect to Asterisk
+						LOGGER.info(xStrings.getString("Server.creatingAsteriskManager")); //$NON-NLS-1$
+						asteriskManager = new AsteriskManager(language, country,
 							databaseManager.getUserSettings().get("asteriskHost"), //$NON-NLS-1$
 							databaseManager.getUserSettings().get("asteriskUser"), //$NON-NLS-1$
-							databaseManager.getUserSettings().get("asteriskPass")); //$NON-NLS-1$
+							databaseManager.getUserSettings().get("asteriskPass"), //$NON-NLS-1$
+							databaseManager.getUserSettings().get("autoAnswerContext"), //$NON-NLS-1$
+							databaseManager.getUserSettings().get("defaultContext"), //$NON-NLS-1$
+							databaseManager.getUserSettings().get("contextMacroAuto"), //$NON-NLS-1$
+							databaseManager.getUserSettings().get("queueNumber"), //$NON-NLS-1$
+							Long.parseLong(databaseManager.getUserSettings().get("defaultTimeOut"))); //$NON-NLS-1$
+						asteriskManager.setControlRoom(chatManager.getControlChatRoom());
+						LOGGER.info(xStrings.getString("Server.asteriskConnecting")); //$NON-NLS-1$
 					
-					LOGGER.info(xStrings.getString("Server.asteriskConnecting")); //$NON-NLS-1$
-					
-					try{
-						asteriskManager.connect();
-						LOGGER.info(xStrings.getString("Server.asteriskConnected")); //$NON-NLS-1$
+						try{
+							asteriskManager.connect();
+							LOGGER.info(xStrings.getString("Server.asteriskConnected")); //$NON-NLS-1$
 						
-						hasErrors = false; //Reset flag as everything is working
-						//asteriskManager.createCall("5001", "5002", "TEST 2");
-						//asteriskManager.redirectCall("1376067949.321", "5001");
-						//asteriskManager.hangupCall("1376067949.321");
-					}catch(ManagerCommunicationException e){
+							hasErrors = false; //Reset flag as everything is working
+							//asteriskManager.createCall("5001", "5002", "TEST 2");
+							//asteriskManager.redirectCall("1376324667.378", "5002");
+							//asteriskManager.redirectCallToQueue("1376313386.343");
+							//asteriskManager.hangupCall("1376067949.321");
+						}catch(ManagerCommunicationException e){
 						
-						showError(e, xStrings.getString("Server.asteriskConnectionError")); //$NON-NLS-1$
-						hasErrors = true;
+							showError(e, xStrings.getString("Server.asteriskConnectionError")); //$NON-NLS-1$
+							hasErrors = true;
+						
+						}
 						
 					}
 					
-					
 				}
-					
 				
 			}
 			
