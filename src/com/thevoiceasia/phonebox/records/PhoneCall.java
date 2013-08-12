@@ -10,33 +10,47 @@ import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 
 import org.asteriskjava.live.AsteriskChannel;
+import org.asteriskjava.live.AsteriskQueueEntry;
 import org.asteriskjava.live.CallerId;
 
+import com.thevoiceasia.phonebox.asterisk.AsteriskManager;
 import com.thevoiceasia.phonebox.chat.I18NStrings;
 import com.thevoiceasia.phonebox.database.DatabaseManager;
 
-public class PhoneCall {
+public class PhoneCall implements Runnable{
 
 	/** CLASS VARS **/
 	private AsteriskChannel channel;
+	private AsteriskQueueEntry queueEntry;
 	private Vector<Person> people = new Vector<Person>();
 	private int activePerson = 0;
 	
 	private DatabaseManager database;
+	private AsteriskManager asteriskManager;
 	private I18NStrings xStrings; //Link to external string resources
 	private Vector<Integer> numberIDs = new Vector<Integer>(); 
 	
 	/** STATICS **/
 	private static final Logger LOGGER = Logger.getLogger(PhoneCall.class.getName());//Logger
 	
-	public PhoneCall(DatabaseManager database, AsteriskChannel channel){
+	public PhoneCall(DatabaseManager database, AsteriskChannel channel) {
 		
 		this.database = database;
 		this.channel = channel;
 		xStrings = new I18NStrings(database.getUserSettings().get("language"),  //$NON-NLS-1$
 				database.getUserSettings().get("country")); //$NON-NLS-1$
 		
-		populatePersonDetails();
+	}
+	
+	public PhoneCall(DatabaseManager database, AsteriskQueueEntry queueEntry, 
+			AsteriskManager asteriskManager) {
+		
+		this.database = database;
+		this.queueEntry = queueEntry;
+		this.asteriskManager = asteriskManager;
+		
+		xStrings = new I18NStrings(database.getUserSettings().get("language"),  //$NON-NLS-1$
+				database.getUserSettings().get("country")); //$NON-NLS-1$
 		
 	}
 	
@@ -573,6 +587,17 @@ public class PhoneCall {
 		e.printStackTrace();
 		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("PhoneCall.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
 		LOGGER.severe(friendlyErrorMessage);
+		
+	}
+
+	/**
+	 * Populates Details from the DB and then sends a message via XMPP for this channel
+	 */
+	@Override
+	public void run() {
+		
+		populatePersonDetails();
+		trackRinging();
 		
 	}
 	
