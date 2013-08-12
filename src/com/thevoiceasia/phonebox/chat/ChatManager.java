@@ -25,12 +25,13 @@ import com.thevoiceasia.phonebox.misc.LastActionTimer;
 public class ChatManager implements UserStatusListener, PacketListener {
 
 	//XMPP Settings
-	private String XMPPUserName, XMPPPassword, XMPPNickName, XMPPServerHostName, XMPPRoomName;
+	private String XMPPUserName, XMPPPassword, XMPPNickName, XMPPServerHostName, XMPPRoomName,
+		XMPPControlRoomName;
 	private int XMPPChatHistory, idleTimeout;
 	
 	//XMPP Connections/Rooms
 	private Connection XMPPServerConnection;
-	private MultiUserChat phoneboxChat;
+	private MultiUserChat phoneboxChat, controlChat;
 	
 	//ChatManager vars
 	private boolean hasErrors = false; //Error Flag used internally
@@ -56,7 +57,8 @@ public class ChatManager implements UserStatusListener, PacketListener {
 	 * @param country
 	 */
 	public ChatManager(String userName, String password, String nickName, 
-			String serverHostName, String roomName, String language, String country, int idleTimeout){
+			String serverHostName, String roomName, String controlRoomName,
+			String language, String country, int idleTimeout){
 		
 		//Get I18N handle for external strings
 		xStrings = new I18NStrings(language, country);
@@ -64,6 +66,7 @@ public class ChatManager implements UserStatusListener, PacketListener {
 		this.XMPPPassword = password;
 		this.XMPPServerHostName = serverHostName;
 		this.XMPPRoomName = roomName;
+		this.XMPPControlRoomName = controlRoomName;
 		this.XMPPChatHistory = XMPP_CHAT_HISTORY;
 		this.XMPPNickName = nickName;
 		this.idleTimeout = idleTimeout;
@@ -171,6 +174,16 @@ public class ChatManager implements UserStatusListener, PacketListener {
 	}
 	
 	/**
+	 * Returns the Phonebox Control Chat Room
+	 * @return
+	 */
+	public MultiUserChat getControlChatRoom(){
+		
+		return controlChat;
+		
+	}
+	
+	/**
 	 * Returns true if hasErrors is set, usually from XMPP connect/message errors
 	 * @return
 	 */
@@ -252,27 +265,48 @@ public class ChatManager implements UserStatusListener, PacketListener {
 			//Join Group Chat Channel
 			if(!hasErrors){
 				
-				phoneboxChat = new MultiUserChat(XMPPServerConnection, XMPPRoomName);
-				DiscussionHistory chatHistory = new DiscussionHistory();
-				chatHistory.setSeconds(XMPPChatHistory);
-				
-				try{
-					LOGGER.info(xStrings.getString("ChatManager.logJoinRoom")); //$NON-NLS-1$
-					phoneboxChat.join(XMPPNickName, XMPPPassword, chatHistory, 
-							SmackConfiguration.getPacketReplyTimeout());
-					LOGGER.info(xStrings.getString("ChatManager.logJoinedRoom")); //$NON-NLS-1$
-					
-				}catch(XMPPException e){
-					
-					showError(e, xStrings.getString("ChatManager.chatRoomError")); //$NON-NLS-1$
-					hasErrors = true;
-					disconnect();
-					
+				if(XMPPRoomName != null){
+					phoneboxChat = new MultiUserChat(XMPPServerConnection, XMPPRoomName);
+					joinRoom(phoneboxChat);
 				}
+				
+				controlChat = new MultiUserChat(XMPPServerConnection, XMPPControlRoomName);
+				joinRoom(controlChat);
 				
 			}
 			
 		}
+		
+	}
+	
+	/**
+	 * Joins the given MUC to the chat room, sets error flag if there are problems
+	 * @param room room to join
+	 * @return true if successful
+	 */
+	private boolean joinRoom(MultiUserChat room){
+		
+		boolean success = false;
+		
+		DiscussionHistory chatHistory = new DiscussionHistory();
+		chatHistory.setSeconds(XMPPChatHistory);
+		
+		try{
+			LOGGER.info(xStrings.getString("ChatManager.logJoinRoom")); //$NON-NLS-1$
+			room.join(XMPPNickName, XMPPPassword, chatHistory, 
+					SmackConfiguration.getPacketReplyTimeout());
+			LOGGER.info(xStrings.getString("ChatManager.logJoinedRoom")); //$NON-NLS-1$
+			success = true;
+			
+		}catch(XMPPException e){
+			
+			showError(e, xStrings.getString("ChatManager.chatRoomError")); //$NON-NLS-1$
+			hasErrors = true;
+			disconnect();
+			
+		}
+		
+		return success;
 		
 	}
 	
@@ -334,12 +368,17 @@ public class ChatManager implements UserStatusListener, PacketListener {
 	/**
 	 * Sends the given string as a message to the XMPP chat room
 	 * @param msg
+	 * @param controlMessage flag to indicate whether this goes to control room or not
 	 */
-	public void sendMessage(String msg){
+	public void sendMessage(String msg, boolean controlMessage){
 		
 		LOGGER.info(xStrings.getString("ChatManager.logSendMessage")); //$NON-NLS-1$
 		try{
-			phoneboxChat.sendMessage(msg);
+			if(phoneboxChat != null && !controlMessage)
+				phoneboxChat.sendMessage(msg);
+			else
+				controlChat.sendMessage(msg);
+			
 		}catch(XMPPException e){
 			showWarning(e, xStrings.getString("ChatManager.chatRoomError")); //$NON-NLS-1$
 		}catch(IllegalStateException e){
