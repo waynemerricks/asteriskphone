@@ -29,6 +29,8 @@ public class PhoneCall implements Runnable{
 	private AsteriskManager asteriskManager;
 	private I18NStrings xStrings; //Link to external string resources
 	private Vector<Integer> numberIDs = new Vector<Integer>(); 
+	private char threadMode;
+	private String threadOperator;
 	
 	/** STATICS **/
 	private static final Logger LOGGER = Logger.getLogger(PhoneCall.class.getName());//Logger
@@ -40,7 +42,24 @@ public class PhoneCall implements Runnable{
 		xStrings = new I18NStrings(database.getUserSettings().get("language"),  //$NON-NLS-1$
 				database.getUserSettings().get("country")); //$NON-NLS-1$
 		
+		populatePersonDetails();
+		
 	}
+	
+	public PhoneCall(DatabaseManager database, AsteriskChannel channel, 
+			AsteriskManager asteriskManager, char mode, String from){
+	
+		this.database = database;
+		this.channel = channel;
+		this.asteriskManager = asteriskManager;
+		threadMode = mode;
+		threadOperator = from;
+		
+		xStrings = new I18NStrings(database.getUserSettings().get("language"),  //$NON-NLS-1$
+				database.getUserSettings().get("country")); //$NON-NLS-1$
+		
+	}
+	
 	
 	public PhoneCall(DatabaseManager database, AsteriskQueueEntry queueEntry, 
 			AsteriskManager asteriskManager) {
@@ -48,6 +67,9 @@ public class PhoneCall implements Runnable{
 		this.database = database;
 		this.queueEntry = queueEntry;
 		this.asteriskManager = asteriskManager;
+		this.channel = queueEntry.getChannel();
+		threadMode = 'Q';
+		threadOperator = "NA"; //$NON-NLS-1$
 		
 		xStrings = new I18NStrings(database.getUserSettings().get("language"),  //$NON-NLS-1$
 				database.getUserSettings().get("country")); //$NON-NLS-1$
@@ -135,8 +157,39 @@ public class PhoneCall implements Runnable{
 		
 		Statement statement = null;
 		
-		String SQL = "INSERT INTO callhistory(phonenumber, state) VALUES("  //$NON-NLS-1$
-				+ channel.getCallerId().getNumber() + ", 'R')"; //$NON-NLS-1$
+		String SQL = "INSERT INTO callhistory(phonenumber, state, callchannel) VALUES("  //$NON-NLS-1$
+				+ "'" + channel.getCallerId().getNumber() + "', 'R', " //$NON-NLS-1$ //$NON-NLS-2$ 
+				+ channel.getId() + ")"; //$NON-NLS-1$
+		
+		try{
+			
+			statement = database.getWriteConnection().createStatement();
+			statement.executeUpdate(SQL);
+	        
+		}catch(SQLException e){
+        	
+        	showError(e, xStrings.getString("PhoneCall.errorTrackingRingState") //$NON-NLS-1$ 
+        			+ channel.getCallerId().getNumber());
+        	
+        }finally{
+            if(statement != null)
+            	try{
+            		statement.close();
+            	}catch(Exception e){}
+        }
+		
+	}
+	
+	/**
+	 * Adds a record to the DB to indicate that this PhoneCall is in the ringing state
+	 */
+	public void trackQueue(String operator){
+		
+		Statement statement = null;
+		
+		String SQL = "INSERT INTO callhistory(phonenumber, state, callchannel, operator) VALUES("  //$NON-NLS-1$
+				+ "'" + channel.getCallerId().getNumber() + "', 'Q', " //$NON-NLS-1$ //$NON-NLS-2$ 
+				+ channel.getId() + ", '" + operator + "')"; //$NON-NLS-1$ //$NON-NLS-2$
 		
 		try{
 			
@@ -165,8 +218,9 @@ public class PhoneCall implements Runnable{
 		
 		Statement statement = null;
 		
-		String SQL = "INSERT INTO callhistory(phonenumber, state, operator) VALUES("  //$NON-NLS-1$
-				+ channel.getCallerId().getNumber() + ", 'A', " + answeredBy + ")"; //$NON-NLS-1$ //$NON-NLS-2$
+		String SQL = "INSERT INTO callhistory(phonenumber, state, operator, callchannel) VALUES("  //$NON-NLS-1$
+				+ "'" + channel.getCallerId().getNumber() + "', 'A', '" + answeredBy + "', " //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				+ channel.getId() + ")"; //$NON-NLS-1$
 		
 		try{
 			
@@ -195,8 +249,9 @@ public class PhoneCall implements Runnable{
 		
 		Statement statement = null;
 		
-		String SQL = "INSERT INTO callhistory(phonenumber, state, operator) VALUES("  //$NON-NLS-1$
-				+ channel.getCallerId().getNumber() + ", 'P', " + parkedBy + ")"; //$NON-NLS-1$ //$NON-NLS-2$
+		String SQL = "INSERT INTO callhistory(phonenumber, state, operator, callchannel) VALUES("  //$NON-NLS-1$
+				+ "'" + channel.getCallerId().getNumber() + "', 'P', '" + parkedBy + "', " //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				+ channel.getId() + ")"; //$NON-NLS-1$
 		
 		try{
 			
@@ -225,8 +280,9 @@ public class PhoneCall implements Runnable{
 		
 		Statement statement = null;
 		
-		String SQL = "INSERT INTO callhistory(phonenumber, state, operator) VALUES("  //$NON-NLS-1$
-				+ channel.getCallerId().getNumber() + ", 'H', " + hangupBy + ")"; //$NON-NLS-1$ //$NON-NLS-2$
+		String SQL = "INSERT INTO callhistory(phonenumber, state, operator, callchannel) VALUES("  //$NON-NLS-1$
+				+ "'" + channel.getCallerId().getNumber() + "', 'H', '" + hangupBy + "'," //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				+ channel.getId() + ")"; //$NON-NLS-1$ 
 		
 		try{
 			
@@ -591,13 +647,20 @@ public class PhoneCall implements Runnable{
 	}
 
 	/**
-	 * Populates Details from the DB and then sends a message via XMPP for this channel
+	 * Called via a thread in AsteriskManager to trackRinging without blocking event processing
 	 */
 	@Override
 	public void run() {
 		
-		populatePersonDetails();
-		trackRinging();
+		if(threadMode == 'Q'){
+			trackQueue(threadOperator);
+			asteriskManager.sendNewQueueEntryMessage(queueEntry);
+		}else if(threadMode == 'H'){
+			//Automated Hang up, user hang ups will bypass this
+			trackHangup(threadOperator); 
+		}else if(threadMode == 'A'){
+			trackAnswered(threadOperator);
+		}
 		
 	}
 	
