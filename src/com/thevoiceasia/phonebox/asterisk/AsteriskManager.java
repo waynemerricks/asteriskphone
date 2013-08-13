@@ -173,6 +173,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		
 	}
 	
+	//TODO Lock Channel so that multiples don't constantly redirect call
 	/**
 	 * Redirects the given channel to the given extension
 	 * @param channelID Channel to redirect
