@@ -48,6 +48,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	private String autoAnswerContext, defaultContext, contextMacroAuto, queueNumber;
 	private long defaultTimeOut;
 	private MultiUserChat controlRoom;
+	private DatabaseManager databaseManager;
 	
 	/* We need to spawn threads for event response with db lookups, in order to guard against
 	 * craziness, we'll use the ExecutorService to have X threads available to use (set via
@@ -59,41 +60,28 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	/**
 	 * Creates a new Asterisk Manager instance that handles events and sends commands via XMPP
 	 * to any clients listening
-	 * @param language language for strings used to set locale
-	 * @param country country for strings used to set locale
-	 * @param asteriskHost host name/ip for Asterisk server
-	 * @param asteriskUser user name for Asterisk Manager Connection
-	 * @param asteriskPass password for Asterisk Manager Connection
+	 * @param databaseManager used for settings and saving records to DB
+	 * @param controlRoom XMPP Chat Room to use for control messages
 	 */
-	//TODO rework to pass a database to this, its not worth this many arguments to decouple
-	public AsteriskManager(String language, String country, String asteriskHost, 
-			String asteriskUser, String asteriskPass, String autoAnswerContext,
-			String defaultContext, String contextMacroAuto, String queueNumber,
-			long defaultTimeOut, int maxDBThreads){
+	public AsteriskManager(DatabaseManager databaseManager, MultiUserChat controlRoom){
 		
-		this.autoAnswerContext = autoAnswerContext;
-		this.defaultContext = defaultContext;
-		this.contextMacroAuto = contextMacroAuto;
-		this.queueNumber = queueNumber;
-		this.defaultTimeOut = defaultTimeOut;
-		this.maxExecutorThreads = maxDBThreads;
+		this.databaseManager = databaseManager;
+		HashMap<String, String> settings = databaseManager.getUserSettings();
+		this.autoAnswerContext = settings.get("autoAnswerContext"); //$NON-NLS-1$
+		this.defaultContext = settings.get("defaultContext"); //$NON-NLS-1$
+		this.contextMacroAuto = settings.get("contextMacroAuto"); //$NON-NLS-1$
+		this.queueNumber = settings.get("queueNumber"); //$NON-NLS-1$
+		this.defaultTimeOut = Long.parseLong(settings.get("defaultTimeOut")); //$NON-NLS-1$
+		this.maxExecutorThreads = Integer.parseInt(settings.get("threadPoolMax")); //$NON-NLS-1$
+		this.controlRoom = controlRoom; //Control Room XMPP chat
 		
 		//Turn off AsteriskJava logger for all but SEVERE
 		AST_LOGGER.setLevel(Level.SEVERE);
 		
-		xStrings = new I18NStrings(language, country);
+		xStrings = new I18NStrings(settings.get("language"), settings.get("country")); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		asteriskServer = new DefaultAsteriskServer(asteriskHost, asteriskUser, asteriskPass);
-		
-	}
-	
-	/**
-	 * Set the room to broadcast control messages to
-	 * @param control
-	 */
-	public void setControlRoom(MultiUserChat control){
-		
-		controlRoom = control;
+		asteriskServer = new DefaultAsteriskServer(settings.get("asteriskHost"),  //$NON-NLS-1$
+				settings.get("asteriskUser"), settings.get("asteriskPass"));  //$NON-NLS-1$//$NON-NLS-2$
 		
 	}
 	
@@ -190,12 +178,17 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	 * @param channelID Channel to redirect
 	 * @param to extension to send channel to
 	 */
-	public void redirectCall(String channelID, String to){
+	public void redirectCall(String channelID, String to, String from){
 	
 		AsteriskChannel channel = activeChannels.get(channelID);
 		
 		if(channel != null)//null = channel not found
 			channel.redirect(autoAnswerContext, to, DEFAULT_PRIORITY);
+		
+		String callerNumber = channel.getCallerId().getNumber();
+		
+		if(callerNumber.length() >= 7 || callerNumber.equals("5003"))//TODO 5003 DEBUG //$NON-NLS-1$
+			dbLookUpService.execute(new PhoneCall(databaseManager, channel, this, 'A', from));
 		
 	}
 
@@ -203,21 +196,31 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	 * Redirects the given channel to the on air queue specified in DB
 	 * @param channelID Channel to redirect
 	 */
-	public void redirectCallToQueue(String channelID){
+	public void redirectCallToQueue(String channelID, String from){
 		
 		AsteriskChannel channel = activeChannels.get(channelID);
 		
 		if(channel != null)
 			channel.redirect(defaultContext, queueNumber, DEFAULT_PRIORITY);
 		
+		String callerNumber = channel.getCallerId().getNumber();
+		
+		if(callerNumber.length() >= 7 || callerNumber.equals("5003"))//TODO 5003 DEBUG //$NON-NLS-1$
+			dbLookUpService.execute(new PhoneCall(databaseManager, channel, this, 'Q', from));
+		
 	}
 	
-	public void hangupCall(String channelID){
+	public void hangupCall(String channelID, String from){
 		
 		AsteriskChannel channel = activeChannels.get(channelID);
 		
 		if(channel != null)
 			channel.hangup();
+		
+		String callerNumber = channel.getCallerId().getNumber();
+		
+		if(callerNumber.length() >= 7 || callerNumber.equals("5003"))//TODO 5003 DEBUG //$NON-NLS-1$
+			dbLookUpService.execute(new PhoneCall(databaseManager, channel, this, 'H', from));
 		
 	}
 	
@@ -236,12 +239,15 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	@Override
 	public void onNewQueueEntry(AsteriskQueueEntry entry) {
 		
-		//TODO Thread me as I'm going to do a DB lookup
+		//DB Lookup for PhoneCall info (namely just to create entries) via Executor Thread
 		//Returns via sendNewQueueEntryMessage
 		LOGGER.info(xStrings.getString("AsteriskManager.newQueueEntry") + //$NON-NLS-1$
 				entry.getQueue().getName() + "/" + entry.getChannel().getId()); //$NON-NLS-1$
 		
-		dbLookUpService.execute(new PhoneCall(database, entry, this));
+		String callerNumber = entry.getChannel().getCallerId().getNumber();
+		
+		if(callerNumber.length() >= 7 || callerNumber.equals("5003"))//TODO 5003 DEBUG //$NON-NLS-1$
+			dbLookUpService.execute(new PhoneCall(databaseManager, entry, this));
 		
 	}
 
@@ -326,10 +332,19 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 					 */
 					String hangupCause = hangup.getHangupCauseText();
 					String logCause;
+					boolean logHangup = false;
 					
-					if(hangupCause.equals(HANGUP_NORMAL))
+					if(hangupCause.equals(HANGUP_NORMAL)){
 						logCause = xStrings.getString("AsteriskManager.channelHangup"); //$NON-NLS-1$
-					else if(hangupCause.equals(HANGUP_OFFLINE))
+						/* We want to log normal hang ups as part of a normal call life cycle
+						 * but not the errors as we're only interested complete calls from outside
+						 */
+						String callerNumber = hangup.getCallerId().getNumber();
+						
+						if(callerNumber.length() >= 7 || callerNumber.equals("5003"))//TODO 5003 DEBUG //$NON-NLS-1$
+							logHangup = true; 
+						
+					}else if(hangupCause.equals(HANGUP_OFFLINE))
 						logCause = xStrings.getString("AsteriskManager.channelHangupOffline"); //$NON-NLS-1$
 					else if(hangupCause.equals(HANGUP_UNACCEPTABLE))
 						logCause = xStrings.getString("AsteriskManager.channelHangupUnacceptable"); //$NON-NLS-1$
@@ -340,6 +355,11 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 					else
 						logCause = hangupCause;
 					
+					//Log this in the DB
+					if(logHangup)
+						dbLookUpService.execute(new PhoneCall(databaseManager, hangup, this, 'H', "NA")); //$NON-NLS-1$
+					
+					//Send XMPP Message
 					String message = logCause + "/" + hangup.getCallerId().getNumber() + "/" + hangup.getId(); //$NON-NLS-1$ //$NON-NLS-2$
 					LOGGER.info(message);
 					sendMessage(message);
@@ -401,11 +421,16 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 			
 			if(evt.getNewValue() != null){//null = unlinking, not null = linking
 				
-				String linkedTo = getNumberFromChannelName(channel.getLinkedChannel().getName());
+				String linkedTo = channel.getLinkedChannel().getCallerId().getNumber(); 
 				
 				String message = xStrings.getString("AsteriskManager.callConnected") +  //$NON-NLS-1$
 						"/" + channel.getCallerId().getNumber() + "/" + //$NON-NLS-1$ //$NON-NLS-2$
 						linkedTo + "/" + channel.getId(); //$NON-NLS-1$
+				
+				String callerNumber = channel.getCallerId().getNumber();
+				
+				if(callerNumber.length() >= 7 || callerNumber.equals("5003"))//TODO 5003 DEBUG //$NON-NLS-1$
+					dbLookUpService.execute(new PhoneCall(databaseManager, channel, this, 'A', "NA")); //$NON-NLS-1$
 				
 				LOGGER.info(message);
 				sendMessage(message);
@@ -413,32 +438,6 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 			}
 			
 		}
-		
-	}
-	
-	/**
-	 * Splits standard channel name into its extension in the form of:
-	 * SIP/6001-blahblah 
-	 * to 6001
-	 * @param name
-	 * @return
-	 */
-	private String getNumberFromChannelName(String name){
-		
-		String number = name;
-		
-		if(number.contains("/")){ //$NON-NLS-1$
-		
-			number = number.split("/")[1]; //$NON-NLS-1$
-			
-			if(number.contains("-")) //$NON-NLS-1$
-				number = number.split("-")[0]; //$NON-NLS-1$
-			
-			name = number;
-			
-		}
-		
-		return name;
 		
 	}
 	
