@@ -69,16 +69,9 @@ public class Server extends Thread{
 							
 						//Create and Connect to Asterisk
 						LOGGER.info(xStrings.getString("Server.creatingAsteriskManager")); //$NON-NLS-1$
-						asteriskManager = new AsteriskManager(language, country,
-							databaseManager.getUserSettings().get("asteriskHost"), //$NON-NLS-1$
-							databaseManager.getUserSettings().get("asteriskUser"), //$NON-NLS-1$
-							databaseManager.getUserSettings().get("asteriskPass"), //$NON-NLS-1$
-							databaseManager.getUserSettings().get("autoAnswerContext"), //$NON-NLS-1$
-							databaseManager.getUserSettings().get("defaultContext"), //$NON-NLS-1$
-							databaseManager.getUserSettings().get("contextMacroAuto"), //$NON-NLS-1$
-							databaseManager.getUserSettings().get("queueNumber"), //$NON-NLS-1$
-							Long.parseLong(databaseManager.getUserSettings().get("defaultTimeOut"))); //$NON-NLS-1$
-						asteriskManager.setControlRoom(chatManager.getControlChatRoom());
+						asteriskManager = new AsteriskManager(databaseManager,
+								chatManager.getControlChatRoom());
+						
 						LOGGER.info(xStrings.getString("Server.asteriskConnecting")); //$NON-NLS-1$
 					
 						try{
@@ -87,9 +80,9 @@ public class Server extends Thread{
 						
 							hasErrors = false; //Reset flag as everything is working
 							//asteriskManager.createCall("5001", "5002", "TEST 2");
-							//asteriskManager.redirectCall("1376324667.378", "5002");
+							//asteriskManager.redirectCall("1376399231.403", "5002", "TEST 2");
 							//asteriskManager.redirectCallToQueue("1376313386.343");
-							//asteriskManager.hangupCall("1376067949.321");
+							//asteriskManager.hangupCall("1376399231.403", "TEST 2");
 						}catch(ManagerCommunicationException e){
 						
 							showError(e, xStrings.getString("Server.asteriskConnectionError")); //$NON-NLS-1$
