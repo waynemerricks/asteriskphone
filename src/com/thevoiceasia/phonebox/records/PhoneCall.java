@@ -30,7 +30,7 @@ public class PhoneCall implements Runnable{
 	private I18NStrings xStrings; //Link to external string resources
 	private Vector<Integer> numberIDs = new Vector<Integer>(); 
 	private char threadMode;
-	private String threadOperator;
+	private String threadOperator, answeredBy;
 	
 	/** STATICS **/
 	private static final Logger LOGGER = Logger.getLogger(PhoneCall.class.getName());//Logger
@@ -73,6 +73,16 @@ public class PhoneCall implements Runnable{
 		
 		xStrings = new I18NStrings(database.getUserSettings().get("language"),  //$NON-NLS-1$
 				database.getUserSettings().get("country")); //$NON-NLS-1$
+		
+	}
+	
+	/**
+	 * Returns the person who answered this call or null if not answered
+	 * @return
+	 */
+	public String getAnsweredBy(){
+		
+		return answeredBy;
 		
 	}
 	
@@ -215,6 +225,8 @@ public class PhoneCall implements Runnable{
 	 * @param answeredBy User Name of person who answered
 	 */
 	public void trackAnswered(String answeredBy){
+		
+		this.answeredBy = answeredBy;
 		
 		Statement statement = null;
 		
