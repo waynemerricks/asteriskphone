@@ -1,6 +1,5 @@
 package com.thevoiceasia.phonebox.calls;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -12,14 +11,16 @@ import java.util.TimerTask;
 import java.util.logging.Logger;
 
 import javax.swing.ImageIcon;
-import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
-import javax.swing.UIManager.LookAndFeelInfo;
 
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.muc.MultiUserChat;
+
+import com.thevoiceasia.phonebox.records.Person;
+import com.thevoiceasia.phonebox.records.PhoneCall;
 
 public class CallInfoPanel extends JPanel implements MouseListener{
 
@@ -63,7 +64,8 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	private TimerTask ringingTask;
 	private MultiUserChat controlRoom;
 	private String channelID, myExtension; 
-	private boolean hangupActive;
+	private boolean hangupActive, canTakeCall;
+	private PhoneCall phoneCallRecord;
 	
 	/** GUI SPECIFIC **/
 	private TransparentLabel alertIcon, connectedToLabel, conversationLabel;
@@ -78,10 +80,13 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	 * @param callerLocation location of the person who is calling
 	 * @param conversation current conversation details (typed by handlers)
 	 * @param alertLevel friendly icon to use along with call
+	 * @param channelID id of the asterisk channel this panel applies to
+	 * @param hangupActive indicates whether hangup mode is active at time of creation
+	 * @param canTakeCall indicates whether this user can steal calls from others
 	 */
 	public CallInfoPanel(String language, String country, String callerName, 
 			String callerLocation, String conversation,	int alertLevel,
-			String channelID, boolean hangupActive){
+			String channelID, boolean hangupActive, boolean canTakeCall){
 	
 		xStrings = new I18NStrings(language, country);
 		this.addMouseListener(this);
@@ -89,6 +94,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		ringingTimer = new Timer("ringingTimer:" + channelID); //$NON-NLS-1$
 		this.channelID = channelID;
 		this.hangupActive = hangupActive;
+		this.canTakeCall = canTakeCall;
 		
 		//Argh the horror!
 		this.setLayout(new GridBagLayout());
@@ -376,33 +382,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		
 	}
 	
-	public static void main(String[] args){
-		
-		try {
-		    for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-		        if ("Nimbus".equals(info.getName())) { //$NON-NLS-1$
-		            UIManager.setLookAndFeel(info.getClassName());
-		            break;
-		        }
-		    }
-		} catch (Exception e) {
-		    // Will use default L&F at this point, don't really care which it is
-		}
-		
-		JFrame win = new JFrame("Test");
-		win.setSize(450, 200);
-		win.setLayout(new BorderLayout());
-		CallInfoPanel info = new CallInfoPanel("en", "GB", "Wayne Merricks", 
-				"United Kingdom", "Pray for his goat",	ALERT_OK, "12344567890.123", true);
-		win.add(info);
-		win.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		
-		win.setVisible(true);
-		info.setQueued();
-		//info.setAlertLevel("images/presenter.png");
-		info.setAlertLevel(ALERT_BANNED);
-		
-	}
+	
 
 	/**
 	 * Sends a message to control room via XMPP
@@ -420,22 +400,46 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 				if(hangupActive){
 					message = xStrings.getString("calls.hangup") + "/" + channelID;  //$NON-NLS-1$//$NON-NLS-2$
 					hangupActive = false;
-				}else
+					LOGGER.info(xStrings.getString("CallInfoPanel.requestHangupCall")  //$NON-NLS-1$
+							+ channelID);
+				}else{
 					message = xStrings.getString("calls.transfer") + "/" + channelID + "/"  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 									+ myExtension;
-				
+					LOGGER.info(xStrings.getString("CallInfoPanel.requestTransferCall") //$NON-NLS-1$
+							+ channelID + "/" + myExtension); //$NON-NLS-1$
+				}
 			}else if(messageMode == MODE_ANSWERED){
 				
 				if(hangupActive){
 					message = xStrings.getString("calls.hangup") + "/" + channelID; //$NON-NLS-1$ //$NON-NLS-2$
 					hangupActive = false;
-				}else
+					LOGGER.info(xStrings.getString("CallInfoPanel.requestHangupCall")  //$NON-NLS-1$
+							+ channelID);
+				}else{
 					message = xStrings.getString("calls.queue") + "/" + channelID; //$NON-NLS-1$ //$NON-NLS-2$
+					LOGGER.info(xStrings.getString("CallInfoPanel.requestQueueCall") //$NON-NLS-1$
+							+ channelID + "/" + myExtension); //$NON-NLS-1$
+				}
+			}else if(messageMode == MODE_ANSWERED_ELSEWHERE || messageMode == MODE_ON_AIR){
 				
-			}else if(messageMode == MODE_ANSWERED_ELSEWHERE){
-				
-				//TODO Takeback?
-				
+				//Taking a call from another user
+				if(takeCall()){
+					
+					if(hangupActive){
+						message = xStrings.getString("calls.hangup") + "/" + channelID; //$NON-NLS-1$ //$NON-NLS-2$ 
+						hangupActive = false;
+						LOGGER.info(xStrings.getString("CallInfoPanel.requestHangupCallOther")  //$NON-NLS-1$
+								+ channelID);
+					}else{
+						message = xStrings.getString("calls.transfer") + "/" + channelID //$NON-NLS-1$ //$NON-NLS-2$
+									+ myExtension;
+						LOGGER.info(xStrings.getString(
+								"CallInfoPanel.requestTransferCallOther") //$NON-NLS-1$
+								+ channelID + "/" + myExtension); //$NON-NLS-1$
+					}
+					
+				}
+					
 			}
 			
 			if(message != null)
@@ -448,7 +452,89 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		}else
 			LOGGER.severe(xStrings.getString("CallInfoPanel.noControlRoomSet")); //$NON-NLS-1$
 		
-		//TODO Mode for hangup!
+		//TODO Mode for hangup need to think about how it interacts with gui
+		//E.g. hangup clicked should now cancel hangup mode elsewhere
+		
+	}
+	
+	/**
+	 * Shows a confirm box when you request to take the call from someone else
+	 * @return
+	 */
+	private boolean takeCall(){
+	
+		boolean takeIt = false;
+		
+		if(canTakeCall){
+			
+			int option = JOptionPane.showConfirmDialog(this, 
+					xStrings.getString("CallInfoPanel.takeCall"),  //$NON-NLS-1$
+					xStrings.getString("CallInfoPanel.takeCallTitle"), //$NON-NLS-1$
+					JOptionPane.QUESTION_MESSAGE);
+			
+			if(option == JOptionPane.YES_OPTION)
+				takeIt = true;
+			
+		}
+		
+		return takeIt;
+		
+	}
+	
+	/**
+	 * Internal method to update the labels by grabbing info from the PhoneCall 
+	 * object associated with this panel
+	 */
+	private void updateLabels(){
+		
+		if(phoneCallRecord != null){
+			
+			final Person p = phoneCallRecord.getActivePerson();
+			final String answeredBy = phoneCallRecord.getAnsweredBy();
+			
+			SwingUtilities.invokeLater(new Runnable(){
+				
+				public void run(){
+					
+					nameLabel.setText(p.name);
+					locationLabel.setText(p.location);
+					
+					if(p.getShortAlertLevel() == 'W')
+						setAlertLevel(ALERT_WARNING);
+					else if(p.getShortAlertLevel() == 'B')
+						setAlertLevel(ALERT_BANNED);
+					
+					if(answeredBy != null)
+						connectedToLabel.setText(answeredBy);
+					
+					if(p.currentConversation != null && p.currentConversation.length() > 0)
+						conversationLabel.setText(p.currentConversation);
+					
+				}
+			});
+			
+		}
+		
+	}
+	
+	/**
+	 * Sets this panel to show info from the given PhoneCall
+	 * @param phoneCall
+	 */
+	public void setPhoneCallRecord(PhoneCall phoneCall){
+		
+		phoneCallRecord = phoneCall;
+		updateLabels();
+		
+	}
+	
+	/**
+	 * Returns the PhoneCall object associated with this panel
+	 * @return Can be null if no record attached
+	 */
+	public PhoneCall getPhoneCallRecord(){
+		
+		return phoneCallRecord;
 		
 	}
 	
