@@ -11,7 +11,7 @@ import java.util.logging.Logger;
 
 import javax.swing.*;
 
-import com.thevoiceasia.phonebox.calls.CallManager;
+import com.thevoiceasia.phonebox.calls.CallManagerPanel;
 import com.thevoiceasia.phonebox.chat.ChatManager;
 import com.thevoiceasia.phonebox.chat.ChatWindow;
 import com.thevoiceasia.phonebox.database.DatabaseManager;
@@ -24,7 +24,6 @@ public class Client extends JFrame implements WindowListener{
 	//Class Vars
 	private ChatManager chatManager;
 	private DatabaseManager databaseManager;
-	private CallManager callManager;
 	
 	private String language, country;
 	private boolean hasErrors = false;
@@ -41,7 +40,7 @@ public class Client extends JFrame implements WindowListener{
 	private static final Level RECORDS_LOG_LEVEL = Level.INFO;
 	private static final Logger CALL_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.calls"); //$NON-NLS-1$
 	private static final Level CALL_LOG_LEVEL = Level.INFO;
-	 
+	
 	private static I18NStrings xStrings;
 	
 	public Client(String language, String country){
@@ -61,27 +60,38 @@ public class Client extends JFrame implements WindowListener{
 		
 		if(!hasErrors){
 			
+			LOGGER.info(xStrings.getString("Client.buildingGUI")); //$NON-NLS-1$
+			
 			/** Build GUI **/
 			setLookandFeel();
-			this.setSize(340, 400);
+			this.setSize(1024, 768);
 			this.setLayout(new BorderLayout());
 			this.setTitle(xStrings.getString("Client.appTitle")); //$NON-NLS-1$
 			this.addWindowListener(this);
 			
+			LOGGER.info(xStrings.getString("Client.loadingChatModule")); //$NON-NLS-1$
+			
 			//Chat Module
 			this.add(new ChatWindow(chatManager, language, country, userSettings.get("nickName"), //$NON-NLS-1$
-					userSettings.get("isStudio")), BorderLayout.CENTER); //$NON-NLS-1$ 
+					userSettings.get("isStudio")), BorderLayout.EAST); //$NON-NLS-1$ 
 			
 			if(chatManager.hasErrors())
 				hasErrors = true;
-			else
+			else{
 				chatManager.startIdleDetectThread();
-			
-			//GUI For Call Input
-			//TODO
-			
-			//GUI For Call Queue
-			//TODO
+				
+				//GUI For Call Queue
+				//TODO
+				//CallManager interacts with control room
+				LOGGER.info(xStrings.getString("Client.creatingCallManager")); //$NON-NLS-1$
+				
+				this.add(new CallManagerPanel(language, country,
+						chatManager.getControlChatRoom()), BorderLayout.CENTER);
+				
+				//GUI For Call Input
+				//TODO
+				
+			}
 			
 		}
 		
@@ -99,9 +109,8 @@ public class Client extends JFrame implements WindowListener{
 			hasErrors = true;
 		else{
 			
-			databaseManager.connect();
-			
-			if(!databaseManager.hasErrors()){
+			LOGGER.info(xStrings.getString("Client.connectingToDatabase")); //$NON-NLS-1$
+			if(databaseManager.connect()){
 				
 				boolean createUser = !databaseManager.populateUserSettings();
 				userSettings = databaseManager.getUserSettings();
@@ -124,25 +133,17 @@ public class Client extends JFrame implements WindowListener{
 					
 					if(createUser){
 						
-						chatManager.createUser();
+						LOGGER.info(xStrings.getString("Client.creatingXMPPUser")); //$NON-NLS-1$
 						
-					}else{
-						
-						if(chatManager.hasErrors())
+						if(!chatManager.createUser())
 							hasErrors = true;
-						else{
-							
-							//CallManager interacts with control room
-							callManager = new CallManager(language, country, 
-									chatManager.getControlChatRoom());
-							
-						}
 						
 					}
 					
 				}
 				
-			}
+			}else
+				hasErrors = true;
 			
 		}
 		
