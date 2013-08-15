@@ -39,7 +39,7 @@ public class Person {
 	 * Returns char representation of alert level 
 	 * @return N = Normal, W = Warning, B = Banned
 	 */
-	private char getShortAlertLevel(){
+	public char getShortAlertLevel(){
 		
 		char shortAlert = 'N';
 		
