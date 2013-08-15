@@ -114,7 +114,8 @@ public class ChatManager implements UserStatusListener, PacketListener {
 			
 				if(now - actionTimers.get(i).getLastActionTime() < idleTimeout)
 					alive = true;
-					
+				//TODO refactor so this class holds the last action time and objects
+				//reset it
 				i++;
 				
 			}
@@ -133,7 +134,9 @@ public class ChatManager implements UserStatusListener, PacketListener {
 	 * Helper method to create a new XMPP user based on the current credentials
 	 * Will fail if user already exists and flag hasErrors
 	 */
-	public void createUser(){
+	public boolean createUser(){
+		
+		boolean created = false;
 		
 		LOGGER.info(xStrings.getString("ChatManager.logCreatingXMPPUser") + XMPPUserName); //$NON-NLS-1$
 		XMPPConnection setupConnection = new XMPPConnection(XMPPServerHostName);
@@ -152,6 +155,7 @@ public class ChatManager implements UserStatusListener, PacketListener {
 			try {
 				XMPPAccounts.createAccount(XMPPUserName.split("@")[0], XMPPPassword); //$NON-NLS-1$
 				LOGGER.info(xStrings.getString("ChatManager.logCreatedXMPPUser") + XMPPUserName); //$NON-NLS-1$
+				created = true;
 				setupConnection.disconnect();
 				LOGGER.info(xStrings.getString("ChatManager.logSetupDisconnected")); //$NON-NLS-1$
 			} catch (XMPPException e) {
@@ -160,6 +164,8 @@ public class ChatManager implements UserStatusListener, PacketListener {
 			}
 			
 		}
+		
+		return created;
 		
 	}
 	
