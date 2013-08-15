@@ -70,7 +70,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		this.autoAnswerContext = settings.get("autoAnswerContext"); //$NON-NLS-1$
 		this.defaultContext = settings.get("defaultContext"); //$NON-NLS-1$
 		this.contextMacroAuto = settings.get("contextMacroAuto"); //$NON-NLS-1$
-		this.queueNumber = settings.get("queueNumber"); //$NON-NLS-1$
+		this.queueNumber = settings.get("onAirQueueNumber"); //$NON-NLS-1$
 		this.defaultTimeOut = Long.parseLong(settings.get("defaultTimeOut")); //$NON-NLS-1$
 		this.maxExecutorThreads = Integer.parseInt(settings.get("threadPoolMax")); //$NON-NLS-1$
 		this.controlRoom = controlRoom; //Control Room XMPP chat
@@ -257,7 +257,6 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		//Transfers from handlers goes into Studio Queue
 		String message = xStrings.getString("AsteriskManager.populatedQueueEntry") + "/" + //$NON-NLS-1$ //$NON-NLS-2$
 				entry.getQueue().getName() + "/" + entry.getChannel().getId(); //$NON-NLS-1$
-		entry.getQueue().getName();
 		
 		LOGGER.info(message);
 		sendMessage(message);
