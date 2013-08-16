@@ -10,7 +10,6 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import org.jivesoftware.smack.PacketListener;
-import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smackx.muc.MultiUserChat;
@@ -66,24 +65,11 @@ public class CallManagerPanel extends JPanel implements PacketListener{
 	}
 	
 	/**
-	 * Internal method to send a message to the control room
-	 * @param message
-	 */
-	private void sendMessage(String message){
-	
-		try {
-			controlRoom.sendMessage(message);
-		} catch (XMPPException e) {
-			LOGGER.severe(xStrings.getString("CallManager.errorSendingMessage") + message); //$NON-NLS-1$
-		}
-		
-	}
-	
-	/**
 	 * Helper method to create a call info panel and then spawn a thread to grab details
 	 * from the DB (via standard Executor)
 	 * @param phoneNumber phoneNumber of the call
 	 * @param channelID channel id of the call
+	 * @param mode Panel Mode to set the initial state to
 	 */
 	private void createSkeletonCallInfoPanel(String phoneNumber, String channelID, int mode){
 		
@@ -180,17 +166,15 @@ public class CallManagerPanel extends JPanel implements PacketListener{
 				//RINGING - Can Ignore
 				
 				//CALL - Entry point to handler
-				if(command.length == 4 
-						&& command[0].equals("CallManagerPanel.callRingingFrom")){ //$NON-NLS-1$
+				if(command.length == 4){
 					
-					//Create a CallInfoPanel with skeleton details
-					if(callPanels.get(command[3]) == null)
-						createSkeletonCallInfoPanel(command[1], command[3], MODE_RINGING);
+					if(command[0].equals("CallManagerPanel.callRingingFrom")){//$NON-NLS-1$
 						
-				}else if(command.length == 3){
-					
-					
-					if(command[0].equals(xStrings.getString("CallManager.callQueued"))){ //$NON-NLS-1$
+						//Create a CallInfoPanel with skeleton details
+						if(callPanels.get(command[3]) == null)
+							createSkeletonCallInfoPanel(command[1], command[3], MODE_RINGING);
+						
+					}else if(command[0].equals(xStrings.getString("CallManager.callQueued"))){ //$NON-NLS-1$
 					
 						//Call Added to QUEUE read queue number and act accordingly
 						if(command[1].equals(settings.get("incomingQueueNumber"))){ //$NON-NLS-1$
@@ -203,25 +187,33 @@ public class CallManagerPanel extends JPanel implements PacketListener{
 							
 						}else if(command[1].equals(settings.get("queueNumber"))){ //$NON-NLS-1$
 							
-							//TODO On Air Queue
+							//On Air Queue
 							if(callPanels.get(command[2]) != null){
 								
 								//Already in our list so update
+								callPanels.get(command[2]).setQueued();
 								
 							}else{
 								
 								//Not in our list so create skeleton and spawn update thread
-								createSkeletonCallInfoPanel()//TODO change queue to give caller id
+								//queue, name, number, channel
+								createSkeletonCallInfoPanel(command[3], command[4], MODE_QUEUED);
 								
 							}
 							
 						}
 						
-					}else if(command[0].equals(xStrings.getString("CallManager.callHangup"))){ //$NON-NLS-1$
-					
-						//Call Hangup received
-						//TODO
 						
+					}
+					
+				}else if(command.length == 3 && 
+						command[0].equals(xStrings.getString("CallManager.callHangup"))){ //$NON-NLS-1$
+					
+					//Call Hangup received
+					//Check to see if we have the panel in the list and remove it
+					if(callPanels.get(command[2]) != null){
+						
+						removePanel(command[2]);
 						
 					}
 					
@@ -230,6 +222,27 @@ public class CallManagerPanel extends JPanel implements PacketListener{
 			}
 			
 		}
+		
+	}
+	
+	/**
+	 * Removes the given callInfoPanel (denoted by channel ID)
+	 * @param channelID channel to remove
+	 */
+	public void removePanel(String channelID){
+		
+		final String channel = channelID;
+		
+		SwingUtilities.invokeLater(new Runnable(){
+			
+			public void run(){
+				
+				remove(callPanels.get(channel));
+				callPanels.remove(channel);
+				
+			}
+			
+		});
 		
 	}
 	
