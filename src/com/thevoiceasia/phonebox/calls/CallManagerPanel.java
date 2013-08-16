@@ -207,7 +207,7 @@ public class CallManagerPanel extends JPanel implements PacketListener{
 					}
 					
 				}else if(command.length == 3 && 
-						command[0].equals(xStrings.getString("CallManager.callHangup"))){ //$NON-NLS-1$
+						command[0].startsWith(xStrings.getString("CallManager.callHangup"))){ //$NON-NLS-1$
 					
 					//Call Hangup received
 					//Check to see if we have the panel in the list and remove it
