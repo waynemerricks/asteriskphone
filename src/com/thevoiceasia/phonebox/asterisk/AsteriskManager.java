@@ -256,7 +256,8 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		
 		//Transfers from handlers goes into Studio Queue
 		String message = xStrings.getString("AsteriskManager.populatedQueueEntry") + "/" + //$NON-NLS-1$ //$NON-NLS-2$
-				entry.getQueue().getName() + "/" + entry.getChannel().getId(); //$NON-NLS-1$
+				entry.getQueue().getName() + "/" + entry.getChannel().getCallerId().getNumber() + //$NON-NLS-1$
+				"/" + entry.getChannel().getId(); //$NON-NLS-1$
 		
 		LOGGER.info(message);
 		sendMessage(message);
