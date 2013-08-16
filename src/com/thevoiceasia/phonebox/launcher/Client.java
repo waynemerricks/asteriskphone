@@ -85,8 +85,9 @@ public class Client extends JFrame implements WindowListener{
 				//CallManager interacts with control room
 				LOGGER.info(xStrings.getString("Client.creatingCallManager")); //$NON-NLS-1$
 				
-				this.add(new CallManagerPanel(language, country,
-						chatManager.getControlChatRoom()), BorderLayout.CENTER);
+				this.add(new CallManagerPanel(databaseManager.getUserSettings(),
+						chatManager.getControlChatRoom(), 
+						databaseManager.getReadConnection()), BorderLayout.CENTER);
 				
 				//GUI For Call Input
 				//TODO
