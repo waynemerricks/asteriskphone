@@ -64,7 +64,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	private Timer ringingTimer;
 	private TimerTask ringingTask;
 	private MultiUserChat controlRoom;
-	private String channelID, myExtension; 
+	private String channelID, myExtension, myNickName; 
 	private boolean hangupActive, canTakeCall;
 	private PhoneCall phoneCallRecord;
 	
@@ -88,7 +88,8 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	public CallInfoPanel(String language, String country, String callerName, 
 			String callerLocation, String conversation,	int alertLevel,
 			String channelID, boolean hangupActive, boolean canTakeCall,
-			MultiUserChat controlRoom, String myExtension){
+			MultiUserChat controlRoom, String myExtension, String myNickName,
+			int hourOffset){
 	
 		xStrings = new I18NStrings(language, country);
 		this.addMouseListener(this);
@@ -99,6 +100,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		this.canTakeCall = canTakeCall;
 		this.controlRoom = controlRoom;
 		this.myExtension = myExtension;
+		this.myNickName = myNickName;
 		
 		//Argh the horror!
 		this.setLayout(new GridBagLayout());
@@ -118,7 +120,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		
 		//Timer Label 1 row/column
 		timeLabel = new TimerLabel(xStrings.getString("CallInfoPanel.callTimeInit"), //$NON-NLS-1$
-				TransparentLabel.CENTER); 
+				TransparentLabel.CENTER, hourOffset); 
 		
 		c.weightx = 0.25;
 		c.gridx = 1;
@@ -172,6 +174,42 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		
 	}
 	
+	/**
+	 * Helper method, used for LOGGER reporting
+	 * @return
+	 */
+	public String getChannelID(){
+		
+		return channelID;
+		
+	}
+	
+	/**
+	 * Sets the GUI label for connectedTo
+	 * Will reflect the changes on the PhoneCall record associated with this panel
+	 * @param to
+	 */
+	public void setConnectedTo(String to){
+		
+		phoneCallRecord.setAnsweredBy(to);
+		
+		final String connTo = to;
+		
+		SwingUtilities.invokeLater(new Runnable(){
+			
+			public void run(){
+		
+				LOGGER.info(connTo);
+				connectedToLabel.setText(connTo);
+				
+			}
+		});
+		
+	}
+	/**
+	 * Helper method to set the control room this panel reports to
+	 * @param controlRoom
+	 */
 	public void setControlRoom(MultiUserChat controlRoom){
 		
 		this.controlRoom = controlRoom;
@@ -253,11 +291,15 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		mode = MODE_ANSWERED;
 		timeLabel.resetStageTime();
 		
+		if(phoneCallRecord != null)
+			phoneCallRecord.setAnsweredBy(myNickName);
+		
 		SwingUtilities.invokeLater(new Runnable(){
 			
 			public void run(){
 				
 				setBackground(ANSWERED_COLOUR);
+				connectedToLabel.setText(myNickName);
 				
 			}
 			
@@ -268,16 +310,26 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	/**
 	 * Sets the panel to answered by someone else mode
 	 */
-	public void setAnsweredElseWhere(){
+	public void setAnsweredElseWhere(String answeredBy){
+		
+		if(mode == MODE_RINGING)
+			ringingTask.cancel();
 		
 		mode = MODE_ANSWERED_ELSEWHERE;
+		
+		if(phoneCallRecord != null)
+			phoneCallRecord.setAnsweredBy(answeredBy);
+		
 		timeLabel.resetStageTime();
+		
+		final String answered = answeredBy;
 		
 		SwingUtilities.invokeLater(new Runnable(){
 			
 			public void run(){
 				
 				setBackground(ANSWERED_ELSEWHERE_COLOUR);
+				connectedToLabel.setText(answered);
 				
 			}
 			
@@ -311,7 +363,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	/**
 	 * Sets the panel to answered by someone else mode
 	 */
-	public void setOnAir(){
+	public void setOnAir(String studioName){
 		
 		if(mode == MODE_RINGING)
 			ringingTask.cancel();
@@ -319,11 +371,14 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		mode = MODE_ON_AIR;
 		timeLabel.resetStageTime();
 		
+		final String studio = studioName;
+		
 		SwingUtilities.invokeLater(new Runnable(){
 			
 			public void run(){
 				
 				setBackground(ON_AIR_COLOUR);
+				connectedToLabel.setText(studio);
 				
 			}
 			
@@ -446,7 +501,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 								+ channelID);
 					}else{
 						message = xStrings.getString("calls.transfer") + "/" + channelID //$NON-NLS-1$ //$NON-NLS-2$
-									+ myExtension;
+									+ "/" + myExtension; //$NON-NLS-1$
 						LOGGER.info(xStrings.getString(
 								"CallInfoPanel.requestTransferCallOther") //$NON-NLS-1$
 								+ channelID + "/" + myExtension); //$NON-NLS-1$
@@ -483,8 +538,9 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 			
 			int option = JOptionPane.showConfirmDialog(this, 
 					xStrings.getString("CallInfoPanel.takeCall"),  //$NON-NLS-1$
-					xStrings.getString("CallInfoPanel.takeCallTitle"), //$NON-NLS-1$
-					JOptionPane.QUESTION_MESSAGE);
+					xStrings.getString("CallInfoPanel.takeCallTitle")//$NON-NLS-1$
+						.replace("\\n", "\n").replace("\\t", "\t"), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+					JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 			
 			if(option == JOptionPane.YES_OPTION)
 				takeIt = true;
@@ -504,7 +560,6 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		if(phoneCallRecord != null){
 			
 			final Person p = phoneCallRecord.getActivePerson();
-			final String answeredBy = phoneCallRecord.getAnsweredBy();
 			
 			SwingUtilities.invokeLater(new Runnable(){
 				
@@ -518,9 +573,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 					else if(p.getShortAlertLevel() == 'B')
 						setAlertLevel(ALERT_BANNED);
 					
-					if(answeredBy != null)
-						connectedToLabel.setText(answeredBy);
-					
+					//TODO old conversation?
 					if(p.currentConversation != null && p.currentConversation.length() > 0)
 						conversationLabel.setText(p.currentConversation);
 					
