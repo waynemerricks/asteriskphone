@@ -258,7 +258,11 @@ public class ChatManager implements UserStatusListener, PacketListener {
 			
 			try{
 				LOGGER.info(xStrings.getString("ChatManager.logLogin")); //$NON-NLS-1$
-				XMPPServerConnection.login(XMPPUserName, XMPPPassword);
+				
+				if(XMPPRoomName == null)
+					XMPPServerConnection.login(XMPPUserName, XMPPPassword, "Client"); //$NON-NLS-1$
+				else
+					XMPPServerConnection.login(XMPPUserName, XMPPPassword, "Server"); //$NON-NLS-1$
 				LOGGER.info(xStrings.getString("ChatManager.logLoggedIn")); //$NON-NLS-1$
 			}catch(XMPPException e){
 				
