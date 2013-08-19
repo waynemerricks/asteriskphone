@@ -242,14 +242,16 @@ public class DatabaseManager {
 	 * Grabs settings from the database and puts them in a nice HashMap
 	 * @return false if user needs to be created on chat server
 	 */
-	public boolean populateUserSettings(){
+	public boolean populateUserSettings(String userName){
 		
 		boolean gotUser = false;
 		LOGGER.info(xStrings.getString("DatabaseManager.logPopulatingUserSettings")); //$NON-NLS-1$
 		
 		try {
 			String machineName = InetAddress.getLocalHost().getHostName();
-			String userName = System.getProperty("user.name"); //$NON-NLS-1$
+			
+			if(userName == null)
+				userName = System.getProperty("user.name"); //$NON-NLS-1$
 			
 			getSettingsFromDB("GLOBAL"); //$NON-NLS-1$
 			getSettingsFromDB(machineName);

@@ -38,7 +38,7 @@ public class Server extends Thread{
 			
 			if(databaseManager.connect()){
 				
-				boolean createUser = !databaseManager.populateUserSettings();
+				boolean createUser = !databaseManager.populateUserSettings("server"); //$NON-NLS-1$
 				
 				chatManager = new ChatManager(databaseManager.getUserSettings()
 						.get("XMPPLogin") + "@" +  //$NON-NLS-1$ //$NON-NLS-2$
