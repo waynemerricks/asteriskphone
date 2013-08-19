@@ -1,22 +1,28 @@
 package com.thevoiceasia.phonebox.calls;
 
-import java.sql.Connection;
+import com.thevoiceasia.phonebox.database.DatabaseManager;
+import com.thevoiceasia.phonebox.records.PhoneCall;
 
 public class InfoPanelPopulator implements Runnable {
 
-	private Connection databaseConnection;
+	private DatabaseManager database;
 	private CallInfoPanel infoPanel;
+	private String callerID, channelID;
 	
-	public InfoPanelPopulator(Connection databaseConnection, CallInfoPanel infoPanel) {
+	public InfoPanelPopulator(DatabaseManager database, CallInfoPanel infoPanel, 
+			String callerID, String channelID) {
 		
-		this.databaseConnection = databaseConnection;
+		this.database = database;
 		this.infoPanel = infoPanel;
+		this.callerID = callerID;
+		this.channelID = channelID;
 		
 	}
 
 	@Override
 	public void run() {
-		// TODO Auto-generated method stub
+		
+		infoPanel.setPhoneCallRecord(new PhoneCall(database, callerID, channelID));
 		
 	}
 
