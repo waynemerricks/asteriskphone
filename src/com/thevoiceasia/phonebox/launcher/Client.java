@@ -85,9 +85,9 @@ public class Client extends JFrame implements WindowListener{
 				//CallManager interacts with control room
 				LOGGER.info(xStrings.getString("Client.creatingCallManager")); //$NON-NLS-1$
 				
-				this.add(new CallManagerPanel(databaseManager.getUserSettings(),
+				this.add(new JScrollPane(new CallManagerPanel(databaseManager.getUserSettings(),
 						chatManager.getControlChatRoom(), 
-						databaseManager.getReadConnection()), BorderLayout.CENTER);
+						databaseManager.getReadConnection())), BorderLayout.CENTER);
 				
 				//GUI For Call Input
 				//TODO
@@ -113,7 +113,7 @@ public class Client extends JFrame implements WindowListener{
 			LOGGER.info(xStrings.getString("Client.connectingToDatabase")); //$NON-NLS-1$
 			if(databaseManager.connect()){
 				
-				boolean createUser = !databaseManager.populateUserSettings();
+				boolean createUser = !databaseManager.populateUserSettings(null);
 				userSettings = databaseManager.getUserSettings();
 				
 				//Chat Connection Manager
