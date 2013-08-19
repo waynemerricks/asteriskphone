@@ -13,27 +13,59 @@ public class TimerLabel extends TransparentLabel {
 	private static final long serialVersionUID = 1L;
 
 	/** CLASS VARS **/
-	private long creationTimer, stageTimer;
+	private long creationTimer, stageTimer, hourOffset;
 	private Timer timeUpdateTimer = new Timer("time updater"); //$NON-NLS-1$
 	
 	public TimerLabel() {
+		
+		hourOffset = 0;
 		setupTimer(null);
+		
+	}
+	
+	public TimerLabel(int minutes){
+		
+		hourOffset = minutes * 60000;
+		setupTimer(null);
+		
+	}
+	
+	public TimerLabel(Date creationTime, int minutes){
+		
+		hourOffset = minutes * 60000;
+		setupTimer(creationTime);
+		
 	}
 	
 	public TimerLabel(Date creationTime){
 		
+		hourOffset = 0;
 		setupTimer(creationTime);
 		
 	}
 
 	public TimerLabel(String text) {
+		
 		super(text);
+		hourOffset = 0;
 		setupTimer(null);
+		
 	}
 
-	public TimerLabel(String text, int horizontalAlignment) {
+	public TimerLabel(String text, int horizontalAlignment, int minutes){
+		
 		super(text, horizontalAlignment);
+		this.hourOffset = minutes * 60000;
 		setupTimer(null);
+		
+	}
+	
+	public TimerLabel(String text, int horizontalAlignment) {
+		
+		super(text, horizontalAlignment);
+		hourOffset = 0;
+		setupTimer(null);
+		
 	}
 
 	/**
@@ -81,8 +113,8 @@ public class TimerLabel extends TransparentLabel {
 			public void run(){
 			
 				long now = new Date().getTime();
-				Date createTime = new Date(now - creationTimer);
-				Date stageTime = new Date(now - stageTimer);
+				Date createTime = new Date(now - creationTimer - hourOffset);
+				Date stageTime = new Date(now - stageTimer - hourOffset);
 				
 				SimpleDateFormat sdf = new SimpleDateFormat("mm:ss"); //$NON-NLS-1$
 				
