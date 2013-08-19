@@ -22,13 +22,16 @@ import org.asteriskjava.live.ManagerCommunicationException;
 import org.asteriskjava.live.MeetMeUser;
 import org.asteriskjava.live.OriginateCallback;
 import org.asteriskjava.live.internal.AsteriskAgentImpl;
+import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 
 import com.thevoiceasia.phonebox.database.DatabaseManager;
 import com.thevoiceasia.phonebox.records.PhoneCall;
 
-public class AsteriskManager implements AsteriskServerListener, PropertyChangeListener, OriginateCallback {
+public class AsteriskManager implements AsteriskServerListener, PropertyChangeListener, OriginateCallback, PacketListener {
 
 	//STATICS
 	private static final Logger AST_LOGGER = Logger.getLogger("org.asteriskjava"); //$NON-NLS-1$
@@ -74,6 +77,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		this.defaultTimeOut = Long.parseLong(settings.get("defaultTimeOut")); //$NON-NLS-1$
 		this.maxExecutorThreads = Integer.parseInt(settings.get("threadPoolMax")); //$NON-NLS-1$
 		this.controlRoom = controlRoom; //Control Room XMPP chat
+		this.controlRoom.addMessageListener(this);
 		
 		//Turn off AsteriskJava logger for all but SEVERE
 		AST_LOGGER.setLevel(Level.SEVERE);
@@ -289,6 +293,43 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		
 	}
 	
+	/** PacketListener **/
+	@Override
+	public void processPacket(Packet XMPPPacket) {
+		// TODO Auto-generated method stub
+		if(XMPPPacket instanceof Message){
+			
+			Message message = (Message)XMPPPacket;
+			
+			String from = message.getFrom();
+			
+			if(from.contains("/")) //$NON-NLS-1$
+				from = from.split("/")[1]; //$NON-NLS-1$
+			
+			if(!from.equals(controlRoom.getNickname())){//If the message didn't come from me 
+				
+				//React to commands thread all of this if performance is a problem
+				LOGGER.info(xStrings.getString("AsteriskManager.receivedMessage") + //$NON-NLS-1$
+						message.getBody()); 
+				
+				//TODO React to commands
+				String[] command = message.getBody().split("/"); //$NON-NLS-1$
+				
+				if(command.length == 3 && 
+						command[0].equals(
+								xStrings.getString("AsteriskManager.commandTransfer"))){ //$NON-NLS-1$
+					
+					redirectCall(command[1], command[2], from);
+					
+					
+				}
+				
+			}
+			
+		}	
+		
+	}
+	
 	/** PropertyChangeListener **/
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
@@ -464,5 +505,5 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 
 	@Override
 	public void onSuccess(AsteriskChannel channel) {}
-	
+
 }
