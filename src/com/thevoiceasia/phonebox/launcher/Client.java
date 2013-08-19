@@ -87,7 +87,7 @@ public class Client extends JFrame implements WindowListener{
 				
 				this.add(new JScrollPane(new CallManagerPanel(databaseManager.getUserSettings(),
 						chatManager.getControlChatRoom(), 
-						databaseManager.getReadConnection())), BorderLayout.CENTER);
+						databaseManager)), BorderLayout.CENTER);
 				
 				//GUI For Call Input
 				//TODO
