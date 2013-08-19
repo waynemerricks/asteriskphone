@@ -9,18 +9,14 @@ import java.util.logging.Logger;
 
 import javax.swing.JOptionPane;
 
-import org.asteriskjava.live.AsteriskChannel;
 import org.asteriskjava.live.AsteriskQueueEntry;
-import org.asteriskjava.live.CallerId;
 
 import com.thevoiceasia.phonebox.asterisk.AsteriskManager;
-import com.thevoiceasia.phonebox.chat.I18NStrings;
 import com.thevoiceasia.phonebox.database.DatabaseManager;
 
 public class PhoneCall implements Runnable{
 
 	/** CLASS VARS **/
-	private AsteriskChannel channel;
 	private AsteriskQueueEntry queueEntry;
 	private Vector<Person> people = new Vector<Person>();
 	private int activePerson = 0;
@@ -30,15 +26,18 @@ public class PhoneCall implements Runnable{
 	private I18NStrings xStrings; //Link to external string resources
 	private Vector<Integer> numberIDs = new Vector<Integer>(); 
 	private char threadMode;
-	private String threadOperator, answeredBy;
+	private String threadOperator, answeredBy, callerID, channelID;
 	
 	/** STATICS **/
 	private static final Logger LOGGER = Logger.getLogger(PhoneCall.class.getName());//Logger
 	
-	public PhoneCall(DatabaseManager database, AsteriskChannel channel) {
+	//TODO BUG When creating new person person_id is always 1 and not what the record id is
+	public PhoneCall(DatabaseManager database, String callerID, String channelID) {
 		
 		this.database = database;
-		this.channel = channel;
+		this.callerID = callerID;
+		this.channelID = channelID;
+		
 		xStrings = new I18NStrings(database.getUserSettings().get("language"),  //$NON-NLS-1$
 				database.getUserSettings().get("country")); //$NON-NLS-1$
 		
@@ -46,11 +45,12 @@ public class PhoneCall implements Runnable{
 		
 	}
 	
-	public PhoneCall(DatabaseManager database, AsteriskChannel channel, 
+	public PhoneCall(DatabaseManager database, String callerID, String channelID, 
 			AsteriskManager asteriskManager, char mode, String from){
 	
 		this.database = database;
-		this.channel = channel;
+		this.callerID = callerID;
+		this.channelID = channelID;
 		this.asteriskManager = asteriskManager;
 		threadMode = mode;
 		threadOperator = from;
@@ -67,7 +67,8 @@ public class PhoneCall implements Runnable{
 		this.database = database;
 		this.queueEntry = queueEntry;
 		this.asteriskManager = asteriskManager;
-		this.channel = queueEntry.getChannel();
+		this.channelID = queueEntry.getChannel().getId();
+		this.callerID = queueEntry.getChannel().getCallerId().getNumber();
 		threadMode = 'Q';
 		threadOperator = "NA"; //$NON-NLS-1$
 		
@@ -168,8 +169,8 @@ public class PhoneCall implements Runnable{
 		Statement statement = null;
 		
 		String SQL = "INSERT INTO callhistory(phonenumber, state, callchannel) VALUES("  //$NON-NLS-1$
-				+ "'" + channel.getCallerId().getNumber() + "', 'R', " //$NON-NLS-1$ //$NON-NLS-2$ 
-				+ channel.getId() + ")"; //$NON-NLS-1$
+				+ "'" + callerID + "', 'R', " //$NON-NLS-1$ //$NON-NLS-2$ 
+				+ channelID + ")"; //$NON-NLS-1$
 		
 		try{
 			
@@ -179,7 +180,7 @@ public class PhoneCall implements Runnable{
 		}catch(SQLException e){
         	
         	showError(e, xStrings.getString("PhoneCall.errorTrackingRingState") //$NON-NLS-1$ 
-        			+ channel.getCallerId().getNumber());
+        			+ callerID);
         	
         }finally{
             if(statement != null)
@@ -198,8 +199,8 @@ public class PhoneCall implements Runnable{
 		Statement statement = null;
 		
 		String SQL = "INSERT INTO callhistory(phonenumber, state, callchannel, operator) VALUES("  //$NON-NLS-1$
-				+ "'" + channel.getCallerId().getNumber() + "', 'Q', " //$NON-NLS-1$ //$NON-NLS-2$ 
-				+ channel.getId() + ", '" + operator + "')"; //$NON-NLS-1$ //$NON-NLS-2$
+				+ "'" + callerID + "', 'Q', " //$NON-NLS-1$ //$NON-NLS-2$ 
+				+ channelID + ", '" + operator + "')"; //$NON-NLS-1$ //$NON-NLS-2$
 		
 		try{
 			
@@ -209,7 +210,7 @@ public class PhoneCall implements Runnable{
 		}catch(SQLException e){
         	
         	showError(e, xStrings.getString("PhoneCall.errorTrackingRingState") //$NON-NLS-1$ 
-        			+ channel.getCallerId().getNumber());
+        			+ callerID);
         	
         }finally{
             if(statement != null)
@@ -217,6 +218,18 @@ public class PhoneCall implements Runnable{
             		statement.close();
             	}catch(Exception e){}
         }
+		
+	}
+	
+	/**
+	 * Sets answered by to the given string.  This DOES NOT save tracking to the DB
+	 * Used by CallManagerPanel internally to keep client states correct without
+	 * resaving to the DB (which will be done by the person who answered it)
+	 * @param answeredBy
+	 */
+	public void setAnsweredBy(String answeredBy){
+		
+		this.answeredBy = answeredBy;
 		
 	}
 	
@@ -231,8 +244,8 @@ public class PhoneCall implements Runnable{
 		Statement statement = null;
 		
 		String SQL = "INSERT INTO callhistory(phonenumber, state, operator, callchannel) VALUES("  //$NON-NLS-1$
-				+ "'" + channel.getCallerId().getNumber() + "', 'A', '" + answeredBy + "', " //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-				+ channel.getId() + ")"; //$NON-NLS-1$
+				+ "'" + callerID + "', 'A', '" + answeredBy + "', " //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				+ channelID + ")"; //$NON-NLS-1$
 		
 		try{
 			
@@ -242,7 +255,7 @@ public class PhoneCall implements Runnable{
 		}catch(SQLException e){
         	
         	showError(e, xStrings.getString("PhoneCall.errorTrackingAnsweredState") //$NON-NLS-1$ 
-        			+ channel.getCallerId().getNumber());
+        			+ callerID);
         	
         }finally{
             if(statement != null)
@@ -262,8 +275,8 @@ public class PhoneCall implements Runnable{
 		Statement statement = null;
 		
 		String SQL = "INSERT INTO callhistory(phonenumber, state, operator, callchannel) VALUES("  //$NON-NLS-1$
-				+ "'" + channel.getCallerId().getNumber() + "', 'P', '" + parkedBy + "', " //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-				+ channel.getId() + ")"; //$NON-NLS-1$
+				+ "'" + callerID + "', 'P', '" + parkedBy + "', " //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				+ channelID + ")"; //$NON-NLS-1$
 		
 		try{
 			
@@ -273,7 +286,7 @@ public class PhoneCall implements Runnable{
 		}catch(SQLException e){
         	
         	showError(e, xStrings.getString("PhoneCall.errorTrackingParkedState") //$NON-NLS-1$ 
-        			+ channel.getCallerId().getNumber());
+        			+ callerID);
         	
         }finally{
             if(statement != null)
@@ -293,8 +306,8 @@ public class PhoneCall implements Runnable{
 		Statement statement = null;
 		
 		String SQL = "INSERT INTO callhistory(phonenumber, state, operator, callchannel) VALUES("  //$NON-NLS-1$
-				+ "'" + channel.getCallerId().getNumber() + "', 'H', '" + hangupBy + "'," //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-				+ channel.getId() + ")"; //$NON-NLS-1$ 
+				+ "'" + callerID + "', 'H', '" + hangupBy + "'," //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				+ channelID + ")"; //$NON-NLS-1$ 
 		
 		try{
 			
@@ -304,7 +317,7 @@ public class PhoneCall implements Runnable{
 		}catch(SQLException e){
         	
         	showError(e, xStrings.getString("PhoneCall.errorTrackingHangupState") //$NON-NLS-1$ 
-        			+ channel.getCallerId().getNumber());
+        			+ callerID);
         	
         }finally{
             if(statement != null)
@@ -330,7 +343,7 @@ public class PhoneCall implements Runnable{
 			 * Incorporate a TIMESTAMP to figure out latest called from person.
 			 */
 			String SQL = "SELECT numbers_id, person_id FROM phonenumbers WHERE phone_number='"  //$NON-NLS-1$
-					+ channel.getCallerId() + "'"; //$NON-NLS-1$
+					+ callerID + "'"; //$NON-NLS-1$
 			statement = database.getConnection().createStatement();
 		    resultSet = statement.executeQuery(SQL);
 		    
@@ -374,8 +387,8 @@ public class PhoneCall implements Runnable{
 		    		//Name
 		    		person.name = personResultSet.getString("name"); //$NON-NLS-1$
 		    		
-		    		if(person.name.equals("null")) //$NON-NLS-1$
-		    			person.name.equals(xStrings.getString("PhoneCall.unknownCaller")); //$NON-NLS-1$
+		    		if(person.name == null || person.name.equals("null")) //$NON-NLS-1$
+		    			person.name = xStrings.getString("PhoneCall.unknownCaller"); //$NON-NLS-1$
 		    		
 		    		//Gender
 		    		person.gender = personResultSet.getString("gender"); //$NON-NLS-1$
@@ -390,37 +403,37 @@ public class PhoneCall implements Runnable{
 		    		//Location
 		    		person.location = personResultSet.getString("location"); //$NON-NLS-1$
 		    		
-		    		if(person.location.equals("null")) //$NON-NLS-1$
+		    		if(person.location == null || person.location.equals("null")) //$NON-NLS-1$
 		    			person.location = xStrings.getString("PhoneCall.locationUnknown"); //$NON-NLS-1$
 		    		
 		    		//Postal Address
 		    		person.postalAddress = personResultSet.getString("postal_address"); //$NON-NLS-1$
 		    		
-		    		if(person.postalAddress.equals("null")) //$NON-NLS-1$
+		    		if(person.postalAddress == null || person.postalAddress.equals("null")) //$NON-NLS-1$
 		    			person.postalAddress = ""; //$NON-NLS-1$
 		    		
 		    		//Post Code
 		    		person.postCode = personResultSet.getString("post_code"); //$NON-NLS-1$
 		    		
-		    		if(person.postCode.equals("null")) //$NON-NLS-1$
+		    		if(person.postCode == null || person.postCode.equals("null")) //$NON-NLS-1$
 		    			person.postCode = ""; //$NON-NLS-1$
 		    		
 		    		//Email Address
 		    		person.email = personResultSet.getString("email_address"); //$NON-NLS-1$
 		    		
-		    		if(person.email.equals("null")) //$NON-NLS-1$
+		    		if(person.email == null || person.email.equals("null")) //$NON-NLS-1$
 		    			person.email = ""; //$NON-NLS-1$
 		    		
 		    		//Language
 		    		person.language = personResultSet.getString("language"); //$NON-NLS-1$
 		    		
-		    		if(person.language.equals("null")) //$NON-NLS-1$
+		    		if(person.language == null || person.language.equals("null")) //$NON-NLS-1$
 		    			person.language = ""; //$NON-NLS-1$
 		    		
 		    		//Religion
 		    		person.religion = personResultSet.getString("religion"); //$NON-NLS-1$
 		    		
-		    		if(person.religion.equals("null")) //$NON-NLS-1$
+		    		if(person.religion == null || person.religion.equals("null")) //$NON-NLS-1$
 		    			person.religion = ""; //$NON-NLS-1$
 		    		
 		    		//Get the conversation history for this person
@@ -460,7 +473,7 @@ public class PhoneCall implements Runnable{
 		    	newPerson.createNewDBEntry(database.getWriteConnection());
 	    		newPerson = populatePersonWithDefaults(newPerson);
 	    		
-	    		createNumberRecord(channel.getCallerId(), newPerson.id);
+	    		createNumberRecord(callerID, newPerson.id);
 	    		
 	    		//Add this person to the people Vector
 	    		people.add(newPerson);
@@ -512,7 +525,8 @@ public class PhoneCall implements Runnable{
 		Statement statement = null;
 		ResultSet resultSet = null;
 		
-		String SQL = "SELECT time, conversation WHERE person_id = " + person.id; //$NON-NLS-1$
+		String SQL = "SELECT time, conversation FROM conversations WHERE person_id = " +//$NON-NLS-1$ 
+						person.id; 
 		
 		try{
 			
@@ -558,14 +572,14 @@ public class PhoneCall implements Runnable{
 	 * @param personID personID in the person table to attach to this record
 	 * @return
 	 */
-	private int createNumberRecord(CallerId callerId, int personID) {
+	private int createNumberRecord(String callerID, int personID) {
 		
 		int id = -1;
 		
 		Statement statement = null;
 		
 		String SQL = "INSERT INTO phonenumbers(phone_number, person_id) VALUES("  //$NON-NLS-1$
-				+ callerId.getNumber() + ", " + personID + ")";  //$NON-NLS-1$ //$NON-NLS-2$
+				+ callerID + ", " + personID + ")";  //$NON-NLS-1$ //$NON-NLS-2$
 		
 		try{
 			
@@ -631,7 +645,7 @@ public class PhoneCall implements Runnable{
 	private Person populatePersonWithDefaults(Person person){
 		
 		person.alert = xStrings.getString("PhoneCall.alertNormal"); //$NON-NLS-1$
-		person.name.equals(xStrings.getString("PhoneCall.unknownCaller")); //$NON-NLS-1$
+		person.name = xStrings.getString("PhoneCall.unknownCaller"); //$NON-NLS-1$
 		person.gender = xStrings.getString("PhoneCall.genderUnknown"); //$NON-NLS-1$
 		person.location = xStrings.getString("PhoneCall.locationUnknown"); //$NON-NLS-1$
 		person.postalAddress = ""; //$NON-NLS-1$
