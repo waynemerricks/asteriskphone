@@ -1,6 +1,7 @@
 package com.thevoiceasia.phonebox.calls;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.MouseEvent;
@@ -86,7 +87,8 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	 */
 	public CallInfoPanel(String language, String country, String callerName, 
 			String callerLocation, String conversation,	int alertLevel,
-			String channelID, boolean hangupActive, boolean canTakeCall){
+			String channelID, boolean hangupActive, boolean canTakeCall,
+			MultiUserChat controlRoom, String myExtension){
 	
 		xStrings = new I18NStrings(language, country);
 		this.addMouseListener(this);
@@ -95,6 +97,8 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		this.channelID = channelID;
 		this.hangupActive = hangupActive;
 		this.canTakeCall = canTakeCall;
+		this.controlRoom = controlRoom;
+		this.myExtension = myExtension;
 		
 		//Argh the horror!
 		this.setLayout(new GridBagLayout());
@@ -161,6 +165,10 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		c.fill = GridBagConstraints.BOTH;
 		
 		this.add(conversationLabel, c);
+		
+		this.setPreferredSize(new Dimension(600, 150));
+		this.setMinimumSize(new Dimension(400, 150));
+		//this.validate();
 		
 	}
 	
@@ -282,6 +290,9 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	 */
 	public void setQueued(){
 		
+		if(mode == MODE_RINGING)
+			ringingTask.cancel();
+		
 		mode = MODE_QUEUED;
 		timeLabel.resetStageTime();
 		
@@ -301,6 +312,9 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	 * Sets the panel to answered by someone else mode
 	 */
 	public void setOnAir(){
+		
+		if(mode == MODE_RINGING)
+			ringingTask.cancel();
 		
 		mode = MODE_ON_AIR;
 		timeLabel.resetStageTime();
