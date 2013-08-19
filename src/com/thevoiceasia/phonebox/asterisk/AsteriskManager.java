@@ -193,7 +193,8 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		String callerNumber = channel.getCallerId().getNumber();
 		
 		if(callerNumber.length() >= 7 || callerNumber.equals("5003"))//TODO 5003 DEBUG //$NON-NLS-1$
-			dbLookUpService.execute(new PhoneCall(databaseManager, channel, this, 'A', from));
+			dbLookUpService.execute(new PhoneCall(databaseManager, 
+					channel.getCallerId().getNumber(), channel.getId(), this, 'A', from));
 		
 	}
 
@@ -211,7 +212,8 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		String callerNumber = channel.getCallerId().getNumber();
 		
 		if(callerNumber.length() >= 7 || callerNumber.equals("5003"))//TODO 5003 DEBUG //$NON-NLS-1$
-			dbLookUpService.execute(new PhoneCall(databaseManager, channel, this, 'Q', from));
+			dbLookUpService.execute(new PhoneCall(databaseManager, 
+					channel.getCallerId().getNumber(), channel.getId(), this, 'Q', from));
 		
 	}
 	
@@ -225,7 +227,8 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		String callerNumber = channel.getCallerId().getNumber();
 		
 		if(callerNumber.length() >= 7 || callerNumber.equals("5003"))//TODO 5003 DEBUG //$NON-NLS-1$
-			dbLookUpService.execute(new PhoneCall(databaseManager, channel, this, 'H', from));
+			dbLookUpService.execute(new PhoneCall(databaseManager, 
+					channel.getCallerId().getNumber(), channel.getId(), this, 'H', from));
 		
 	}
 	
@@ -315,12 +318,18 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 				//TODO React to commands
 				String[] command = message.getBody().split("/"); //$NON-NLS-1$
 				
-				if(command.length == 3 && 
-						command[0].equals(
+				if(command.length == 3 && command[0].equals(
 								xStrings.getString("AsteriskManager.commandTransfer"))){ //$NON-NLS-1$
 					
+					//Received a transfer command
 					redirectCall(command[1], command[2], from);
 					
+					
+				}else if(command.length == 2 && command[0].equals(
+						xStrings.getString("AsteriskManager.commandQueue"))){ //$NON-NLS-1$
+					
+					//Received a command to put the call into the on air queue
+					redirectCallToQueue(command[1], from);
 					
 				}
 				
@@ -399,7 +408,8 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 					
 					//Log this in the DB
 					if(logHangup)
-						dbLookUpService.execute(new PhoneCall(databaseManager, hangup, this, 'H', "NA")); //$NON-NLS-1$
+						dbLookUpService.execute(new PhoneCall(databaseManager, 
+								hangup.getCallerId().getNumber(), hangup.getId(), this, 'H', "NA")); //$NON-NLS-1$
 					
 					//Send XMPP Message
 					String message = logCause + "/" + hangup.getCallerId().getNumber() + "/" + hangup.getId(); //$NON-NLS-1$ //$NON-NLS-2$
@@ -472,7 +482,8 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 				String callerNumber = channel.getCallerId().getNumber();
 				
 				if(callerNumber.length() >= 7 || callerNumber.equals("5003"))//TODO 5003 DEBUG //$NON-NLS-1$
-					dbLookUpService.execute(new PhoneCall(databaseManager, channel, this, 'A', "NA")); //$NON-NLS-1$
+					dbLookUpService.execute(new PhoneCall(databaseManager, 
+							channel.getCallerId().getNumber(), channel.getId(), this, 'A', "NA")); //$NON-NLS-1$
 				
 				LOGGER.info(message);
 				sendMessage(message);
