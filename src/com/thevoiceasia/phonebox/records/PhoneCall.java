@@ -31,7 +31,6 @@ public class PhoneCall implements Runnable{
 	/** STATICS **/
 	private static final Logger LOGGER = Logger.getLogger(PhoneCall.class.getName());//Logger
 	
-	//TODO BUG When creating new person person_id is always 1 and not what the record id is
 	public PhoneCall(DatabaseManager database, String callerID, String channelID) {
 		
 		this.database = database;

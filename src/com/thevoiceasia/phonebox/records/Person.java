@@ -1,6 +1,7 @@
 package com.thevoiceasia.phonebox.records;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Connection;
@@ -195,14 +196,22 @@ public class Person {
 		int id = -1;
 		
 		Statement statement = null;
+		ResultSet rs = null;
 		
 		String SQL = "INSERT INTO person VALUES()";  //$NON-NLS-1$
 		
 		try{
 			
 			statement = databaseConnection.createStatement();
-			id = statement.executeUpdate(SQL, Statement.RETURN_GENERATED_KEYS);
-	        this.id = id; //Set ID for this object now that we have an ID
+			int rows = statement.executeUpdate(SQL, Statement.RETURN_GENERATED_KEYS);
+			
+			if(rows > 0){
+				rs = statement.getGeneratedKeys();
+				rs.next();
+				id = rs.getInt(1);
+				this.id = id;//Set ID for this object now that we have an ID
+			}
+			
 		}catch(SQLException e){
         	
         	showError(e, xStrings.getString("Person.errorCreatingNewPerson")); //$NON-NLS-1$
