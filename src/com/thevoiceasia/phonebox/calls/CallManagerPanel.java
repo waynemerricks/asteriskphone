@@ -316,7 +316,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								callPanels.get(command[3]).setAnswered();
 							else{
 								
-								if(command[1].length() > 7 || command[1].equals("5003"))//TODO DEBUG 5003 //$NON-NLS-1$
+								if(command[1].length() > 7 || command[1].equals("5003"))//DEBUG 5003 //$NON-NLS-1$
 									if(isStudioExtension(command[2])){
 										
 										callPanels.get(command[3]).setOnAir(
@@ -347,7 +347,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								
 								//TODO BUG?? Unknown numbers?
 								//This isn't us so someone connected to someone else
-								if(command[1].length() >= 7 || command[1].equals("5003")){//TODO 5003 DEBUG //$NON-NLS-1$
+								if(command[1].length() >= 7 || command[1].equals("5003")){//DEBUG 5003 //$NON-NLS-1$
 									
 									//This is an outside call connecting to someone else
 									//Check to see if someone else = studio
@@ -368,7 +368,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								
 								
 								// This is us so we're active on a call
-								if(command[1].length() >= 7 || command[1].equals("5003")){//TODO 5003 DEBUG //$NON-NLS-1$
+								if(command[1].length() >= 7 || command[1].equals("5003")){//DEBUG 5003 //$NON-NLS-1$
 									
 									//This is an outside call connecting to us
 									createSkeletonCallInfoPanel(command[1], command[3], 
@@ -422,7 +422,10 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	 * @param callInfoPanel
 	 */
 	private void notifyListeners(CallInfoPanel callInfoPanel) {
-		// TODO Auto-generated method stub
+		/* TODO Need to notify any listeners of this CallManagerPanel, to be implemented
+		 * once we have components in place that will act as listeners (call data input 
+		 * panel?)
+		 */
 		LOGGER.info(xStrings.getString("CallManagerPanel.notifyListeners") + //$NON-NLS-1$
 				callInfoPanel.getChannelID()); 
 		
