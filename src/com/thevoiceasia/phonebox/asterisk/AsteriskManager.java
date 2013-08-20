@@ -299,7 +299,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	/** PacketListener **/
 	@Override
 	public void processPacket(Packet XMPPPacket) {
-		// TODO Auto-generated method stub
+		
 		if(XMPPPacket instanceof Message){
 			
 			Message message = (Message)XMPPPacket;
