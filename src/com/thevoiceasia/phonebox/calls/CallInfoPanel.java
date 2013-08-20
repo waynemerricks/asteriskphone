@@ -603,8 +603,6 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 					nameLabel.setText(p.name);
 					locationLabel.setText(p.location);
 					
-					System.out.println(p.getShortAlertLevel());
-					
 					if(p.getShortAlertLevel() == 'W')
 						setAlertLevel(ALERT_WARNING);
 					else if(p.getShortAlertLevel() == 'B')
