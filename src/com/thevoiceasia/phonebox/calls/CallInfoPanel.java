@@ -312,18 +312,28 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	 */
 	private void setAnsweredElseWhere(){
 		
-		mode = MODE_ANSWERED_ELSEWHERE;
-		
-		SwingUtilities.invokeLater(new Runnable(){
+		/*
+		 * Only reset to AnsweredElseWhere if we're still in the clicked state
+		 * Call may have gone on air by the time the user clicks yes.
+		 * 
+		 * Still a possibility of race condition here but its not worth the synching
+		 * hassle
+		 */
+		if(mode == MODE_CLICKED){
 			
-			public void run(){
-				
-				setBackground(ANSWERED_ELSEWHERE_COLOUR);
-				
-			}
+			mode = MODE_ANSWERED_ELSEWHERE;
 			
-		});
-		
+			SwingUtilities.invokeLater(new Runnable(){
+				
+				public void run(){
+					
+					setBackground(ANSWERED_ELSEWHERE_COLOUR);
+					
+				}
+				
+			});
+			
+		}
 	}
 	
 	/**
