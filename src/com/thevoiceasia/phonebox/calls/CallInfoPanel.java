@@ -308,6 +308,25 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	}
 	
 	/**
+	 * Internal answeredElseWhere used when user clicks no to take call
+	 */
+	private void setAnsweredElseWhere(){
+		
+		mode = MODE_ANSWERED_ELSEWHERE;
+		
+		SwingUtilities.invokeLater(new Runnable(){
+			
+			public void run(){
+				
+				setBackground(ANSWERED_ELSEWHERE_COLOUR);
+				
+			}
+			
+		});
+		
+	}
+	
+	/**
 	 * Sets the panel to answered by someone else mode
 	 */
 	public void setAnsweredElseWhere(String answeredBy){
@@ -507,7 +526,13 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 								+ channelID + "/" + myExtension); //$NON-NLS-1$
 					}
 					
+				}else{
+					
+					//Set call back to answered elsewhere don't reset timer
+					setAnsweredElseWhere();
+					
 				}
+					
 					
 			}
 			
@@ -567,6 +592,8 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 					
 					nameLabel.setText(p.name);
 					locationLabel.setText(p.location);
+					
+					System.out.println(p.getShortAlertLevel());
 					
 					if(p.getShortAlertLevel() == 'W')
 						setAlertLevel(ALERT_WARNING);
