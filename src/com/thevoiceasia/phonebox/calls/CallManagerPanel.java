@@ -1,5 +1,8 @@
 package com.thevoiceasia.phonebox.calls;
 
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -18,8 +21,9 @@ import org.jivesoftware.smackx.muc.MultiUserChat;
 
 import com.thevoiceasia.misc.CountryCodes;
 import com.thevoiceasia.phonebox.database.DatabaseManager;
+import com.thevoiceasia.phonebox.misc.LastActionTimer;
 
-public class CallManagerPanel extends JPanel implements PacketListener{
+public class CallManagerPanel extends JPanel implements PacketListener, MouseListener, LastActionTimer{
 
 	/** STATICS */
 	private static final long serialVersionUID = 1L;
@@ -45,6 +49,7 @@ public class CallManagerPanel extends JPanel implements PacketListener{
 	private DatabaseManager database;
 	private HashMap<String, String> settings;
 	private HashMap<String, String> studioExtensions = new HashMap<String, String>();
+	private long lastActionTime = new Date().getTime();
 	
 	/* We need to spawn threads for event response with db lookups, in order to guard against
 	 * craziness, we'll use the ExecutorService to have X threads available to use (set via
@@ -69,6 +74,7 @@ public class CallManagerPanel extends JPanel implements PacketListener{
 		populateStudioExtensions();
 				
 		this.setLayout(new MigLayout(new LC().fillX()));
+		this.addMouseListener(this);
 		
 	}
 	
@@ -301,7 +307,6 @@ public class CallManagerPanel extends JPanel implements PacketListener{
 					}else if(command[0].equals(
 							xStrings.getString("CallManagerPanel.callConnected"))){ //$NON-NLS-1$
 						
-						//TODO
 						/* I want to only deal with channels that are from outside
 						 * In theory this should mean its a channel we already have
 						 * however what happens when we log in and a call is in progress?
@@ -438,5 +443,37 @@ public class CallManagerPanel extends JPanel implements PacketListener{
 		});
 		
 	}
+
+	/* LAST ACTION TIMER */
+	@Override
+	public long getLastActionTime() {
+		
+		return lastActionTime;
+		
+	}
+	
+	/* MOUSE LISTENER */
+	@Override
+	public void mouseClicked(MouseEvent evt) {
+		
+		lastActionTime = new Date().getTime();
+		System.out.println(lastActionTime);
+		
+	}
+
+	/* UNUSED MOUSE LISTENER METHODS */
+	@Override
+	public void mouseEntered(MouseEvent evt){}
+
+	@Override
+	public void mouseExited(MouseEvent evt){}
+
+	@Override
+	public void mousePressed(MouseEvent evt){}
+
+	@Override
+	public void mouseReleased(MouseEvent evt){}
+
+	
 	
 }
