@@ -2,6 +2,7 @@ package com.thevoiceasia.phonebox.asterisk;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -47,9 +48,10 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	//CLASS VARS
 	private AsteriskServer asteriskServer;
 	private HashMap<String, AsteriskChannel> activeChannels = new HashMap<String, AsteriskChannel>();
+	private HashMap<String, Long> lockedChannels = new HashMap<String, Long>();
 	private I18NStrings xStrings;
 	private String autoAnswerContext, defaultContext, contextMacroAuto, queueNumber;
-	private long defaultTimeOut;
+	private long defaultTimeOut, channelLockTimeOut;
 	private MultiUserChat controlRoom;
 	private DatabaseManager databaseManager;
 	
@@ -76,6 +78,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		this.queueNumber = settings.get("onAirQueueNumber"); //$NON-NLS-1$
 		this.defaultTimeOut = Long.parseLong(settings.get("defaultTimeOut")); //$NON-NLS-1$
 		this.maxExecutorThreads = Integer.parseInt(settings.get("threadPoolMax")); //$NON-NLS-1$
+		this.channelLockTimeOut = Long.parseLong(settings.get("channelLockTimeOut")); //$NON-NLS-1$
 		this.controlRoom = controlRoom; //Control Room XMPP chat
 		this.controlRoom.addMessageListener(this);
 		
@@ -177,7 +180,6 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		
 	}
 	
-	//TODO Lock Channel so that multiples don't constantly redirect call
 	/**
 	 * Redirects the given channel to the given extension
 	 * @param channelID Channel to redirect
@@ -187,7 +189,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	
 		AsteriskChannel channel = activeChannels.get(channelID);
 		
-		if(channel != null)//null = channel not found
+		if(channel != null && !isLocked(channel))//null = channel not found
 			channel.redirect(autoAnswerContext, to, DEFAULT_PRIORITY);
 		
 		String callerNumber = channel.getCallerId().getNumber();
@@ -196,6 +198,41 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 			dbLookUpService.execute(new PhoneCall(databaseManager, 
 					channel.getCallerId().getNumber(), channel.getId(), this, 'A', from));
 		
+	}
+	
+	/**
+	 * Checks to see whether the given channel is locked and should not be transferred
+	 * This is a preventative measure to make sure 3 requests to answer the call
+	 * does not result in the call jumping between 3 operators
+	 * 
+	 * After a short TIME_OUT channel lock expires and can be transfered again
+	 * 
+	 * If channel is not locked, method will return false but the channel will become locked
+	 * so that subsequent calls will get the correct locked value
+	 * 
+	 * @param channel
+	 * @return true if channel lock time out has not expired
+	 */
+	private synchronized boolean isLocked(AsteriskChannel channel) {
+		
+		boolean locked = false;
+		
+		if(lockedChannels.get(channel.getId()) != null){
+			
+			//Potentially locked
+			long lockedAt = lockedChannels.get(channel.getId());
+			
+			if(new Date().getTime() - lockedAt >= channelLockTimeOut){
+				
+				lockedChannels.put(channel.getId(), new Date().getTime());
+				
+			}else
+				locked = true;
+			
+		}else
+			lockedChannels.put(channel.getId(), new Date().getTime());
+		
+		return locked;
 	}
 
 	/**
