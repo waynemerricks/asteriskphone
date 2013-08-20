@@ -23,6 +23,9 @@ import org.asteriskjava.live.ManagerCommunicationException;
 import org.asteriskjava.live.MeetMeUser;
 import org.asteriskjava.live.OriginateCallback;
 import org.asteriskjava.live.internal.AsteriskAgentImpl;
+
+import org.jivesoftware.smack.Chat;
+import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
@@ -32,7 +35,7 @@ import org.jivesoftware.smackx.muc.MultiUserChat;
 import com.thevoiceasia.phonebox.database.DatabaseManager;
 import com.thevoiceasia.phonebox.records.PhoneCall;
 
-public class AsteriskManager implements AsteriskServerListener, PropertyChangeListener, OriginateCallback, PacketListener {
+public class AsteriskManager implements AsteriskServerListener, PropertyChangeListener, OriginateCallback, PacketListener, MessageListener {
 
 	//STATICS
 	private static final Logger AST_LOGGER = Logger.getLogger("org.asteriskjava"); //$NON-NLS-1$
@@ -147,23 +150,80 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		
 	}
 	
-	//Necessary when new clients join but not needed as public, rework this to send XMPP update
-	//TODO need to decide what is happening on channels and send update via XMPP
-	public void showChannels(){
+	//Need to decide what is happening on channels and send update via XMPP
+	private void sendChannelInfo(String recipient){
 		
-		for (AsteriskChannel asteriskChannel : asteriskServer.getChannels()) {
-            System.out.println(asteriskChannel);
+		/*
+		 * LinkedChannel == null means its in a queue?
+		 * AsteriskQueue.getName 3000 = incoming so set ringing
+		 * AsteriskQueue.getName 3001 = on air queue so set green
+		 * 
+		 * Loop through AsteriskQueue.getEntries().getChannel to pick up channels 
+		 * and what not.  If its an internal ignore?
+		 */
+		LOGGER.info(xStrings.getString("AsteriskManager.sendingChannelInfo") + recipient); //$NON-NLS-1$
+		
+		for(AsteriskChannel asteriskChannel : asteriskServer.getChannels()){
+            
+			//System.out.println("CHANNEL: " + asteriskChannel);
+            
+            if(asteriskChannel.getLinkedChannel() != null && 
+            		(asteriskChannel.getCallerId().getNumber().length() >= 7 || 
+            		asteriskChannel.getCallerId().getNumber().equals("5003"))){ //DEBUG 5003 //$NON-NLS-1$
+            	
+            	//This is one we need to deal with CONNECTED/5003/5001/1377009449.5
+            	String command = xStrings.getString("AsteriskManager.callConnected") + "/"  //$NON-NLS-1$ //$NON-NLS-2$
+            			+ asteriskChannel.getCallerId().getNumber() + "/"  //$NON-NLS-1$
+            			+ asteriskChannel.getLinkedChannel().getCallerId().getNumber() 
+            			+ "/" + asteriskChannel.getId(); //$NON-NLS-1$
+            	
+            	//System.out.println(command);
+            	sendPrivateMessage(recipient, command);
+            	
+            }
+            
+        }
+		
+		for(AsteriskQueue asteriskQueue : asteriskServer.getQueues()){
+
+			//System.out.println("QUEUE: " + asteriskQueue);
+			
+			for(AsteriskQueueEntry entry : asteriskQueue.getEntries()){
+				
+				//QUEUE/3000/5003/1377009449.5
+				String command = xStrings.getString("AsteriskManager.commandQueue") + "/"   //$NON-NLS-1$//$NON-NLS-2$
+						+ asteriskQueue.getName() + "/"  //$NON-NLS-1$
+						+ entry.getChannel().getCallerId().getNumber() + "/"  //$NON-NLS-1$
+						+ entry.getChannel().getId();
+				
+				//System.out.println(command);
+				sendPrivateMessage(recipient, command);
+				
+			}
+					
         }
 		
 	}
 	
-	public void showQueues(){
+	/**
+	 * Internal method to send a message to a given user
+	 * @param recipient
+	 * @param message
+	 */
+	private void sendPrivateMessage(String recipient, String message){
+	
+		Chat chat = controlRoom.createPrivateChat(controlRoom.getRoom() + "/" + recipient, this); //$NON-NLS-1$
 		
-		for (AsteriskQueue asteriskQueue : asteriskServer.getQueues()) {
-            System.out.println(asteriskQueue);
-        }
+		try {
+			LOGGER.info(xStrings.getString("AsteriskManager.sendingPrivateMessage") +  //$NON-NLS-1$
+					recipient + "/" + message); //$NON-NLS-1$
+			chat.sendMessage(message);
+		} catch (XMPPException e) {
+			LOGGER.warning(xStrings.getString("AsteriskManager.errorSendingPrivateMessage") + recipient); //$NON-NLS-1$
+		}
 		
 	}
+	
 	
 	/**
 	 * Creates a call to the given number from the given number
@@ -308,11 +368,6 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		
 	}
 	
-	
-	
-	/* TODO Database Call Life Cycle Logging
-	 * XMPP Extension with Asterisk Info, Class it for easy messing around
-	 */
 	/**
 	 * Sends control message to XMPP control chat room
 	 * @param message
@@ -352,7 +407,6 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 				LOGGER.info(xStrings.getString("AsteriskManager.receivedMessage") + //$NON-NLS-1$
 						message.getBody()); 
 				
-				//TODO React to commands
 				String[] command = message.getBody().split("/"); //$NON-NLS-1$
 				
 				if(command.length == 3 && command[0].equals(
@@ -367,6 +421,12 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 					
 					//Received a command to put the call into the on air queue
 					redirectCallToQueue(command[1], from);
+					
+				}else if(command.length == 2 && command[0].equals(
+						xStrings.getString("AsteriskManager.commandUpdate"))){ //$NON-NLS-1$
+				
+					//Send updates to the person who asked for it (usually when they login)
+					sendChannelInfo(from);
 					
 				}
 				
@@ -528,6 +588,14 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 			}
 			
 		}
+		
+	}
+	
+	/** MESSAGE LISTENER **/
+	@Override
+	public void processMessage(Chat chat, Message message) {
+		
+		//We don't care about any private messages we get so just ignore
 		
 	}
 	
