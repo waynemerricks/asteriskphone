@@ -118,11 +118,6 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		
 	}
 	
-	/* TODO Build up an extensions to names list
-	 * by listening to commands from other users
-	 * hashmap it extension, name, overwrite existing if name is different (same computer
-	 * but different user)
-	 */
 	/**
 	 * Helper method to create a call info panel and then spawn a thread to grab details
 	 * from the DB (via standard Executor)
