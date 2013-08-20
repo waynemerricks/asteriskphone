@@ -14,7 +14,12 @@ import javax.swing.SwingUtilities;
 import net.miginfocom.layout.LC;
 import net.miginfocom.swing.MigLayout;
 
+import org.jivesoftware.smack.Chat;
+import org.jivesoftware.smack.ChatManagerListener;
+import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.PacketListener;
+import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smackx.muc.MultiUserChat;
@@ -23,7 +28,7 @@ import com.thevoiceasia.misc.CountryCodes;
 import com.thevoiceasia.phonebox.database.DatabaseManager;
 import com.thevoiceasia.phonebox.misc.LastActionTimer;
 
-public class CallManagerPanel extends JPanel implements PacketListener, MouseListener, LastActionTimer{
+public class CallManagerPanel extends JPanel implements PacketListener, MouseListener, LastActionTimer, ChatManagerListener, MessageListener {
 
 	/** STATICS */
 	private static final long serialVersionUID = 1L;
@@ -60,7 +65,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	private int maxExecutorThreads;
 	
 	public CallManagerPanel(HashMap<String, String> settings, MultiUserChat controlRoom, 
-			DatabaseManager database){
+			DatabaseManager database, XMPPConnection connection){
 		
 		this.controlRoom = controlRoom;
 		this.controlRoom.addMessageListener(this);
@@ -77,8 +82,24 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		this.setLayout(new MigLayout(new LC().fillX()));
 		this.addMouseListener(this);
 		
+		//Add Private Chat Listener
+		connection.getChatManager().addChatListener(this);
+		
 	}
 	
+	/**
+	 * Sends an UPDATE command to the control room
+	 */
+	public void sendUpdateRequest(){
+		
+		try {
+			controlRoom.sendMessage(xStrings.getString("CallManagerPanel.commandUpdate") +  //$NON-NLS-1$
+					"/" + settings.get("myExtension")); //$NON-NLS-1$ //$NON-NLS-2$
+		} catch (XMPPException e) {
+			LOGGER.severe(xStrings.getString("CallManagerPanel.errorSendingUpdateCommand")); //$NON-NLS-1$
+		}
+		
+	}
 	/**
 	 * Internal method, reads studioExtensions from db and separates them into a hashmap
 	 * [extension] => [name]
@@ -462,12 +483,32 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		
 	}
 	
+	/* CHAT MANAGER LISTENER */
+	@Override
+	public void chatCreated(Chat chat, boolean createdLocally) {
+		
+		//New chat initiated so add a message listener to it
+		chat.addMessageListener(this);
+		LOGGER.info(xStrings.getString("CallManagerPanel.receivedPrivateChatRequest")); //$NON-NLS-1$
+		
+	}
+
+	/* MESSAGE LISTENER */
+	@Override
+	public void processMessage(Chat chat, Message message) {
+		
+		//Can pass this on to the processPacket method as part of normal message handling
+		LOGGER.info(xStrings.getString("CallManagerPanel.receivedPrivateMessage") //$NON-NLS-1$
+				+ message.getBody()); 
+		processPacket(message);
+		
+	}
+	
 	/* MOUSE LISTENER */
 	@Override
 	public void mouseClicked(MouseEvent evt) {
 		
 		lastActionTime = new Date().getTime();
-		System.out.println(lastActionTime);
 		
 	}
 
@@ -483,7 +524,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 
 	@Override
 	public void mouseReleased(MouseEvent evt){}
-
 	
-	
+	//TODO BUG Update gives incorrect call times get channel creation date?
+	//Don't think I could ever figure out stage time
 }
