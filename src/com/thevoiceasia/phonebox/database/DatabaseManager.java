@@ -326,6 +326,23 @@ public class DatabaseManager {
 	 */
 	public Connection getConnection(){
 		
+		try {
+			if(!databaseConnection.isValid(3)){
+				
+				//Reconnect
+				reconnect(false);
+				
+			}
+			
+			
+		} catch (SQLException e) {
+			
+			
+			LOGGER.severe(xStrings.getString("DatabaseManager.logErrorReconnecting")); //$NON-NLS-1$
+			hasErrors = true;
+			
+		}
+		
 		return databaseConnection;
 		
 	}
@@ -339,7 +356,7 @@ public class DatabaseManager {
 	 */
 	public Connection getReadConnection(){
 		
-		return databaseConnection;
+		return getConnection();
 		
 	}
 	
@@ -363,7 +380,37 @@ public class DatabaseManager {
 				
 		}
 		
+		
+		try {
+			if(!connection.isValid(3)){
+				
+				//Reconnect
+				reconnect(true);
+				
+			}
+			
+			
+		} catch (SQLException e) {
+			
+			
+			LOGGER.severe(xStrings.getString("DatabaseManager.logErrorReconnecting")); //$NON-NLS-1$
+			hasErrors = true;
+			
+		}
+		
 		return connection;
+		
+	}
+	
+	private void reconnect(boolean write){
+		
+		if(write){
+			writeConnected = false;
+			connectWrite();
+		}else{
+			connected = false;
+			connect();
+		}
 		
 	}
 	
