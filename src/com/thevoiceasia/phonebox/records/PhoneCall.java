@@ -26,13 +26,28 @@ public class PhoneCall implements Runnable{
 	private I18NStrings xStrings; //Link to external string resources
 	private Vector<Integer> numberIDs = new Vector<Integer>(); 
 	private char threadMode;
-	private String threadOperator, answeredBy, callerID, channelID;
+	private String threadOperator, answeredBy, callerID, channelID, callLocation;
 	
 	/** STATICS **/
 	private static final Logger LOGGER = Logger.getLogger(PhoneCall.class.getName());//Logger
 	
 	public PhoneCall(DatabaseManager database, String callerID, String channelID) {
 		
+		this.database = database;
+		this.callerID = callerID;
+		this.channelID = channelID;
+		
+		xStrings = new I18NStrings(database.getUserSettings().get("language"),  //$NON-NLS-1$
+				database.getUserSettings().get("country")); //$NON-NLS-1$
+		
+		populatePersonDetails();
+		
+	}
+	
+	public PhoneCall(DatabaseManager database, String callerID, String channelID, 
+			String callLocation){
+		
+		this.callLocation = callLocation;
 		this.database = database;
 		this.callerID = callerID;
 		this.channelID = channelID;
@@ -402,8 +417,14 @@ public class PhoneCall implements Runnable{
 		    		//Location
 		    		person.location = personResultSet.getString("location"); //$NON-NLS-1$
 		    		
-		    		if(person.location == null || person.location.equals("null")) //$NON-NLS-1$
-		    			person.location = xStrings.getString("PhoneCall.locationUnknown"); //$NON-NLS-1$
+		    		if(person.location == null || person.location.equals("null")){//$NON-NLS-1$
+		    			
+		    			if(callLocation != null)
+		    				person.location = callLocation;
+		    			else
+		    				person.location = xStrings.getString("PhoneCall.locationUnknown"); //$NON-NLS-1$
+		    			
+		    		}
 		    		
 		    		//Postal Address
 		    		person.postalAddress = personResultSet.getString("postal_address"); //$NON-NLS-1$
@@ -646,7 +667,12 @@ public class PhoneCall implements Runnable{
 		person.alert = xStrings.getString("PhoneCall.alertNormal"); //$NON-NLS-1$
 		person.name = xStrings.getString("PhoneCall.unknownCaller"); //$NON-NLS-1$
 		person.gender = xStrings.getString("PhoneCall.genderUnknown"); //$NON-NLS-1$
-		person.location = xStrings.getString("PhoneCall.locationUnknown"); //$NON-NLS-1$
+		
+		if(callLocation != null)
+			person.location = callLocation;
+		else
+			person.location = xStrings.getString("PhoneCall.locationUnknown"); //$NON-NLS-1$
+		
 		person.postalAddress = ""; //$NON-NLS-1$
 		person.postCode = ""; //$NON-NLS-1$
 		person.email = ""; //$NON-NLS-1$
