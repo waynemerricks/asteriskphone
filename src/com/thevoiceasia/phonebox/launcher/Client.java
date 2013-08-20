@@ -81,16 +81,19 @@ public class Client extends JFrame implements WindowListener{
 				chatManager.startIdleDetectThread();
 				
 				//GUI For Call Queue
-				//TODO
 				//CallManager interacts with control room
 				LOGGER.info(xStrings.getString("Client.creatingCallManager")); //$NON-NLS-1$
-				
-				this.add(new JScrollPane(new CallManagerPanel(databaseManager.getUserSettings(),
+				CallManagerPanel callManagerPanel = new CallManagerPanel(
+						databaseManager.getUserSettings(),
 						chatManager.getControlChatRoom(), 
-						databaseManager)), BorderLayout.CENTER);
+						databaseManager);
 				
-				//GUI For Call Input
-				//TODO
+				chatManager.addActionTimeRecorder(callManagerPanel, 
+						callManagerPanel.getClass().getName());
+				
+				this.add(new JScrollPane(callManagerPanel), BorderLayout.CENTER);
+				
+				//TODO GUI For Call Input
 				
 			}
 			
