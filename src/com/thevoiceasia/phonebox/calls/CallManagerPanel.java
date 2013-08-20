@@ -207,7 +207,7 @@ public class CallManagerPanel extends JPanel implements PacketListener{
 		
 		//Spawn thread to populate details
 		dbLookUpService.execute(
-				new InfoPanelPopulator(database, call, phoneNumber, channelID));
+				new InfoPanelPopulator(database, call, phoneNumber, channelID, location));
 		
 	}
 	
