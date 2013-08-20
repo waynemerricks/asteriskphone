@@ -10,8 +10,6 @@ import java.util.logging.Logger;
 
 import javax.swing.JOptionPane;
 
-import com.thevoiceasia.phonebox.chat.I18NStrings;
-
 public class Person {
 
 	/** CLASS VARS **/
