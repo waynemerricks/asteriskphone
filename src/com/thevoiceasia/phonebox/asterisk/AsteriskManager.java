@@ -194,7 +194,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		
 		String callerNumber = channel.getCallerId().getNumber();
 		
-		if(callerNumber.length() >= 7 || callerNumber.equals("5003"))//TODO 5003 DEBUG //$NON-NLS-1$
+		if(callerNumber.length() >= 7 || callerNumber.equals("5003"))//DEBUG 5003 DEBUG //$NON-NLS-1$
 			dbLookUpService.execute(new PhoneCall(databaseManager, 
 					channel.getCallerId().getNumber(), channel.getId(), this, 'A', from));
 		
@@ -248,7 +248,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		
 		String callerNumber = channel.getCallerId().getNumber();
 		
-		if(callerNumber.length() >= 7 || callerNumber.equals("5003"))//TODO 5003 DEBUG //$NON-NLS-1$
+		if(callerNumber.length() >= 7 || callerNumber.equals("5003"))//DEBUG 5003 DEBUG //$NON-NLS-1$
 			dbLookUpService.execute(new PhoneCall(databaseManager, 
 					channel.getCallerId().getNumber(), channel.getId(), this, 'Q', from));
 		
@@ -263,7 +263,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		
 		String callerNumber = channel.getCallerId().getNumber();
 		
-		if(callerNumber.length() >= 7 || callerNumber.equals("5003"))//TODO 5003 DEBUG //$NON-NLS-1$
+		if(callerNumber.length() >= 7 || callerNumber.equals("5003"))//DEBUG 5003 DEBUG //$NON-NLS-1$
 			dbLookUpService.execute(new PhoneCall(databaseManager, 
 					channel.getCallerId().getNumber(), channel.getId(), this, 'H', from));
 		
@@ -291,7 +291,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		
 		String callerNumber = entry.getChannel().getCallerId().getNumber();
 		
-		if(callerNumber.length() >= 7 || callerNumber.equals("5003"))//TODO 5003 DEBUG //$NON-NLS-1$
+		if(callerNumber.length() >= 7 || callerNumber.equals("5003"))//DEBUG 5003 DEBUG //$NON-NLS-1$
 			dbLookUpService.execute(new PhoneCall(databaseManager, entry, this));
 		
 	}
@@ -429,7 +429,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 						 */
 						String callerNumber = hangup.getCallerId().getNumber();
 						
-						if(callerNumber.length() >= 7 || callerNumber.equals("5003"))//TODO 5003 DEBUG //$NON-NLS-1$
+						if(callerNumber.length() >= 7 || callerNumber.equals("5003"))//DEBUG 5003 DEBUG //$NON-NLS-1$
 							logHangup = true; 
 						
 					}else if(hangupCause.equals(HANGUP_OFFLINE))
@@ -518,7 +518,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 				
 				String callerNumber = channel.getCallerId().getNumber();
 				
-				if(callerNumber.length() >= 7 || callerNumber.equals("5003"))//TODO 5003 DEBUG //$NON-NLS-1$
+				if(callerNumber.length() >= 7 || callerNumber.equals("5003"))//DEBUG 5003 DEBUG //$NON-NLS-1$
 					dbLookUpService.execute(new PhoneCall(databaseManager, 
 							channel.getCallerId().getNumber(), channel.getId(), this, 'A', "NA")); //$NON-NLS-1$
 				
