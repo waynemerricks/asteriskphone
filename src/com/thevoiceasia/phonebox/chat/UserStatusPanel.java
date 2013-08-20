@@ -239,14 +239,11 @@ public class UserStatusPanel extends JPanel implements ParticipantStatusListener
 		
 	}
 
-	@Override
-	public void nicknameChanged(String participant, String newNick) {
-		// TODO Might be interested in this but no docs in Smack API so just guessing at terms
-		LOGGER.info(xStrings.getString("UserStatusPanel.logNickNameChanged") + " " + participant + " " + newNick); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		
-	}
-
+	
 	/** UNUSED ParticipantStatusListener methods **/
+	@Override
+	public void nicknameChanged(String participant, String newNick) {}
+	
 	@Override
 	public void banned(String participant, String actor, String reason) {}
 
