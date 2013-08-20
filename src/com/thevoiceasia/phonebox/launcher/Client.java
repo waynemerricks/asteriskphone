@@ -86,12 +86,15 @@ public class Client extends JFrame implements WindowListener{
 				CallManagerPanel callManagerPanel = new CallManagerPanel(
 						databaseManager.getUserSettings(),
 						chatManager.getControlChatRoom(), 
-						databaseManager);
+						databaseManager, chatManager.getConnection()); 
 				
 				chatManager.addActionTimeRecorder(callManagerPanel, 
 						callManagerPanel.getClass().getName());
 				
 				this.add(new JScrollPane(callManagerPanel), BorderLayout.CENTER);
+				
+				//Request update of active channels from the server
+				callManagerPanel.sendUpdateRequest();
 				
 				//TODO GUI For Call Input
 				
