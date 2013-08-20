@@ -114,7 +114,11 @@ public class ChatManager implements UserStatusListener, PacketListener {
 			
 				if(now - actionTimers.get(i).getLastActionTime() < idleTimeout)
 					alive = true;
-				//TODO refactor so this class holds the last action time and objects
+				/* 
+				 * Refactoring so that this class holds the last action time and objects
+				 * might make sense but then that means every class needs a reference
+				 * to ChatManager which is yet another thing to swap between classes
+				 */
 				//reset it
 				i++;
 				
