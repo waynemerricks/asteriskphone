@@ -73,6 +73,11 @@ public class ChatManager implements UserStatusListener, PacketListener {
 		
 	}
 	
+	public XMPPConnection getConnection(){
+		
+		return (XMPPConnection)XMPPServerConnection;
+		
+	}
 	
 	public void startIdleDetectThread(){
 	
