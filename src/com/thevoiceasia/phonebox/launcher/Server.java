@@ -79,10 +79,7 @@ public class Server extends Thread{
 							LOGGER.info(xStrings.getString("Server.asteriskConnected")); //$NON-NLS-1$
 						
 							hasErrors = false; //Reset flag as everything is working
-							//asteriskManager.createCall("5001", "5002", "TEST 2");
-							//asteriskManager.redirectCall("1376399231.403", "5002", "TEST 2");
-							//asteriskManager.redirectCallToQueue("1376313386.343");
-							//asteriskManager.hangupCall("1376399231.403", "TEST 2");
+							
 						}catch(ManagerCommunicationException e){
 						
 							showError(e, xStrings.getString("Server.asteriskConnectionError")); //$NON-NLS-1$
