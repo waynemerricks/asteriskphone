@@ -50,6 +50,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	private HashMap<String, String> settings;
 	private HashMap<String, String> studioExtensions = new HashMap<String, String>();
 	private long lastActionTime = new Date().getTime();
+	private HashMap<String, String> userExtensions = new HashMap<String, String>();
 	
 	/* We need to spawn threads for event response with db lookups, in order to guard against
 	 * craziness, we'll use the ExecutorService to have X threads available to use (set via
@@ -122,15 +123,6 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	 * hashmap it extension, name, overwrite existing if name is different (same computer
 	 * but different user)
 	 */
-	/* TODO Alternate proposal
-	 * Get user list from chat room
-	 * Read username --> myExtension from DB
-	 * Need to update when people join or leave
-	 */
-	/* TODO MyExtension is per machine not per username.  Would have to rewrite settings
-	 * to lookup machine extension and then write in username -> extension for others
-	 * In popsettings would have to ignore username -> extension
-	 */
 	/**
 	 * Helper method to create a call info panel and then spawn a thread to grab details
 	 * from the DB (via standard Executor)
@@ -176,6 +168,10 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 				location, "", CallInfoPanel.ALERT_OK, channelID,  //$NON-NLS-1$
 				false, true, controlRoom, settings.get("myExtension"),//$NON-NLS-1$
 				settings.get("nickName"), timezoneOffset);//$NON-NLS-1$
+		
+		//Lookup ConnectedTo if we have an entry in the userExtensions map swap to this name
+		if(userExtensions.get(connectedTo) != null)
+			connectedTo = userExtensions.get(connectedTo);
 		
 		switch(mode){
 		
@@ -258,6 +254,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 				 * -- CALL/From Number/To Number/Channel that is calling
 				 * -- QUEUE/Queue Name/Channel that is queued
 				 * -- HANGUP/Number Hung up/Channel that Hung up
+				 * -- TRANSFER/Channel to Transfer/Number to transfer it to
 				 */
 				
 				//RINGING - Can Ignore
@@ -330,9 +327,18 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 										callPanels.get(command[3]).setOnAir(
 												studioExtensions.get(command[2]));
 										
-									}else
-										callPanels.get(command[3]).setAnsweredElseWhere(
-												command[2]);
+									}else{
+									
+										String connectedTo = userExtensions.get(command[2]);
+										
+										if(connectedTo != null)
+											callPanels.get(command[3]).setAnsweredElseWhere(
+													connectedTo);
+										else
+											callPanels.get(command[3]).setAnsweredElseWhere(
+													command[2]);
+									
+									}
 								
 							}
 							
@@ -400,6 +406,12 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 						removePanel(command[2]);
 						
 					}
+					
+				}else if(command.length == 3 &&
+						command[0].equals(xStrings.getString("CallManagerPanel.callTransfer"))){ //$NON-NLS-1$
+					
+					//Transfer from another user, add their name to our extensions list
+					userExtensions.put(command[2], from);
 					
 				}
 				
