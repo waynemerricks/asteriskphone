@@ -533,6 +533,26 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 
 	@Override
 	public void mouseReleased(MouseEvent evt){}
+
+	public void answerNext() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void answerRandom() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void dial() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void setDropMode() {
+		// TODO Auto-generated method stub
+		
+	}
 	
 	//TODO BUG Update gives incorrect call times get channel creation date?
 	//Don't think I could ever figure out stage time
