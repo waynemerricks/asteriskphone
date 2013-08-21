@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.logging.Logger;
 
 import java.security.SecureRandom;
@@ -545,6 +546,57 @@ public class DatabaseManager {
 		e.printStackTrace();
 		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("DatabaseManager.errorBoxTitle"), JOptionPane.WARNING_MESSAGE); //$NON-NLS-1$
 		LOGGER.warning(friendlyErrorMessage);
+		
+	}
+	
+	/**
+	 * Reads the systems phone extensions from the db and populates the systemExtensions
+	 * HashSet.  We will use this to figure out if a call is coming into the system or not
+	 */
+	public HashSet<String> getSystemExtensions(){
+		
+		LOGGER.info(xStrings.getString("AsteriskManager.readingSystemExtensions")); //$NON-NLS-1$
+		
+		String SQL = "SELECT option_value FROM clientsettings WHERE option_name = 'myExtension' " + //$NON-NLS-1$
+				"OR option_name = 'incomingQueueNumber' OR option_name = 'onAirQueueNumber'"; //$NON-NLS-1$
+		
+		HashSet<String> systemExtensions = new HashSet<String>();
+		Statement statement = null;
+		ResultSet resultSet = null;
+		
+		try{
+			
+			statement = getReadConnection().createStatement();
+		    resultSet = statement.executeQuery(SQL);
+		    
+		    while(resultSet.next()){
+		    	
+		    	systemExtensions.add(resultSet.getString(1));
+		    	
+		    }
+
+		}catch (SQLException e){
+			LOGGER.severe(xStrings.getString("AsteriskManager.databaseSQLError") +  //$NON-NLS-1$
+					e.getMessage());
+		}finally {
+			
+			if (resultSet != null) {
+		        try {
+		        	resultSet.close();
+		        } catch (SQLException sqlEx) { } // ignore
+		        resultSet = null;
+		    }
+		    
+			if (statement != null) {
+		        try {
+		        	statement.close();
+		        } catch (SQLException sqlEx) { } // ignore
+		        statement = null;
+		    }
+		    
+		}	
+		
+		return systemExtensions;
 		
 	}
 
