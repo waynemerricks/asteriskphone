@@ -4,6 +4,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
@@ -56,6 +57,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	private HashMap<String, String> studioExtensions = new HashMap<String, String>();
 	private long lastActionTime = new Date().getTime();
 	private HashMap<String, String> userExtensions = new HashMap<String, String>();
+	private HashSet<String> systemExtensions = new HashSet<String>();
 	
 	/* We need to spawn threads for event response with db lookups, in order to guard against
 	 * craziness, we'll use the ExecutorService to have X threads available to use (set via
@@ -84,6 +86,10 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		
 		//Add Private Chat Listener
 		connection.getChatManager().addChatListener(this);
+		
+		//Store a copy of all the system extensions so we can decide what calls we need
+		//to handle
+		systemExtensions = database.getSystemExtensions();
 		
 	}
 	
@@ -337,7 +343,8 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								callPanels.get(command[3]).setAnswered();
 							else{
 								
-								if(command[1].length() > 7 || command[1].equals("5003"))//DEBUG 5003 //$NON-NLS-1$
+								if(systemExtensions.contains(command[2])){
+								
 									if(isStudioExtension(command[2])){
 										
 										callPanels.get(command[3]).setOnAir(
@@ -355,6 +362,8 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 													command[2]);
 									
 									}
+									
+								}
 								
 							}
 							
@@ -368,7 +377,8 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								
 								//TODO BUG?? Unknown numbers?
 								//This isn't us so someone connected to someone else
-								if(command[1].length() >= 7 || command[1].equals("5003")){//DEBUG 5003 //$NON-NLS-1$
+								//Check if we're connected to someone who is monitored by this program
+								if(systemExtensions.contains(command[2])){
 									
 									//This is an outside call connecting to someone else
 									//Check to see if someone else = studio
@@ -389,7 +399,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								
 								
 								// This is us so we're active on a call
-								if(command[1].length() >= 7 || command[1].equals("5003")){//DEBUG 5003 //$NON-NLS-1$
+								if(systemExtensions.contains(command[2])){
 									
 									//This is an outside call connecting to us
 									createSkeletonCallInfoPanel(command[1], command[3], 
