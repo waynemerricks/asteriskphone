@@ -288,6 +288,9 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	 */
 	public void setAnswered(){
 		
+		if(mode == MODE_RINGING)
+			ringingTask.cancel();
+		
 		mode = MODE_ANSWERED;
 		timeLabel.resetStageTime();
 		
@@ -311,6 +314,9 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	 * Internal answeredElseWhere used when user clicks no to take call
 	 */
 	private void setAnsweredElseWhere(){
+		
+		if(mode == MODE_RINGING)
+			ringingTask.cancel();
 		
 		/*
 		 * Only reset to AnsweredElseWhere if we're still in the clicked state
