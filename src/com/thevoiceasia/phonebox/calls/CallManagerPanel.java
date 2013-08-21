@@ -338,10 +338,9 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 						 */
 						if(callPanels.get(command[3]) != null){
 							
-							if(command[1].equals(settings.get("myExtension")) ||  //$NON-NLS-1$
-									command[2].equals(settings.get("myExtension"))) //$NON-NLS-1$
-								callPanels.get(command[3]).setAnswered();
-							else{
+							if(command[2].equals(settings.get("myExtension"))) //$NON-NLS-1$
+									callPanels.get(command[3]).setAnswered();
+							else if(!command[1].equals(settings.get("myExtension"))){ //$NON-NLS-1$
 								
 								if(systemExtensions.contains(command[2])){
 								
@@ -395,7 +394,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									
 								}
 								
-							}else{
+							}else if(!command[1].equals(settings.get("myExtension"))){ //$NON-NLS-1$
 								
 								
 								// This is us so we're active on a call
