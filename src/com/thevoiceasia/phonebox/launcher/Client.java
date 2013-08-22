@@ -94,14 +94,14 @@ public class Client extends JFrame implements WindowListener{
 				
 				JPanel callModule = new JPanel(new BorderLayout());
 				callModule.add(new JScrollPane(callManagerPanel), BorderLayout.CENTER);
-				callModule.add(new CallShortcutBar(callManagerPanel, language, country), 
-						BorderLayout.NORTH);
+				CallShortcutBar callShortcuts = new CallShortcutBar(callManagerPanel, 
+						language, country);
+				callManagerPanel.addManualHangupListener(callShortcuts);
+				callModule.add(callShortcuts, BorderLayout.NORTH);
 				
 				this.add(callModule, BorderLayout.CENTER);
 				
-				//Request update of active channels from the server
 				callManagerPanel.sendUpdateRequest();
-				
 				//TODO GUI For Call Input
 				
 			}
