@@ -67,12 +67,6 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 		topic.setHorizontalAlignment(JLabel.CENTER);
 		topic.setText(xStrings.getString("ChatMessagePanel.topicLabel")); //$NON-NLS-1$
 		
-		JPanel north = new JPanel(new BorderLayout());
-		north.add(topic, BorderLayout.SOUTH);
-		north.add(new JSeparator(JSeparator.HORIZONTAL));
-		
-		this.add(north, BorderLayout.NORTH);
-		
 		JScrollPane messageScroll = new JScrollPane(messages);
 		messageScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		this.add(messageScroll, BorderLayout.CENTER);
