@@ -5,6 +5,10 @@ import java.awt.event.MouseListener;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map.Entry;
+import java.util.Random;
+import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
@@ -29,7 +33,9 @@ import com.thevoiceasia.misc.CountryCodes;
 import com.thevoiceasia.phonebox.database.DatabaseManager;
 import com.thevoiceasia.phonebox.misc.LastActionTimer;
 
-public class CallManagerPanel extends JPanel implements PacketListener, MouseListener, LastActionTimer, ChatManagerListener, MessageListener {
+public class CallManagerPanel extends JPanel implements PacketListener, MouseListener, 
+									LastActionTimer, ChatManagerListener, MessageListener,
+									ManualHangupListener {
 
 	/** STATICS */
 	private static final long serialVersionUID = 1L;
@@ -58,6 +64,8 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	private long lastActionTime = new Date().getTime();
 	private HashMap<String, String> userExtensions = new HashMap<String, String>();
 	private HashSet<String> systemExtensions = new HashSet<String>();
+	private boolean dropMode = false;
+	private Vector<ManualHangupListener> hangupListeners = new Vector<ManualHangupListener>();
 	
 	/* We need to spawn threads for event response with db lookups, in order to guard against
 	 * craziness, we'll use the ExecutorService to have X threads available to use (set via
@@ -94,6 +102,31 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	}
 	
 	/**
+	 * Adds a manual hang up listener to this object
+	 * @param listener
+	 */
+	public void addManualHangupListener(ManualHangupListener listener){
+		
+		hangupListeners.add(listener);
+		
+	}
+	
+	/**
+	 * Alert our listeners that they can cancel the hang up mode
+	 * this occurs if we're initiating a hang up or if it is someone elses call
+	 * and we clicked No, it will also cancel hang up mode
+	 */
+	private void notifyManualHangupListeners(String channelID){
+		
+		for(int i = 0; i < hangupListeners.size(); i++){
+			
+			hangupListeners.get(i).hangupClicked(channelID);
+			
+		}
+		
+	}
+	
+	/**
 	 * Sends an UPDATE command to the control room
 	 */
 	public void sendUpdateRequest(){
@@ -106,6 +139,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		}
 		
 	}
+	
 	/**
 	 * Internal method, reads studioExtensions from db and separates them into a hashmap
 	 * [extension] => [name]
@@ -188,7 +222,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 				settings.get("country"),  //$NON-NLS-1$
 				xStrings.getString("CallManagerPanel.callerUnknown"), //$NON-NLS-1$
 				location, "", CallInfoPanel.ALERT_OK, channelID,  //$NON-NLS-1$
-				false, true, controlRoom, settings.get("myExtension"),//$NON-NLS-1$
+				dropMode, true, controlRoom, settings.get("myExtension"),//$NON-NLS-1$
 				settings.get("nickName"), timezoneOffset);//$NON-NLS-1$
 		
 		//Lookup ConnectedTo if we have an entry in the userExtensions map swap to this name
@@ -215,6 +249,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 				
 		}
 		
+		call.addManualHangupListener(this);
 		final CallInfoPanel addMe = call;
 		
 		callPanels.put(channelID, call);
@@ -297,8 +332,8 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 							
 							//IncomingQueue
 							/* 
-							 * should be handled by CALL event kept here in case I decide
-							 * to implement on hold
+							 * Normally handled by CALL keeping this in case I decide to implement
+							 * on hold
 							 */
 							LOGGER.info(xStrings.getString("CallManagerPanel.CallIncomingQueue")); //$NON-NLS-1$
 							
@@ -484,6 +519,229 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		
 	}
 
+	/**
+	 * Gets the oldest channel we have in callPanels
+	 * If we're a studio only looks at calls waiting to go on air
+	 * If not looks at calls that are ringing
+	 * @return
+	 */
+	private CallInfoPanel getOldestChannel(){
+		
+		Iterator<Entry<String, CallInfoPanel>> calls = callPanels.entrySet().iterator();
+		
+		String oldestKey = null;
+		long oldestTime = 0;
+		boolean studio = (settings.get("isStudio") != null //$NON-NLS-1$
+				&& settings.get("isStudio").equals("true"));  //$NON-NLS-1$//$NON-NLS-2$
+		
+		while(calls.hasNext()){
+			
+			CallInfoPanel call = calls.next().getValue();
+			
+			if(studio && call.getMode() == CallInfoPanel.MODE_QUEUED){
+				
+				if(oldestTime == 0 || oldestTime > call.getCallCreationTime()){
+					oldestTime = call.getCallCreationTime();
+					oldestKey = call.getChannelID();
+				}
+			
+			}else if(!studio && call.getMode() == CallInfoPanel.MODE_RINGING){
+				
+				if(oldestTime == 0 || oldestTime > call.getCallCreationTime()){
+					oldestTime = call.getCallCreationTime();
+					oldestKey = call.getChannelID();
+				}
+				
+			}
+			
+		}
+		
+		return callPanels.get(oldestKey);
+		
+	}
+	
+	/**
+	 * Helper method returns true if we're on a call with someone
+	 * @return
+	 */
+	private String isOnCall(){
+		
+		String onCall = null;
+		
+		Iterator<Entry<String, CallInfoPanel>> calls = callPanels.entrySet().iterator();
+		
+		while(calls.hasNext() && onCall == null){
+			
+			CallInfoPanel call = calls.next().getValue();
+			
+			if(call.getMode() == CallInfoPanel.MODE_ANSWERED)
+				onCall = call.getChannelID();
+			
+		}
+		
+		return onCall;
+		
+	}
+	
+	/**
+	 * Answers the oldest call that is ringing
+	 * unless you're a studio in which case it grabs oldest studio ready call
+	 */
+	public void answerNext() {
+		
+		if(!callPanels.isEmpty()){
+			
+			String onCall = isOnCall();
+			
+			if(onCall == null){
+				
+				CallInfoPanel oldest = getOldestChannel();
+				
+				if(oldest != null)
+					oldest.answer();
+				
+			}else if(isStudio()){
+				
+				//Hangup call we're on and get next one
+				callPanels.get(onCall).hangup();
+				
+				CallInfoPanel oldest = getOldestChannel();
+				
+				if(oldest != null)
+					oldest.answer();
+				
+			}
+			
+		}
+		
+	}
+	
+	/**
+	 * Checks if we're flagged as a studio in the settings
+	 * @return
+	 */
+	private boolean isStudio(){
+		
+		boolean studio = false;
+		
+		if(settings.get("isStudio") != null && settings.get("isStudio").equals("true")){ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			
+			studio = true;
+			
+		}
+		
+		return studio;
+		
+	}
+	
+	/**
+	 * Answers a random call that is ringing
+	 * Unless you're a studio in which case it grabs random studio ready call
+	 */
+	public void answerRandom() {
+		
+		if(!callPanels.isEmpty()){
+			
+			String onCall = isOnCall();
+			
+			if(onCall == null){
+				
+				CallInfoPanel random = getRandomCall();
+				
+				if(random != null)
+					random.answer();
+				
+			}else if(isStudio()){
+				
+				//Hangup call we're on and get next one
+				callPanels.get(onCall).hangup();
+				
+				CallInfoPanel random = getRandomCall();
+				
+				if(random != null)
+					random.answer();
+				
+			}
+			
+		}
+		
+	}
+
+	/**
+	 * Gets a random call that we can answer
+	 * @return
+	 */
+	private CallInfoPanel getRandomCall(){
+		
+		CallInfoPanel randomIshCall = null;
+				
+		Iterator<Entry<String, CallInfoPanel>> calls = callPanels.entrySet().iterator();
+		
+		Vector<String> validKeys = new Vector<String>();
+		boolean studio = (settings.get("isStudio") != null //$NON-NLS-1$
+				&& settings.get("isStudio").equals("true"));  //$NON-NLS-1$//$NON-NLS-2$
+		
+		while(calls.hasNext()){
+			
+			CallInfoPanel call = calls.next().getValue();
+			
+			if((studio && call.getMode() == CallInfoPanel.MODE_QUEUED) 
+					|| (!studio && call.getMode() == CallInfoPanel.MODE_RINGING)){
+				
+				validKeys.add(call.getChannelID());
+				
+			}
+			
+		}
+		
+		if(validKeys.size() > 0){
+			
+			Object[] panels = validKeys.toArray();
+			
+			randomIshCall = callPanels.get(
+					panels[new Random().nextInt(panels.length)]); 
+			
+		}
+		
+		return randomIshCall;
+		
+	}
+	
+	public void dial() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	/**
+	 * Sets call manager to drop mode, updates all CallInfoPanels to also show drop mode
+	 * is active
+	 */
+	public void setDropMode(boolean active) {
+		
+		dropMode = active;
+		
+		if(!callPanels.isEmpty()){
+			
+			Iterator<Entry<String, CallInfoPanel>> calls = callPanels.entrySet().iterator();
+			
+			while(calls.hasNext()){
+				
+				calls.next().getValue().setHangupActive(dropMode);
+				
+			}
+			
+		}
+		
+	}
+	
+	/* MANUAL HANGUP LISTENER */
+	@Override
+	public void hangupClicked(String channelID) {
+		
+		notifyManualHangupListeners(channelID);
+		
+	}
+	
 	/* LAST ACTION TIMER */
 	@Override
 	public long getLastActionTime() {
@@ -534,26 +792,6 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	@Override
 	public void mouseReleased(MouseEvent evt){}
 
-	public void answerNext() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public void answerRandom() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public void dial() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public void setDropMode() {
-		// TODO Auto-generated method stub
-		
-	}
-	
 	//TODO BUG Update gives incorrect call times get channel creation date?
 	//Don't think I could ever figure out stage time
 }
