@@ -19,7 +19,8 @@ import javax.swing.JPanel;
 import com.thevoiceasia.phonebox.launcher.Client;
 import com.thevoiceasia.phonebox.misc.LastActionTimer;
 
-public class CallShortcutBar extends JPanel implements ActionListener, LastActionTimer{
+public class CallShortcutBar extends JPanel implements ActionListener, LastActionTimer,
+														ManualHangupListener{
 
 	/** STATICS **/
 	private static final Logger LOGGER = Logger.getLogger(CallShortcutBar.class.getName());//Logger
@@ -121,7 +122,7 @@ public class CallShortcutBar extends JPanel implements ActionListener, LastActio
 			if(client)
 				parent.setCursor(dropCursor);
 			
-			callManager.setDropMode();
+			callManager.setDropMode(true);
 			dropMode = true;
 		}else
 			setNormalCursor();
@@ -151,6 +152,7 @@ public class CallShortcutBar extends JPanel implements ActionListener, LastActio
 			if(client)
 				parent.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
 			
+			callManager.setDropMode(false);
 			dropMode = false;
 			
 		}
@@ -197,6 +199,13 @@ public class CallShortcutBar extends JPanel implements ActionListener, LastActio
 				setNormalCursor();
 			callManager.dial();
 		}
+		
+	}
+
+	@Override
+	public void hangupClicked(String channelID) {
+		
+		setNormalCursor();
 		
 	}
 
