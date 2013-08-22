@@ -80,7 +80,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		this.database = database;
 		
 		populateStudioExtensions();
-				
+		
 		this.setLayout(new MigLayout(new LC().fillX()));
 		this.addMouseListener(this);
 		
