@@ -555,7 +555,7 @@ public class DatabaseManager {
 	 */
 	public HashSet<String> getSystemExtensions(){
 		
-		LOGGER.info(xStrings.getString("AsteriskManager.readingSystemExtensions")); //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("DatabaseManager.readingSystemExtensions")); //$NON-NLS-1$
 		
 		String SQL = "SELECT option_value FROM clientsettings WHERE option_name = 'myExtension' " + //$NON-NLS-1$
 				"OR option_name = 'incomingQueueNumber' OR option_name = 'onAirQueueNumber'"; //$NON-NLS-1$
@@ -576,7 +576,7 @@ public class DatabaseManager {
 		    }
 
 		}catch (SQLException e){
-			LOGGER.severe(xStrings.getString("AsteriskManager.databaseSQLError") +  //$NON-NLS-1$
+			LOGGER.severe(xStrings.getString("DatabaseManager.databaseSQLError") +  //$NON-NLS-1$
 					e.getMessage());
 		}finally {
 			
