@@ -134,7 +134,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 			LOGGER.info(xStrings.getString("AsteriskManager.startupActiveChannels") + "/" + asteriskChannel.getId()); //$NON-NLS-1$ //$NON-NLS-2$
 			asteriskChannel.addPropertyChangeListener(this);
 			addActiveChannel(asteriskChannel);
-			System.out.println(asteriskChannel);
+			//System.out.println(asteriskChannel);
 			
         }
 		
@@ -204,10 +204,10 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 			
 			for(AsteriskQueueEntry entry : asteriskQueue.getEntries()){
 				
-				//QUEUE/3000/5003/1377009449.5
-				String command = xStrings.getString("AsteriskManager.commandQueue") + "/"   //$NON-NLS-1$//$NON-NLS-2$
-						+ asteriskQueue.getName() + "/"  //$NON-NLS-1$
+				//CALL/5003/3000/1377009449.5
+				String command = xStrings.getString("AsteriskManager.callRingingFrom") + "/"   //$NON-NLS-1$//$NON-NLS-2$
 						+ entry.getChannel().getCallerId().getNumber() + "/"  //$NON-NLS-1$
+						+ asteriskQueue.getName() + "/"  //$NON-NLS-1$
 						+ entry.getChannel().getId();
 				
 				//System.out.println(command);
@@ -443,6 +443,11 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 					//Send updates to the person who asked for it (usually when they login)
 					sendChannelInfo(from);
 					
+				}else if(command.length == 2 && command[0].equals(
+						xStrings.getString("AsteriskManager.commandHangup"))){ //$NON-NLS-1$
+					
+					hangupCall(command[1], from);
+					
 				}
 				
 			}
@@ -455,7 +460,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
 		
-		System.out.println("PROPCHANGE: " + evt); //$NON-NLS-1$
+		//System.out.println("PROPCHANGE: " + evt); //$NON-NLS-1$
 		
 		if(evt.getPropertyName().equals("state") && //$NON-NLS-1$
 				evt.getSource() instanceof AsteriskChannel){ 
