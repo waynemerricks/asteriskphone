@@ -135,5 +135,25 @@ public class TimerLabel extends TransparentLabel {
 		stageTimer = new Date().getTime();
 		
 	}
+	
+	/**
+	 * Returns the creation time as a Date().getTime() long
+	 * @return
+	 */
+	public long getCreationTime(){
+		
+		return creationTimer;
+		
+	}
+	
+	/**
+	 * Returns the stage time as a Date().getTime() long
+	 * @return
+	 */
+	public long getStageTime(){
+		
+		return stageTimer;
+		
+	}
 
 }
