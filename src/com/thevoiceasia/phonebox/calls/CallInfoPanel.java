@@ -9,6 +9,7 @@ import java.awt.event.MouseListener;
 import java.net.URL;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.Vector;
 import java.util.logging.Logger;
 
 import javax.swing.ImageIcon;
@@ -67,6 +68,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	private String channelID, myExtension, myNickName; 
 	private boolean hangupActive, canTakeCall;
 	private PhoneCall phoneCallRecord;
+	private Vector<ManualHangupListener> hangupListeners = new Vector<ManualHangupListener>();
 	
 	/** GUI SPECIFIC **/
 	private TransparentLabel alertIcon, connectedToLabel, conversationLabel;
@@ -175,12 +177,57 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	}
 	
 	/**
+	 * Adds a manual hang up listener to this object
+	 * @param listener
+	 */
+	public void addManualHangupListener(ManualHangupListener listener){
+		
+		hangupListeners.add(listener);
+		
+	}
+	
+	/**
+	 * Gets the mode of this panel
+	 * @return
+	 */
+	public int getMode(){
+		
+		return mode;
+		
+	}
+	
+	/**
+	 * Gets the creation time for this call as a long (equiv to Date().getTime())
+	 * @return
+	 */
+	public long getCallCreationTime(){
+		
+		return timeLabel.getCreationTime();
+		
+	}
+	
+	/**
 	 * Helper method, used for LOGGER reporting
 	 * @return
 	 */
 	public String getChannelID(){
 		
 		return channelID;
+		
+	}
+	
+	/**
+	 * Alert our listeners that they can cancel the hang up mode
+	 * this occurs if we're initiating a hang up or if it is someone elses call
+	 * and we clicked No, it will also cancel hang up mode
+	 */
+	private void notifyManualHangupListeners(){
+		
+		for(int i = 0; i < hangupListeners.size(); i++){
+			
+			hangupListeners.get(i).hangupClicked(channelID);
+			
+		}
 		
 	}
 	
@@ -280,6 +327,16 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 			}
 			
 		});
+		
+	}
+	
+	/**
+	 * Used to alert this panel that hangup is active (or has been deactivated)
+	 * @param active true if active, false if not
+	 */
+	public void setHangupActive(boolean active){
+		
+		hangupActive = active;
 		
 	}
 	
@@ -502,10 +559,13 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 			if(messageMode == MODE_RINGING || messageMode == MODE_QUEUED){
 				
 				if(hangupActive){
+					
 					message = xStrings.getString("calls.hangup") + "/" + channelID;  //$NON-NLS-1$//$NON-NLS-2$
 					hangupActive = false;
 					LOGGER.info(xStrings.getString("CallInfoPanel.requestHangupCall")  //$NON-NLS-1$
 							+ channelID);
+					notifyManualHangupListeners();
+					
 				}else{
 					message = xStrings.getString("calls.transfer") + "/" + channelID + "/"  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 									+ myExtension;
@@ -515,10 +575,13 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 			}else if(messageMode == MODE_ANSWERED){
 				
 				if(hangupActive){
+					
 					message = xStrings.getString("calls.hangup") + "/" + channelID; //$NON-NLS-1$ //$NON-NLS-2$
 					hangupActive = false;
 					LOGGER.info(xStrings.getString("CallInfoPanel.requestHangupCall")  //$NON-NLS-1$
 							+ channelID);
+					notifyManualHangupListeners();
+					
 				}else{
 					message = xStrings.getString("calls.queue") + "/" + channelID; //$NON-NLS-1$ //$NON-NLS-2$
 					LOGGER.info(xStrings.getString("CallInfoPanel.requestQueueCall") //$NON-NLS-1$
@@ -530,10 +593,13 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 				if(takeCall()){
 					
 					if(hangupActive){
+						
 						message = xStrings.getString("calls.hangup") + "/" + channelID; //$NON-NLS-1$ //$NON-NLS-2$ 
 						hangupActive = false;
 						LOGGER.info(xStrings.getString("CallInfoPanel.requestHangupCallOther")  //$NON-NLS-1$
 								+ channelID);
+						notifyManualHangupListeners();
+						
 					}else{
 						message = xStrings.getString("calls.transfer") + "/" + channelID //$NON-NLS-1$ //$NON-NLS-2$
 									+ "/" + myExtension; //$NON-NLS-1$
@@ -546,6 +612,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 					
 					//Set call back to answered elsewhere don't reset timer
 					setAnsweredElseWhere();
+					notifyManualHangupListeners();
 					
 				}
 					
@@ -633,6 +700,38 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		
 		phoneCallRecord = phoneCall;
 		updateLabels();
+		
+	}
+	
+	/**
+	 * Answers this panel (called outside via CallManagerPanel.answerNext())
+	 */
+	public void answer(){
+		
+		if(mode != MODE_CLICKED){
+			int modeWhenClicked = mode;
+			setClicked();
+			sendControlMessage(modeWhenClicked);
+		}
+		
+	}
+	
+	/**
+	 * Hangs up this panel (called outside via CallManagerPanel)
+	 */
+	public void hangup(){
+	
+		String message = xStrings.getString("calls.hangup") + "/" + channelID; //$NON-NLS-1$ //$NON-NLS-2$
+		hangupActive = false;
+		LOGGER.info(xStrings.getString("CallInfoPanel.requestHangupCall")  //$NON-NLS-1$
+				+ channelID);
+		notifyManualHangupListeners();
+		
+		try {
+			controlRoom.sendMessage(message);
+		} catch (XMPPException e) {
+			LOGGER.severe(xStrings.getString("CallInfoPanel.errorSendingControlMessage")); //$NON-NLS-1$
+		}
 		
 	}
 	
