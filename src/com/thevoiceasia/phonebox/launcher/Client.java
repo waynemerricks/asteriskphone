@@ -12,6 +12,7 @@ import java.util.logging.Logger;
 import javax.swing.*;
 
 import com.thevoiceasia.phonebox.calls.CallManagerPanel;
+import com.thevoiceasia.phonebox.calls.CallShortcutBar;
 import com.thevoiceasia.phonebox.chat.ChatManager;
 import com.thevoiceasia.phonebox.chat.ChatWindow;
 import com.thevoiceasia.phonebox.database.DatabaseManager;
@@ -91,7 +92,12 @@ public class Client extends JFrame implements WindowListener{
 				chatManager.addActionTimeRecorder(callManagerPanel, 
 						callManagerPanel.getClass().getName());
 				
-				this.add(new JScrollPane(callManagerPanel), BorderLayout.CENTER);
+				JPanel callModule = new JPanel(new BorderLayout());
+				callModule.add(new JScrollPane(callManagerPanel), BorderLayout.CENTER);
+				callModule.add(new CallShortcutBar(callManagerPanel, language, country), 
+						BorderLayout.NORTH);
+				
+				this.add(callModule, BorderLayout.CENTER);
 				
 				//Request update of active channels from the server
 				callManagerPanel.sendUpdateRequest();
