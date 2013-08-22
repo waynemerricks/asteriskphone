@@ -1,7 +1,10 @@
 package com.thevoiceasia.phonebox.calls;
 
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.GridLayout;
+import java.awt.Point;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URL;
@@ -13,7 +16,6 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import com.thevoiceasia.phonebox.chat.I18NStrings;
 import com.thevoiceasia.phonebox.launcher.Client;
 import com.thevoiceasia.phonebox.misc.LastActionTimer;
 
@@ -27,32 +29,31 @@ public class CallShortcutBar extends JPanel implements ActionListener, LastActio
 	private I18NStrings xStrings; //Link to external string resources
 	private CallManagerPanel callManager;
 	private long lastActionTime = new Date().getTime();
+	private Cursor dropCursor;
+	private boolean dropMode = false;
 	
 	public CallShortcutBar(CallManagerPanel callManager, String language, String country) {
-		// TODO Auto-generated constructor stub
+		
 		xStrings = new I18NStrings(language, country);
 		
 		this.callManager = callManager;
 		this.setLayout(new GridLayout(1, 5, 5, 5));
 		
-		JButton button = new JButton(xStrings.getString("CallShortcutBar.answerNext"),  //$NON-NLS-1$
-				createImageIcon("images/answer.png", "answer")); //$NON-NLS-1$ //$NON-NLS-2$
+		JButton button = new JButton(createImageIcon("images/answer.png", "answer")); //$NON-NLS-1$ //$NON-NLS-2$
 		button.addActionListener(this);
 		button.setActionCommand("answer"); //$NON-NLS-1$
 		button.setToolTipText(xStrings.getString("CallShortcutBar.answerNextToolTip")); //$NON-NLS-1$
 		
 		this.add(button);
 		
-		button = new JButton(xStrings.getString("CallShortcutBar.answerRandom"),  //$NON-NLS-1$
-				createImageIcon("images/answerRandom.png", "answerrandom")); //$NON-NLS-1$ //$NON-NLS-2$
+		button = new JButton(createImageIcon("images/answerrandom.png", "answerrandom")); //$NON-NLS-1$ //$NON-NLS-2$
 		button.addActionListener(this);
 		button.setActionCommand("answerrandom"); //$NON-NLS-1$
 		button.setToolTipText(xStrings.getString("CallShortcutBar.answerRandomToolTip")); //$NON-NLS-1$
 		
 		this.add(button);
 		
-		button = new JButton(xStrings.getString("CallShortcutBar.drop"),  //$NON-NLS-1$
-				createImageIcon("images/drop.png", "drop")); //$NON-NLS-1$ //$NON-NLS-2$
+		button = new JButton(createImageIcon("images/drop.png", "drop")); //$NON-NLS-1$ //$NON-NLS-2$
 		button.addActionListener(this);
 		button.setActionCommand("drop"); //$NON-NLS-1$
 		button.setToolTipText(xStrings.getString("CallShortcutBar.dropToolTip")); //$NON-NLS-1$
@@ -61,13 +62,14 @@ public class CallShortcutBar extends JPanel implements ActionListener, LastActio
 		
 		this.add(new JLabel(" ")); //$NON-NLS-1$ SPACER
 		
-		button = new JButton(xStrings.getString("CallShortcutBar.dial"),  //$NON-NLS-1$
-				createImageIcon("images/dial.png", "dial")); //$NON-NLS-1$ //$NON-NLS-2$
+		button = new JButton(createImageIcon("images/dial.png", "dial")); //$NON-NLS-1$ //$NON-NLS-2$
 		button.addActionListener(this);
 		button.setActionCommand("dial"); //$NON-NLS-1$
 		button.setToolTipText(xStrings.getString("CallShortcutBar.dialToolTip")); //$NON-NLS-1$
 		
 		this.add(button);
+		
+		loadDropCursor();
 		
 	}
 
@@ -95,24 +97,76 @@ public class CallShortcutBar extends JPanel implements ActionListener, LastActio
 		
 	}
 	
+	/**
+	 * Sets the cursor to the drop icon and informs CallManagerPanel
+	 */
 	private void drop(){
 	
-		/* TODO Set cursor to drop icon
-		 * also tell callmanager to set drop too
-		 */
-		boolean client = false;
-		Component parent = getParent();
+		if(!dropMode){
+			boolean client = false;
 		
-		while(!client){
+			Component parent = getParent();
 			
-			if(parent instanceof Client)
-				client = true;
-			else
-				parent = parent.getParent();
+			while(!client){
+				
+				if(parent instanceof Client)
+					client = true;
+				else
+					parent = parent.getParent();
+				
+			}
+			
+			this.setCursor(dropCursor);
+			
+			if(client)
+				parent.setCursor(dropCursor);
+			
+			callManager.setDropMode();
+			dropMode = true;
+		}else
+			setNormalCursor();
+		
+	}
+	
+	/**
+	 * Sets the cursor back to normal
+	 */
+	public void setNormalCursor(){
+		
+		if(dropMode){
+			boolean client = false;
+			Component parent = getParent();
+			
+			while(!client){
+				
+				if(parent instanceof Client)
+					client = true;
+				else
+					parent = parent.getParent();
+				
+			}
+			
+			this.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+			
+			if(client)
+				parent.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+			
+			dropMode = false;
 			
 		}
-		this.setCursor(cursor)
-		callManager.setDropMode();
+		
+	}
+	
+	/**
+	 * Preloads custom drop cursor and stores for later use
+	 */
+	private void loadDropCursor(){
+		
+		Toolkit toolkit = Toolkit.getDefaultToolkit();
+		dropCursor = toolkit.createCustomCursor(
+				createImageIcon("images/dropcursor.gif", "dropcursor").getImage(), //$NON-NLS-1$ //$NON-NLS-2$
+				new Point(0, 0),
+				"dropCursor");  //$NON-NLS-1$
 		
 	}
 	
@@ -129,12 +183,18 @@ public class CallShortcutBar extends JPanel implements ActionListener, LastActio
 		lastActionTime = new Date().getTime();
 		
 		if(evt.getActionCommand().equals("answer")){ //$NON-NLS-1$
+			if(dropMode)
+				setNormalCursor();
 			callManager.answerNext();
 		}else if(evt.getActionCommand().equals("answerrandom")){ //$NON-NLS-1$
+			if(dropMode)
+				setNormalCursor();
 			callManager.answerRandom();
 		}else if(evt.getActionCommand().equals("drop")){ //$NON-NLS-1$
 			drop();
 		}else if(evt.getActionCommand().equals("dial")){ //$NON-NLS-1$
+			if(dropMode)
+				setNormalCursor();
 			callManager.dial();
 		}
 		
