@@ -229,6 +229,7 @@ public class Client extends JFrame implements WindowListener{
 				e.printStackTrace();
 				JOptionPane.showMessageDialog(null, e.getMessage(), xStrings.getString("Client.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
 				LOGGER.severe(e.getMessage());
+				phonebox.closeLoadingSplash();
 				
 				System.exit(1);
 				
@@ -250,6 +251,7 @@ public class Client extends JFrame implements WindowListener{
 				e.printStackTrace();
 				JOptionPane.showMessageDialog(null, e.getMessage(), xStrings.getString("Client.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
 				LOGGER.severe(e.getMessage());
+				phonebox.closeLoadingSplash();
 				
 				System.exit(1);
 				
