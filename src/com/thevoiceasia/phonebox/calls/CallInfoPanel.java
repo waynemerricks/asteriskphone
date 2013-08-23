@@ -266,17 +266,20 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	/**
 	 * Sets this panel to ringing mode
 	 */
-	public void setRinging(){
+	public void setRinging(String connectedTo){
 		
 		if(mode != MODE_RINGING){
 			
 			timeLabel.resetStageTime(); //Reset Stage Time
-			
+			final String connected = connectedTo;
 			ringingTask = new TimerTask(){//Setup new ringing animation
 				
 				public void run(){
 					
-					setRinging();
+					setRinging(null);
+					
+					if(connected != null)
+						connectedToLabel.setText(connected);
 					
 				}
 				
@@ -749,22 +752,26 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	@Override
 	public void mouseClicked(MouseEvent evt) {
 		
-		//This will forward the clicks onto its parent if its a CallManagerPanel
-		if(this.getParent() != null && this.getParent() instanceof CallManagerPanel){
+		if(myExtension != null){
 			
-			CallManagerPanel cmp = (CallManagerPanel)this.getParent();
+			//This will forward the clicks onto its parent if its a CallManagerPanel
+			if(this.getParent() != null && this.getParent() instanceof CallManagerPanel){
+				
+				CallManagerPanel cmp = (CallManagerPanel)this.getParent();
+				
+				MouseListener[] mouseListeners = cmp.getMouseListeners();
+				
+				for(MouseListener listener : mouseListeners)
+					listener.mouseClicked(evt);
+				
+			}
 			
-			MouseListener[] mouseListeners = cmp.getMouseListeners();
+			if(mode != MODE_CLICKED){
+				int modeWhenClicked = new Integer(mode);
+				setClicked();
+				sendControlMessage(modeWhenClicked);
+			}
 			
-			for(MouseListener listener : mouseListeners)
-				listener.mouseClicked(evt);
-			
-		}
-		
-		if(mode != MODE_CLICKED){
-			int modeWhenClicked = new Integer(mode);
-			setClicked();
-			sendControlMessage(modeWhenClicked);
 		}
 		
 	}
