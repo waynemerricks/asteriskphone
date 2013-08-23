@@ -29,6 +29,7 @@ public class Client extends JFrame implements WindowListener{
 	private String language, country;
 	private boolean hasErrors = false;
 	private HashMap<String, String> userSettings;
+	private Splash loadingSplash;
 	
 	//Statics
 	private static final Logger LOGGER = Logger.getLogger(Client.class.getName());//Logger
@@ -55,9 +56,13 @@ public class Client extends JFrame implements WindowListener{
 		/** Initialise component daemons **/
 		xStrings = new I18NStrings(language, country);
 		setupLogging();
+		
+		loadingSplash = new Splash(""); //$NON-NLS-1$
+		loadingSplash.setVisible(true);
+		loadingSplash.setStatus(xStrings.getString("Client.loading")); //$NON-NLS-1$
+		
 		setupManagementObjects();
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		
 		
 		if(!hasErrors){
 			
@@ -71,6 +76,7 @@ public class Client extends JFrame implements WindowListener{
 			this.addWindowListener(this);
 			
 			LOGGER.info(xStrings.getString("Client.loadingChatModule")); //$NON-NLS-1$
+			loadingSplash.setStatus(xStrings.getString("Client.loadingChatModule")); //$NON-NLS-1$
 			
 			//Chat Module
 			this.add(new ChatWindow(chatManager, language, country, userSettings.get("nickName"), //$NON-NLS-1$
@@ -84,6 +90,8 @@ public class Client extends JFrame implements WindowListener{
 				//GUI For Call Queue
 				//CallManager interacts with control room
 				LOGGER.info(xStrings.getString("Client.creatingCallManager")); //$NON-NLS-1$
+				loadingSplash.setStatus(xStrings.getString("Client.creatingCallManager")); //$NON-NLS-1$
+				
 				CallManagerPanel callManagerPanel = new CallManagerPanel(
 						databaseManager.getUserSettings(),
 						chatManager.getControlChatRoom(), 
@@ -104,9 +112,21 @@ public class Client extends JFrame implements WindowListener{
 				callManagerPanel.sendUpdateRequest();
 				//TODO GUI For Call Input
 				
+				loadingSplash.setStatus(xStrings.getString("Client.loadingComplete")); //$NON-NLS-1$
+				
 			}
 			
 		}
+		
+	}
+	
+	/**
+	 * Closes the splash screen
+	 */
+	public void closeLoadingSplash(){
+		
+		loadingSplash.setVisible(false);
+		loadingSplash.close();
 		
 	}
 	
@@ -123,6 +143,8 @@ public class Client extends JFrame implements WindowListener{
 		else{
 			
 			LOGGER.info(xStrings.getString("Client.connectingToDatabase")); //$NON-NLS-1$
+			loadingSplash.setStatus(xStrings.getString("Client.connectingToDatabase")); //$NON-NLS-1$
+
 			if(databaseManager.connect()){
 				
 				boolean createUser = !databaseManager.populateUserSettings(null);
@@ -147,6 +169,7 @@ public class Client extends JFrame implements WindowListener{
 					if(createUser){
 						
 						LOGGER.info(xStrings.getString("Client.creatingXMPPUser")); //$NON-NLS-1$
+						loadingSplash.setStatus(xStrings.getString("Client.creatingXMPPUser")); //$NON-NLS-1$
 						
 						if(!chatManager.createUser())
 							hasErrors = true;
@@ -162,6 +185,10 @@ public class Client extends JFrame implements WindowListener{
 		
 	}
 	
+	/**
+	 * Sets the nimbus L&F for Client.lookAndFeel in strings.properties to specify 
+	 * others
+	 */
 	private void setLookandFeel(){
 		
 		// Set preferred L&F
@@ -191,9 +218,10 @@ public class Client extends JFrame implements WindowListener{
 			I18NStrings xStrings = new I18NStrings(args[0], args[1]);
 			Client phonebox = new Client(args[0], args[1]);
 		
-			if(!phonebox.hasErrors())
+			if(!phonebox.hasErrors()){
 				phonebox.setVisible(true);
-			else{
+				phonebox.closeLoadingSplash();
+			}else{
 				
 				Exception e = new Exception(xStrings.getString("Client.onLoadError")); //$NON-NLS-1$
 
@@ -211,9 +239,10 @@ public class Client extends JFrame implements WindowListener{
 			I18NStrings xStrings = new I18NStrings("en", "GB");  //$NON-NLS-1$//$NON-NLS-2$
 			Client phonebox = new Client("en", "GB"); //$NON-NLS-1$ //$NON-NLS-2$
 		
-			if(!phonebox.hasErrors())
+			if(!phonebox.hasErrors()){
 				phonebox.setVisible(true);
-			else{
+				phonebox.closeLoadingSplash();
+			}else{
 				
 				Exception e = new Exception(xStrings.getString("Client.onLoadError")); //$NON-NLS-1$
 
