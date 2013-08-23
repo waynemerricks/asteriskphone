@@ -6,7 +6,10 @@ import java.awt.Frame;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.net.URL;
+import java.util.Vector;
 import java.util.logging.Logger;
 
 import javax.swing.ImageIcon;
@@ -14,10 +17,8 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.UIManager;
-import javax.swing.UIManager.LookAndFeelInfo;
 
-public class DialPanel extends JDialog implements ActionListener{
+public class DialPanel extends JDialog implements ActionListener, KeyListener{
 
 	/** STATICS **/
 	private static final Logger LOGGER = Logger.getLogger(DialPanel.class.getName());//Logger
@@ -29,6 +30,8 @@ public class DialPanel extends JDialog implements ActionListener{
 	/* CLASS VARS */
 	private JTextField number;
 	private I18NStrings xStrings;
+	private String dialledNumber;
+	private Vector<DialListener> listeners = new Vector<DialListener>();
 	
 	public DialPanel(Frame owner, String title, String language, 
 			String country) {
@@ -43,6 +46,7 @@ public class DialPanel extends JDialog implements ActionListener{
 		number = new JTextField();
 		number.setFont(new Font(number.getFont().getName(), Font.BOLD, 24));
 		number.setHorizontalAlignment(JTextField.CENTER);
+		number.addKeyListener(this);
 		
 		this.add(number, BorderLayout.NORTH);
 		
@@ -53,8 +57,8 @@ public class DialPanel extends JDialog implements ActionListener{
 			
 			JButton button = new JButton(buttons[i]);
 			button.setActionCommand(buttons[i]);
-			button.setToolTipText(xStrings.getString("DialPanel.dialToolTip" + " "   //$NON-NLS-1$//$NON-NLS-2$
-					+ buttons[i]));
+			button.setToolTipText(xStrings.getString("DialPanel.dialToolTip") + " "   //$NON-NLS-1$//$NON-NLS-2$
+					+ buttons[i]);
 			button.addActionListener(this);
 			numberGrid.add(button);
 			
@@ -62,14 +66,14 @@ public class DialPanel extends JDialog implements ActionListener{
 		
 		this.add(numberGrid, BorderLayout.CENTER);
 		
-		JPanel south = new JPanel(new GridLayout(2, 1, 5, 5));
-		JButton button = new JButton(createImageIcon("images/dial.png", "dial"));  //$NON-NLS-1$//$NON-NLS-2$
+		JPanel south = new JPanel(new GridLayout(1, 2, 5, 5));
+		JButton button = new JButton(createImageIcon("images/answer.png", "dial"));  //$NON-NLS-1$//$NON-NLS-2$
 		button.setActionCommand("dial"); //$NON-NLS-1$
 		button.setToolTipText(xStrings.getString("DialPanel.dialButtonToolTip")); //$NON-NLS-1$
 		button.addActionListener(this);
 		south.add(button);
 		
-		button = new JButton(createImageIcon("images/clear.png", "clear"));  //$NON-NLS-1$//$NON-NLS-2$
+		button = new JButton(createImageIcon("images/drop.png", "clear"));  //$NON-NLS-1$//$NON-NLS-2$
 		button.setActionCommand("clear"); //$NON-NLS-1$
 		button.setToolTipText(xStrings.getString("DialPanel.clearButtonToolTip")); //$NON-NLS-1$
 		button.addActionListener(this);
@@ -77,6 +81,26 @@ public class DialPanel extends JDialog implements ActionListener{
 		
 		this.add(south, BorderLayout.SOUTH);
 		 
+	}
+	
+	/**
+	 * Add a listener to this panel
+	 * @param listener
+	 */
+	public void addDialListener(DialListener listener){
+		
+		listeners.add(listener);
+		
+	}
+	
+	/**
+	 * Notify anyone listening to this dialog
+	 */
+	private void notifyListeners(){
+		
+		for(int i = 0; i < listeners.size(); i++)
+			listeners.get(i).dial(dialledNumber);
+		
 	}
 	
 	/**
@@ -109,7 +133,9 @@ public class DialPanel extends JDialog implements ActionListener{
 	 */
 	private void dial(){
 		
-		//TODO
+		dialledNumber = number.getText();
+		this.setVisible(false);
+		notifyListeners();
 		
 	}
 	
@@ -127,20 +153,21 @@ public class DialPanel extends JDialog implements ActionListener{
 		
 	}
 	
-	public static void main(String[] args){
-		try {
-		    for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-		        if ("Nimbus".equals(info.getName())) { //$NON-NLS-1$
-		            UIManager.setLookAndFeel(info.getClassName());
-		            break;
-		        }
-		    }
-		} catch (Exception e) {
-		    // Will use default L&F at this point, don't really care which it is
-		}
-		new DialPanel(null, "Enter Number", "en", "GB").setVisible(true);
+	/** Key Listener **/
+	@Override
+	public void keyReleased(KeyEvent evt) {
+		
+		if(evt.getKeyCode() == KeyEvent.VK_ENTER)
+			dial();
 		
 	}
+
+	/** Unnecessary Key Listener Methods **/
+	@Override
+	public void keyPressed(KeyEvent evt) {}
+
+	@Override
+	public void keyTyped(KeyEvent evt) {}
 
 
 }
