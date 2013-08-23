@@ -1,5 +1,6 @@
 package com.thevoiceasia.phonebox.calls;
 
+import java.awt.Component;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.Date;
@@ -31,11 +32,12 @@ import org.jivesoftware.smackx.muc.MultiUserChat;
 
 import com.thevoiceasia.misc.CountryCodes;
 import com.thevoiceasia.phonebox.database.DatabaseManager;
+import com.thevoiceasia.phonebox.launcher.Client;
 import com.thevoiceasia.phonebox.misc.LastActionTimer;
 
 public class CallManagerPanel extends JPanel implements PacketListener, MouseListener, 
 									LastActionTimer, ChatManagerListener, MessageListener,
-									ManualHangupListener {
+									ManualHangupListener, DialListener {
 
 	/** STATICS */
 	private static final long serialVersionUID = 1L;
@@ -66,6 +68,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	private HashSet<String> systemExtensions = new HashSet<String>();
 	private boolean dropMode = false;
 	private Vector<ManualHangupListener> hangupListeners = new Vector<ManualHangupListener>();
+	private DialPanel dialler = null;
 	
 	/* We need to spawn threads for event response with db lookups, in order to guard against
 	 * craziness, we'll use the ExecutorService to have X threads available to use (set via
@@ -232,7 +235,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		switch(mode){
 		
 			case MODE_RINGING:
-				call.setRinging();
+				call.setRinging(connectedTo);
 				break;
 			case MODE_ANSWERED:
 				call.setAnswered();
@@ -322,8 +325,64 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 					if(command[0].equals(xStrings.getString("CallManagerPanel.callRingingFrom"))){//$NON-NLS-1$
 						
 						//Create a CallInfoPanel with skeleton details
-						if(callPanels.get(command[3]) == null)
-							createSkeletonCallInfoPanel(command[1], command[3], MODE_RINGING, null);
+						if(callPanels.get(command[3]) == null){
+						
+							/*
+							 * Was too simplistic to use CALL/FROM/TO/CHANNEL as a way of determining
+							 * outside calls coming in.
+							 * 
+							 * Exception case: Call from system extension to an outside line you get:
+							 * CALL/1234/4444444/CHANNEL
+							 * 
+							 * What we want to happen is:
+							 * 
+							 * Check if call is from us and not another system extension and to outside
+							 * 		set the panel to answered
+							 * If call is from another system extension and to outside
+							 * 		set the panel to answered elsewhere
+							 * if call is internal from system to system carry on as normal but
+							 * 		set connected to as the person they're dialling
+							 */
+							if(systemExtensions.contains(command[1]) && 
+									systemExtensions.contains(command[2])){
+								
+								//Internal call amongst ourselves
+								createSkeletonCallInfoPanel(command[1], command[3], 
+										MODE_RINGING, command[2]);
+								
+							}else if(systemExtensions.contains(command[1]) && 
+									!systemExtensions.contains(command[2])){
+								
+								//Internal call to outside from me
+								if(command[1].equals(settings.get("myExtension"))) //$NON-NLS-1$
+									createSkeletonCallInfoPanel(command[1], command[3], 
+											MODE_ANSWERED, command[2]);
+								else//Internal call to outside not from me
+									createSkeletonCallInfoPanel(command[1], command[3], 
+											MODE_ANSWERED_ELSEWHERE, command[2]);
+								
+							}else if(!systemExtensions.contains(command[1]) && 
+									systemExtensions.contains(command[2])){
+								
+								//Outside call coming in
+								if(isQueueNumber(command[2])){
+									
+									//Outside call coming into a queue as normal
+									createSkeletonCallInfoPanel(command[1], command[3], 
+											MODE_RINGING, null);
+									
+								}else{
+									
+									//Outside call coming direct to a phone
+									createSkeletonCallInfoPanel(command[1], command[3], 
+											MODE_RINGING, command[2]);
+									
+								}
+								
+							}
+							
+							
+						}
 						
 					}else if(command[0].equals(xStrings.getString("CallManagerPanel.callQueued"))){ //$NON-NLS-1$
 					
@@ -482,6 +541,23 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	}
 	
 	/**
+	 * Checks if the given number is one of our system queues
+	 * @param number number to check
+	 * @return true if it is in the queue (currently settings => incomingQueueNumber OR
+	 * settings => onAirQueueNumber)
+	 */
+	private boolean isQueueNumber(String number){
+		
+		boolean isQueue = false;
+		
+		if(settings.get("incomingQueueNumber").equals(number) ||  //$NON-NLS-1$
+				settings.get("onAirQueueNumber").equals(number)) //$NON-NLS-1$
+			isQueue = true;
+		
+		return isQueue;
+		
+	}
+	/**
 	 * Notifies any object listening to this CallManagerPanel
 	 * Primarily used to 
 	 * @param callInfoPanel
@@ -589,7 +665,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	 */
 	public void answerNext() {
 		
-		if(!callPanels.isEmpty()){
+		if(!callPanels.isEmpty() && settings.get("myExtension") != null){ //$NON-NLS-1$
 			
 			String onCall = isOnCall();
 			
@@ -640,7 +716,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	 */
 	public void answerRandom() {
 		
-		if(!callPanels.isEmpty()){
+		if(!callPanels.isEmpty() && settings.get("myExtension") != null){ //$NON-NLS-1$
 			
 			String onCall = isOnCall();
 			
@@ -707,11 +783,47 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		
 	}
 	
+	/**
+	 * Spawns a dialling panel and will then make a call to the result
+	 */
 	public void dial() {
-		// TODO Auto-generated method stub
+		
+		if(dialler == null && settings.get("myExtension") != null){ //$NON-NLS-1$
+			
+			Component parent = this.getParent();
+			Client owner = null;
+			
+			while(parent != null && !(parent instanceof Client))
+				parent = parent.getParent();
+			
+			if(parent != null)
+				owner = (Client)parent;
+			
+			dialler = new DialPanel(owner, xStrings.getString("DialPanel.title"), //$NON-NLS-1$
+					settings.get("language"), settings.get("country"));  //$NON-NLS-1$//$NON-NLS-2$
+			dialler.addDialListener(this);
+			
+		}
+		
+		if(settings.get("myExtension") != null) //$NON-NLS-1$
+			dialler.setVisible(true);
 		
 	}
 
+	/**
+	 * DialListener entry point, this sends a message via control to call the given number
+	 */
+	public void dial(String number){
+	
+		try {
+			controlRoom.sendMessage(xStrings.getString("CallManagerPanel.commandDial") +  //$NON-NLS-1$
+					"/" + number + "/" + settings.get("myExtension")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		} catch (XMPPException e) {
+			LOGGER.severe(xStrings.getString("CallManagerPanel.errorSendingDialCommand")); //$NON-NLS-1$
+		}
+		
+	}
+	
 	/**
 	 * Sets call manager to drop mode, updates all CallInfoPanels to also show drop mode
 	 * is active
