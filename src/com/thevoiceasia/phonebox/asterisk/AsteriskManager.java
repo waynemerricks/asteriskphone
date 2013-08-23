@@ -448,6 +448,11 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 					
 					hangupCall(command[1], from);
 					
+				}else if(command.length == 3 && command[0].equals(
+						xStrings.getString("AsteriskManager.commandDial"))){ //$NON-NLS-1$
+					
+					createCall(command[1], command[2], from);
+					
 				}
 				
 			}
@@ -560,12 +565,17 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 					
 					AsteriskChannel channel = (AsteriskChannel)evt.getSource();
 					
-					String message = xStrings.getString("AsteriskManager.callRingingFrom") +  //$NON-NLS-1$
-							"/" + channel.getCallerId().getNumber() + "/" +  //$NON-NLS-1$ //$NON-NLS-2$
-							calling.getExtension() + "/" + channel.getId(); //$NON-NLS-1$
+					if(channel.getCallerId().getNumber() != null && 
+							!channel.getCallerId().getNumber().equals("null")){ //$NON-NLS-1$
+						
+						String message = xStrings.getString("AsteriskManager.callRingingFrom") +  //$NON-NLS-1$
+								"/" + channel.getCallerId().getNumber() + "/" +  //$NON-NLS-1$ //$NON-NLS-2$
+								calling.getExtension() + "/" + channel.getId(); //$NON-NLS-1$
+						
+						LOGGER.info(message);
+						sendMessage(message);
 					
-					LOGGER.info(message);
-					sendMessage(message);
+					}
 					
 				}
 				
