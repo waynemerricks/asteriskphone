@@ -124,7 +124,7 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 			if(friendlyFrom.equals(xStrings.getString("ChatMessagePanel.SYSTEM"))){  //$NON-NLS-1$
 				
 				//Control Messages, need to clean up message body and act accordingly
-				//phonebox@conference.elastix/waynemerricks !ChatManager.chatParticipantLeft!
+				//chatroom@domain/username !ChatManager.chatParticipantLeft!
 				if(b.contains("/")) //$NON-NLS-1$
 					b = b.split("/")[1]; //$NON-NLS-1$
 				
