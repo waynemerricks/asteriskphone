@@ -591,16 +591,30 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 				
 				String linkedTo = channel.getLinkedChannel().getCallerId().getNumber(); 
 				
-				String message = xStrings.getString("AsteriskManager.callConnected") +  //$NON-NLS-1$
-						"/" + channel.getCallerId().getNumber() + "/" + //$NON-NLS-1$ //$NON-NLS-2$
-						linkedTo + "/" + channel.getId(); //$NON-NLS-1$
-				
-				if(systemExtensions.contains(linkedTo))//if we're linked to a system phone
-					dbLookUpService.execute(new PhoneCall(databaseManager, 
-							channel.getCallerId().getNumber(), channel.getId(), this, 'A', "NA")); //$NON-NLS-1$
-				
-				LOGGER.info(message);
-				sendMessage(message);
+				if(!linkedTo.equals(channel.getCallerId().getNumber())){
+					
+					String message = xStrings.getString("AsteriskManager.callConnected") +  //$NON-NLS-1$
+							"/" + channel.getCallerId().getNumber() + "/" + //$NON-NLS-1$ //$NON-NLS-2$
+							linkedTo + "/" + channel.getId(); //$NON-NLS-1$
+					
+					if(systemExtensions.contains(linkedTo))//if we're linked to a system phone
+						dbLookUpService.execute(new PhoneCall(databaseManager, 
+								channel.getCallerId().getNumber(), channel.getId(), this, 'A', "NA")); //$NON-NLS-1$
+					
+					LOGGER.info(message);
+					sendMessage(message);
+					
+				}else{
+					
+					/* Linked channel is same as caller ID, this is sent when dialling to 
+					 * show that the call has connected to the originating phone before it
+					 * starts to dial the number, we can ignore these events as otherwise
+					 * you just spam clients with a ton of CONNECTED/X/X/CHANNEL while
+					 * things go through the motions.
+					 */
+					
+					
+				}
 				
 			}
 			
