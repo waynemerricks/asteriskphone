@@ -49,11 +49,6 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	 * 4 = Queued
 	 * 5 = On Air
 	 */
-	private static final int MODE_RINGING = 1;
-	private static final int MODE_ANSWERED = 2;
-	private static final int MODE_ANSWERED_ELSEWHERE = 3;
-	private static final int MODE_QUEUED = 4;
-	private static final int MODE_ON_AIR = 5;
 	
 	/** CLASS VARS */
 	private MultiUserChat controlRoom;//room to send control messages to
@@ -229,25 +224,39 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 				settings.get("nickName"), timezoneOffset);//$NON-NLS-1$
 		
 		//Lookup ConnectedTo if we have an entry in the userExtensions map swap to this name
+		String friendlyConnected = ""; //$NON-NLS-1$
+		
 		if(userExtensions.get(connectedTo) != null)
-			connectedTo = userExtensions.get(connectedTo);
+			friendlyConnected = userExtensions.get(connectedTo);
 		
 		switch(mode){
 		
-			case MODE_RINGING:
-				call.setRinging(connectedTo);
+			case CallInfoPanel.MODE_RINGING:
+				call.setRinging(friendlyConnected);
 				break;
-			case MODE_ANSWERED:
+			case CallInfoPanel.MODE_RINGING_ME:
+				call.setRingingMe(true);
+				break;
+			case CallInfoPanel.MODE_ANSWERED:
 				call.setAnswered();
 				break;
-			case MODE_ANSWERED_ELSEWHERE:
-				call.setAnsweredElseWhere(connectedTo);
+			case CallInfoPanel.MODE_ANSWERED_ME:
+				call.setAnsweredMe(friendlyConnected, true);
 				break;
-			case MODE_QUEUED:
+			case CallInfoPanel.MODE_ANSWERED_ELSEWHERE:
+				call.setAnsweredElseWhere(friendlyConnected);
+				break;
+			case CallInfoPanel.MODE_QUEUED:
 				call.setQueued();
 				break;
-			case MODE_ON_AIR:
-				call.setOnAir(connectedTo);
+			case CallInfoPanel.MODE_QUEUED_ME:
+				call.setQueuedMe(true);
+				break;
+			case CallInfoPanel.MODE_ON_AIR:
+				call.setOnAir(friendlyConnected);
+				break;
+			case CallInfoPanel.MODE_ON_AIR_ME:
+				call.setOnAirMe(friendlyConnected, true);
 				break;
 				
 		}
@@ -347,19 +356,23 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									systemExtensions.contains(command[2])){
 								
 								//Internal call amongst ourselves
-								createSkeletonCallInfoPanel(command[1], command[3], 
-										MODE_RINGING, command[2]);
+								if(isMyPhone(command[1]))
+									createSkeletonCallInfoPanel(command[1], command[3], 
+											CallInfoPanel.MODE_RINGING_ME, command[2]);
+								else
+									createSkeletonCallInfoPanel(command[1], command[3], 
+											CallInfoPanel.MODE_RINGING, command[2]);
 								
 							}else if(systemExtensions.contains(command[1]) && 
 									!systemExtensions.contains(command[2])){
 								
 								//Internal call to outside from me
-								if(command[1].equals(settings.get("myExtension"))) //$NON-NLS-1$
+								if(isMyPhone(command[1]))
 									createSkeletonCallInfoPanel(command[1], command[3], 
-											MODE_ANSWERED, command[2]);
+											CallInfoPanel.MODE_RINGING_ME, command[2]);
 								else//Internal call to outside not from me
 									createSkeletonCallInfoPanel(command[1], command[3], 
-											MODE_ANSWERED_ELSEWHERE, command[2]);
+											CallInfoPanel.MODE_ANSWERED_ELSEWHERE, command[2]);
 								
 							}else if(!systemExtensions.contains(command[1]) && 
 									systemExtensions.contains(command[2])){
@@ -369,13 +382,13 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									
 									//Outside call coming into a queue as normal
 									createSkeletonCallInfoPanel(command[1], command[3], 
-											MODE_RINGING, null);
+											CallInfoPanel.MODE_RINGING, null);
 									
 								}else{
 									
 									//Outside call coming direct to a phone
 									createSkeletonCallInfoPanel(command[1], command[3], 
-											MODE_RINGING, command[2]);
+											CallInfoPanel.MODE_RINGING, command[2]);
 									
 								}
 								
@@ -403,14 +416,24 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 							if(callPanels.get(command[3]) != null){
 								
 								//Already in our list so update
-								callPanels.get(command[3]).setQueued();
-								LOGGER.info(xStrings.getString("CallManagerPanel.setQueueMode")); //$NON-NLS-1$
+								if(isMyPhone(command[2])){
+									callPanels.get(command[3]).setQueuedMe(true);
+									LOGGER.info(xStrings.getString("CallManagerPanel.setQueueMeMode")); //$NON-NLS-1$
+								}else{
+									callPanels.get(command[3]).setQueued();
+									LOGGER.info(xStrings.getString("CallManagerPanel.setQueueMode")); //$NON-NLS-1$
+								}
 								
 							}else{
 								
 								//Not in our list so create skeleton and spawn update thread
 								//queue, name, number, channel
-								createSkeletonCallInfoPanel(command[2], command[3], MODE_QUEUED, null);
+								if(isMyPhone(command[2]))
+									createSkeletonCallInfoPanel(command[2], command[3], 
+											CallInfoPanel.MODE_QUEUED_ME, null);
+								else
+									createSkeletonCallInfoPanel(command[2], command[3], 
+											CallInfoPanel.MODE_QUEUED, null);
 								
 							}
 							
@@ -432,9 +455,9 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 						 */
 						if(callPanels.get(command[3]) != null){
 							
-							if(command[2].equals(settings.get("myExtension"))) //$NON-NLS-1$
+							if(isMyPhone(command[2]))
 									callPanels.get(command[3]).setAnswered();
-							else if(!command[1].equals(settings.get("myExtension"))){ //$NON-NLS-1$
+							else if(!isMyPhone(command[1])){ //TODO FROM HERE!!"
 								
 								if(systemExtensions.contains(command[2])){
 								
@@ -465,8 +488,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 						}else{
 							
 							//Not exists so check details in case something slipped through
-							if(!command[1].equals(settings.get("myExtension")) && //$NON-NLS-1$
-									!command[2].equals(settings.get("myExtension"))){ //$NON-NLS-1$
+							if(!isMyPhone(command[1]) && !isMyPhone(command[2])){
 								
 								//TODO BUG?? Unknown numbers?
 								//This isn't us so someone connected to someone else
@@ -488,8 +510,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									
 								}
 								
-							}else if(!command[1].equals(settings.get("myExtension"))){ //$NON-NLS-1$
-								
+							}else if(!isMyPhone(command[1])){
 								
 								// This is us so we're active on a call
 								if(systemExtensions.contains(command[2])){
@@ -689,6 +710,23 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 			}
 			
 		}
+		
+	}
+	
+	/**
+	 * Helper to check if a given extension is my phone extension
+	 * Helps to make code more readable
+	 * @param extension extension to check
+	 * @return true if it is my extension
+	 */
+	private boolean isMyPhone(String extension){
+		
+		boolean myPhone = false;
+		
+		if(settings.get("myExtension").equals(extension)) //$NON-NLS-1$
+			myPhone = true;
+		
+		return myPhone;
 		
 	}
 	
