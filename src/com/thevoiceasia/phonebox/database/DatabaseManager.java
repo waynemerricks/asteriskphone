@@ -28,6 +28,7 @@ public class DatabaseManager {
 	private boolean hasErrors = false, connected = false, writeConnected = false;
 	private Connection databaseConnection;
 	private Connection databaseWriteConnection;
+	private Thread keepAliveThread;
 	
 	private HashMap<String, String> settings = new HashMap<String, String>();
 	private Settings database;
@@ -44,9 +45,40 @@ public class DatabaseManager {
 		
 	}
 
+	/**
+	 * Returns the hashmap containing the user settings that were read from the
+	 * database
+	 * @return
+	 */
 	public HashMap<String, String> getUserSettings(){
 		
 		return settings;
+		
+	}
+	
+	/**
+	 * Spawns a thread (two if write is separate) to send a simple query
+	 * to the server every hour to work around MySQL 8 hour idle time out.
+	 * 
+	 * In our situation this isn't a big issue due to volume of calls however 
+	 * might as well do it just in case.
+	 */
+	public void spawnKeepAlive(String language, String country){
+	
+		Connection read = getReadConnection();
+		Connection write = null;
+		KeepAliveThread keepAlive = null;
+		
+		if(hasWriteConnection()){
+			
+			write = getWriteConnection();
+			keepAlive = new KeepAliveThread(read, write, language, country);
+			
+		}else
+			keepAlive = new KeepAliveThread(read, language, country);
+		
+		keepAliveThread = new Thread(keepAlive);
+		keepAliveThread.start();
 		
 	}
 	
@@ -313,7 +345,12 @@ public class DatabaseManager {
 				showWarning(e, xStrings.getString("DatabaseManager.errorDisconnecting")); //$NON-NLS-1$
 				
 			}
-		
+			
+			LOGGER.info(xStrings.getString("DatabaseManager.shutdownKeepAlive")); //$NON-NLS-1$
+			
+			if(keepAliveThread != null)
+				keepAliveThread.interrupt();
+			
 		}
 		
 	}
