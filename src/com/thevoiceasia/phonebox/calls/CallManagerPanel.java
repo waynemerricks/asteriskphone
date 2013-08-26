@@ -443,17 +443,18 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 					}else if(command[0].equals(
 							xStrings.getString("CallManagerPanel.callConnected"))){ //$NON-NLS-1$
 						
-						/* I want to only deal with channels that are from outside
-						 * In theory this should mean its a channel we already have
-						 * however what happens when we log in and a call is in progress?
-						 * 
-						 * Solution??: When log in, ask for server update and queue up other
-						 * commands until updates are dealt with (possible race conditions)
-						 * 
-						 * grab the channel from active, if it exists deal with it, if it 
-						 * doesn't exist check if our number is in it and ignore it.
-						 */
 						if(callPanels.get(command[3]) != null){
+							
+							//Connected to a panel that already exists
+							/* if 1st argument = myphone its my phone connecting to someone else */
+							if(isMyPhone(command[1]))
+								callPanels.get(command[3]).setAnsweredMe(command[2], true);
+							/* if 2nd argument = myphone its a call I've answered */
+							else if(isMyPhone(command[2]))
+								callPanels.get(command[3]).setAnswered();
+							//TODO TODO TODO TODO
+							
+							
 							
 							if(isMyPhone(command[2]))
 									callPanels.get(command[3]).setAnswered();
