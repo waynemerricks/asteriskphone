@@ -46,7 +46,11 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	public static final int MODE_ANSWERED_ELSEWHERE = 3;
 	public static final int MODE_QUEUED = 4;
 	public static final int MODE_ON_AIR = 5;
+	public static final int MODE_RINGING_ME = 6;
+	public static final int MODE_QUEUED_ME = 7;
+	public static final int MODE_ANSWERED_ME = 8;
 	public static final int MODE_CLICKED = -1;
+	public static final int MODE_ON_AIR_ME = 9;
 	
 	//Colours of the different modes
 	private static final Color RINGING_COLOUR = new Color(99, 169, 219);//Blue
@@ -264,6 +268,47 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	}
 	
 	/**
+	 * Sets ringing mode
+	 */
+	public void setRingingMe(boolean reset){
+		
+		if(mode != MODE_RINGING_ME){
+			
+			if(reset)
+				timeLabel.resetStageTime(); //Reset Stage Time
+			
+			ringingTask = new TimerTask(){//Setup new ringing animation
+				
+				public void run(){
+					
+					setRingingMe(false);
+					
+				}
+				
+			};
+		
+			ringingTimer.schedule(ringingTask, 750, 750);
+			
+		}
+		
+		mode = MODE_RINGING_ME;
+		
+		SwingUtilities.invokeLater(new Runnable(){
+			
+			public void run(){
+				
+				if(getBackground() == defaultColour)
+					setBackground(RINGING_COLOUR);
+				else
+					setBackground(defaultColour);
+				
+			}
+			
+		});
+		
+	}
+	
+	/**
 	 * Sets this panel to ringing mode
 	 */
 	public void setRinging(String connectedTo){
@@ -316,7 +361,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	 */
 	public void setClicked(){
 		
-		if(mode == MODE_RINGING)
+		if(mode == MODE_RINGING || mode == MODE_RINGING_ME)
 			ringingTask.cancel();
 		
 		mode = MODE_CLICKED;
@@ -348,7 +393,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	 */
 	public void setAnswered(){
 		
-		if(mode == MODE_RINGING)
+		if(mode == MODE_RINGING || mode == MODE_RINGING_ME)
 			ringingTask.cancel();
 		
 		mode = MODE_ANSWERED;
@@ -371,11 +416,43 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	}
 	
 	/**
+	 * Sets the panel to answered me mode, signifies I've made a call that is answered
+	 */
+	public void setAnsweredMe(String answeredBy, boolean reset){
+		
+		if(mode == MODE_RINGING || mode == MODE_RINGING_ME)
+			ringingTask.cancel();
+		
+		mode = MODE_ANSWERED_ME;
+		
+		if(reset)
+			timeLabel.resetStageTime();
+		
+		if(phoneCallRecord != null)
+			phoneCallRecord.setAnsweredBy(answeredBy);
+		
+		final String answered = answeredBy;
+		
+		SwingUtilities.invokeLater(new Runnable(){
+			
+			public void run(){
+				
+				setBackground(ANSWERED_COLOUR);
+				connectedToLabel.setText(answered);
+				
+			}
+			
+		});
+		
+	}
+	
+	
+	/**
 	 * Internal answeredElseWhere used when user clicks no to take call
 	 */
 	private void setAnsweredElseWhere(){
 		
-		if(mode == MODE_RINGING)
+		if(mode == MODE_RINGING || mode == MODE_RINGING_ME)
 			ringingTask.cancel();
 		
 		/*
@@ -385,7 +462,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		 * Still a possibility of race condition here but its not worth the synching
 		 * hassle
 		 */
-		if(mode == MODE_CLICKED){
+		if(mode == MODE_CLICKED || mode == MODE_RINGING_ME){
 			
 			mode = MODE_ANSWERED_ELSEWHERE;
 			
@@ -407,7 +484,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	 */
 	public void setAnsweredElseWhere(String answeredBy){
 		
-		if(mode == MODE_RINGING)
+		if(mode == MODE_RINGING || mode == MODE_RINGING_ME)
 			ringingTask.cancel();
 		
 		mode = MODE_ANSWERED_ELSEWHERE;
@@ -433,11 +510,11 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	}
 	
 	/**
-	 * Sets the panel to answered by someone else mode
+	 * Sets the panel to queued mode
 	 */
 	public void setQueued(){
 		
-		if(mode == MODE_RINGING)
+		if(mode == MODE_RINGING || mode == MODE_RINGING_ME)
 			ringingTask.cancel();
 		
 		mode = MODE_QUEUED;
@@ -458,9 +535,34 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	/**
 	 * Sets the panel to answered by someone else mode
 	 */
+	public void setQueuedMe(boolean reset){
+		
+		if(mode == MODE_RINGING || mode == MODE_RINGING_ME)
+			ringingTask.cancel();
+		
+		mode = MODE_QUEUED_ME;
+		
+		if(reset)
+			timeLabel.resetStageTime();
+		
+		SwingUtilities.invokeLater(new Runnable(){
+			
+			public void run(){
+				
+				setBackground(QUEUED_COLOUR);
+				
+			}
+			
+		});
+		
+	}
+	
+	/**
+	 * Sets the panel to on air mode
+	 */
 	public void setOnAir(String studioName){
 		
-		if(mode == MODE_RINGING)
+		if(mode == MODE_RINGING || mode == MODE_RINGING_ME)
 			ringingTask.cancel();
 		
 		mode = MODE_ON_AIR;
@@ -474,6 +576,36 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 				
 				setBackground(ON_AIR_COLOUR);
 				connectedToLabel.setText(studio);
+				
+			}
+			
+		});
+		
+	}
+	
+	/**
+	 * Sets the panel to on air me mode
+	 */
+	public void setOnAirMe(String studioName, boolean reset){
+		
+		if(mode == MODE_RINGING || mode == MODE_RINGING_ME)
+			ringingTask.cancel();
+		
+		mode = MODE_ON_AIR_ME;
+		
+		if(reset)
+			timeLabel.resetStageTime();
+		
+		final String studio = studioName;
+		
+		SwingUtilities.invokeLater(new Runnable(){
+			
+			public void run(){
+				
+				setBackground(ON_AIR_COLOUR);
+				
+				if(studio != null)
+					connectedToLabel.setText(studio);
 				
 			}
 			
@@ -575,7 +707,39 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 					LOGGER.info(xStrings.getString("CallInfoPanel.requestTransferCall") //$NON-NLS-1$
 							+ channelID + "/" + myExtension); //$NON-NLS-1$
 				}
+			}else if(messageMode == MODE_RINGING_ME || messageMode == MODE_QUEUED_ME 
+					|| messageMode == MODE_ON_AIR_ME){
+				
+				if(hangupActive){
+					
+					message = xStrings.getString("calls.hangup") + "/" + channelID;  //$NON-NLS-1$//$NON-NLS-2$
+					hangupActive = false;
+					LOGGER.info(xStrings.getString("CallInfoPanel.requestHangupCall")  //$NON-NLS-1$
+							+ channelID);
+					notifyManualHangupListeners();
+					
+				}else{
+					
+					/* We can't do anything to our own call so ignore it if we're not 
+					 * hanging up, but we do need to reset it back to state */
+					switch(messageMode){
+					
+						case MODE_RINGING_ME:
+							setRingingMe(false);
+							break;
+						case MODE_QUEUED_ME:
+							setQueuedMe(false);
+							break;
+						case MODE_ON_AIR_ME:
+							setOnAirMe(null, false);
+							break;
+					
+					}
+					
+				}
+				
 			}else if(messageMode == MODE_ANSWERED){
+			
 				
 				if(hangupActive){
 					
