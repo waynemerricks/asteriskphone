@@ -60,7 +60,8 @@ public class KeepAliveThread implements Runnable {
 			
 			statement = connection.createStatement();
 			resultSet = statement.executeQuery(SQL);
-			
+			LOGGER.info(xStrings.getString("KeepAliveThread.ranKeepAlive")); //$NON-NLS-1$
+		
 		}catch (SQLException e){
 			
 			LOGGER.severe(xStrings.getString("KeepAliveThread.SQLError")); //$NON-NLS-1$
