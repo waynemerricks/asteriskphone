@@ -446,52 +446,85 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 						if(callPanels.get(command[3]) != null){
 							
 							//Connected to a panel that already exists
-							/* if 1st argument = myphone its my phone connecting to someone else */
-							if(isMyPhone(command[1]))
-								callPanels.get(command[3]).setAnsweredMe(command[2], true);
+							/* if 1st argument = myphone its my phone connecting to 
+							 * someone else */
+							if(isMyPhone(command[1])){
+								/* At this stage, check if my phone is on air */
+								if(isStudioExtension(command[2]))
+									callPanels.get(command[3]).setOnAirMe(
+											studioExtensions.get(command[2]), true);
+								else
+									callPanels.get(command[3]).setAnsweredMe(command[2], 
+											true);
 							/* if 2nd argument = myphone its a call I've answered */
-							else if(isMyPhone(command[2]))
+							}else if(isMyPhone(command[2])){
+								
 								callPanels.get(command[3]).setAnswered();
-							//TODO TODO TODO TODO
-							
-							
-							
-							if(isMyPhone(command[2]))
-									callPanels.get(command[3]).setAnswered();
-							else if(!isMyPhone(command[1])){ //TODO FROM HERE!!"
 								
-								if(systemExtensions.contains(command[2])){
+								/* This is us answering a call so we need to alert any 
+								 * listeners so that we can update the input panel as
+								 * required
+								 */
+								notifyListeners(callPanels.get(command[3]));
 								
-									if(isStudioExtension(command[2])){
-										
-										callPanels.get(command[3]).setOnAir(
-												studioExtensions.get(command[2]));
-										
-									}else{
+							/* Not my phone, if 1st argument = one of our extensions, its
+							 * an internal phone connected somewhere else
+							 */
+							}else if(systemExtensions.contains(command[1])){
+								
+								/* If 2nd argument is studio then internal call on air*/
+								if(isStudioExtension(command[2]))
+									callPanels.get(command[3]).setAnsweredElseWhere(
+											studioExtensions.get(command[2]));
+								else{
 									
-										String connectedTo = userExtensions.get(command[2]);
-										
-										if(connectedTo != null)
-											callPanels.get(command[3]).setAnsweredElseWhere(
-													connectedTo);
-										else
-											callPanels.get(command[3]).setAnsweredElseWhere(
-													command[2]);
+									/* Lookup the extension, if we have a reference
+									 * exchange the number for a friendly name e.g.
+									 * 5001 = Steve, if its null leave it as 5001
+									 */
+									String connectedTo = userExtensions.get(command[2]);
 									
-									}
+									if(connectedTo != null)
+										callPanels.get(command[3]).setAnsweredElseWhere(
+												connectedTo);
+									else
+										callPanels.get(command[3]).setAnsweredElseWhere(
+												command[2]);
+								}
+								
+							}else if(systemExtensions.contains(command[2])){
+								
+								/* If second argument is a system extension, this is an
+								 * outside call coming in but not to my phone
+								 */
+								if(isStudioExtension(command[1]))
+									callPanels.get(command[3]).setAnsweredElseWhere(
+											studioExtensions.get(command[1]));
+								else{
+									
+									/* Lookup the extension, if we have a reference
+									 * exchange the number for a friendly name e.g.
+									 * 5001 = Steve, if its null leave it as 5001
+									 */
+									String connectedTo = userExtensions.get(command[1]);
+									
+									if(connectedTo != null)
+										callPanels.get(command[3]).setAnsweredElseWhere(
+												connectedTo);
+									else
+										callPanels.get(command[3]).setAnsweredElseWhere(
+												command[1]);
 									
 								}
 								
 							}
 							
-							notifyListeners(callPanels.get(command[3]));
-							
 						}else{
 							
+							//TODO Check This for bugs as I think its incomplete
 							//Not exists so check details in case something slipped through
 							if(!isMyPhone(command[1]) && !isMyPhone(command[2])){
 								
-								//TODO BUG?? Unknown numbers?
 								//This isn't us so someone connected to someone else
 								//Check if we're connected to someone who is monitored by this program
 								if(systemExtensions.contains(command[2])){
@@ -510,23 +543,32 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									}
 									
 								}
+								//the caller is not me but the receiver is
+							}else if(!isMyPhone(command[1]) && isMyPhone(command[2])){
 								
-							}else if(!isMyPhone(command[1])){
+								/* Someone connected to us, most likely this is a second channel
+								 * for the receiver after we've dialled.
+								 * 
+								 * So check to see if we aren't already connected to this person
+								 * on another channel and if so ignore it, else make the panel
+								 */
 								
-								// This is us so we're active on a call
-								if(systemExtensions.contains(command[2])){
+								if(!isAlreadyConnected(command[1])){
 									
-									//This is an outside call connecting to us
-									createSkeletonCallInfoPanel(command[1], command[3], 
+									/* Don't have a panel for this AND caller is from an
+									 * internal or external phone
+									 */
+									createSkeletonCallInfoPanel(command[1], command[3],
 											CallInfoPanel.MODE_ANSWERED, null);
-									
-									//Notify listeners that we've answered
+								
 									notifyListeners(callPanels.get(command[3]));
 									
-									/* Not Interested in the reverse because we'll have already dealt with
-									 * it here */
-									
 								}
+								
+								//Caller is me and the receiver isn't
+							}else if(isMyPhone(command[1]) && !isMyPhone(command[2])){
+								
+								//Not interested would have been dealt with elsewhere
 								
 							}
 							
@@ -562,6 +604,74 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		
 	}
 	
+	/**
+	 * Checks the panels to make sure we're not already connected to this number.  E.g.
+	 * When connecting you get 5001 -> 5002 and the reverse, 5002 -> 5001 so you know
+	 * both sides of the call are connected.
+	 * 
+	 * This causes problems with duplicate panels and weird behaviour
+	 * 
+	 * @param number number to check
+	 * @return true if we're already connected
+	 */
+	private synchronized boolean isAlreadyConnected(String number){
+		
+		boolean isConnected = false;
+		
+		Iterator<String> panels = callPanels.keySet().iterator();
+		
+		while(panels.hasNext() && isConnected ==
+				false){
+			
+			CallInfoPanel panel = callPanels.get(panels.next());
+			
+			if(panel.getConnectedTo() != null && panel.getConnectedTo().length() > 0){
+				
+				//5001 || tvaadmin
+				try{
+					Integer.parseInt(panel.getConnectedTo());
+					
+					if(panel.getConnectedTo().equals(number))
+						isConnected = true;
+				}catch(NumberFormatException e){
+					
+					if(number.equals(getNumberFromFriendlyName(panel.getConnectedTo())))
+							isConnected = true;
+					
+				}
+				
+			}
+			
+		}
+		
+		return isConnected;
+		
+	}
+	
+	/**
+	 * Iterates through userExtensions and returns the extension value given by 
+	 * the name
+	 * @param name name to search for
+	 * @return null if no match or extension if match e.g. "5001"
+	 */
+	private String getNumberFromFriendlyName(String name) {
+		
+		String number = null;
+		Iterator<String> extensions = userExtensions.keySet().iterator();
+		
+		while(extensions.hasNext() && number == null){
+			
+			String key = extensions.next();
+			
+			if(userExtensions.get(key).equals(name))
+				number = key;
+			
+		}
+		
+		return number;
+		
+	}
+
 	/**
 	 * Checks if the given number is one of our system queues
 	 * @param number number to check
