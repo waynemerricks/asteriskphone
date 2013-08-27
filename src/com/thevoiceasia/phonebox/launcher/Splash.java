@@ -2,10 +2,10 @@ package com.thevoiceasia.phonebox.launcher;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Dimension;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.GridLayout;
 import java.awt.HeadlessException;
-import java.awt.Toolkit;
 import java.net.URL;
 
 import javax.swing.ImageIcon;
@@ -31,10 +31,14 @@ public class Splash extends JFrame implements SplashControl{
 		this.setLayout(new BorderLayout());
 		this.setSize(320, 280);
 		
-		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+		GraphicsDevice[] screens = GraphicsEnvironment.getLocalGraphicsEnvironment()
+				.getScreenDevices();
 		
-		this.setLocation(screen.width / 2 - this.getWidth() / 2, 
-				screen.height / 2 - this.getHeight() / 2);
+		int height = screens[0].getDisplayMode().getHeight();
+		int width = screens[0].getDisplayMode().getWidth();
+		
+		this.setLocation(width / 2 - this.getWidth() / 2, 
+				height / 2 - this.getHeight() / 2);
 		
 		this.setUndecorated(true);
 		
