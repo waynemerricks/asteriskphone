@@ -5,6 +5,7 @@ import java.beans.PropertyChangeListener;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
@@ -179,23 +180,58 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		 */
 		LOGGER.info(xStrings.getString("AsteriskManager.sendingChannelInfo") + recipient); //$NON-NLS-1$
 		
+		Vector<AsteriskChannel> orderedChannels = new Vector<AsteriskChannel>();
+		
+		/* Need to put channels in order, lower id = older channel, oldest -> newest */
 		for(AsteriskChannel asteriskChannel : asteriskServer.getChannels()){
             
-			if(asteriskChannel.getLinkedChannel() != null && 
-            		systemExtensions.contains(asteriskChannel.getLinkedChannel()
-            				.getCallerId().getNumber())){ 
-            	
-            	//This is one we need to deal with CONNECTED/5003/5001/1377009449.5
+			if(orderedChannels.size() == 0)
+				orderedChannels.add(asteriskChannel);
+			else{
+				
+				if(asteriskChannel.getLinkedChannel() != null && 
+	            		systemExtensions.contains(asteriskChannel.getLinkedChannel()
+	            				.getCallerId().getNumber())){ 
+					
+					//Find position to insert
+					boolean inserted = false;
+					int i = 0;
+					
+					while(i < orderedChannels.size() && !inserted){
+						
+						double indexId = Double.parseDouble(orderedChannels.get(i).getId());
+						double channelId = Double.parseDouble(asteriskChannel.getId());
+						
+						if(channelId < indexId){
+							orderedChannels.insertElementAt(asteriskChannel, i);
+							inserted = true;
+						}
+						
+						i++;
+						
+					}
+					
+					if(!inserted)
+						orderedChannels.add(asteriskChannel);
+					
+				}
+				
+			}
+			
+			/* Now we're sorted, we can spam the person who requested the update */
+			for(int i = 0; i < orderedChannels.size(); i++){
+				
+				//This is one we need to deal with CONNECTED/5003/5001/1377009449.5
             	String command = xStrings.getString("AsteriskManager.callConnected") + "/"  //$NON-NLS-1$ //$NON-NLS-2$
-            			+ asteriskChannel.getCallerId().getNumber() + "/"  //$NON-NLS-1$
-            			+ asteriskChannel.getLinkedChannel().getCallerId().getNumber() 
-            			+ "/" + asteriskChannel.getId(); //$NON-NLS-1$
+            			+ orderedChannels.get(i).getCallerId().getNumber() + "/"  //$NON-NLS-1$
+            			+ orderedChannels.get(i).getLinkedChannel().getCallerId().getNumber() 
+            			+ "/" + orderedChannels.get(i).getId(); //$NON-NLS-1$
             	
             	//System.out.println(command);
             	sendPrivateMessage(recipient, command);
-            	
-            }
-            
+				
+			}
+			
         }
 		
 		for(AsteriskQueue asteriskQueue : asteriskServer.getQueues()){
