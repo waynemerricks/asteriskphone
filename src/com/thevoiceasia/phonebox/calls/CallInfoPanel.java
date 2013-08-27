@@ -54,10 +54,14 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	
 	//Colours of the different modes
 	private static final Color RINGING_COLOUR = new Color(99, 169, 219);//Blue
+	private static final Color RINGING_ME_COLOUR = new Color(29, 110, 167);//Dark Blue
 	private static final Color ANSWERED_COLOUR = new Color(237, 171, 122);//Orange
+	private static final Color ANSWERED_ME_COLOUR= new Color(183, 93, 27);//Dark Orange
 	private static final Color ANSWERED_ELSEWHERE_COLOUR = new Color(164, 164, 164);//Grey
 	private static final Color QUEUED_COLOUR = new Color(111, 212, 127);//Green
+	private static final Color QUEUED_ME_COLOUR = new Color(40, 130, 55);//Dark Green
 	private static final Color ON_AIR_COLOUR = new Color(227, 91, 91);//Red ish
+	private static final Color ON_AIR_ME_COLOUR = new Color(152, 27, 27);//Dark Red ish
 	private static final Color CLICKED_COLOUR = new Color(234, 223, 39); //Yellow
 	
 	private static final Logger LOGGER = Logger.getLogger(CallInfoPanel.class.getName());//Logger
@@ -181,6 +185,16 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	}
 	
 	/**
+	 * Helper method to return who this panel is connectedTo
+	 * @return
+	 */
+	public String getConnectedTo(){
+		
+		return connectedToLabel.getText();
+		
+	}
+	
+	/**
 	 * Adds a manual hang up listener to this object
 	 * @param listener
 	 */
@@ -298,7 +312,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 			public void run(){
 				
 				if(getBackground() == defaultColour)
-					setBackground(RINGING_COLOUR);
+					setBackground(RINGING_ME_COLOUR);
 				else
 					setBackground(defaultColour);
 				
@@ -428,7 +442,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		if(reset)
 			timeLabel.resetStageTime();
 		
-		if(phoneCallRecord != null)
+		if(phoneCallRecord != null && answeredBy != null)
 			phoneCallRecord.setAnsweredBy(answeredBy);
 		
 		final String answered = answeredBy;
@@ -437,8 +451,10 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 			
 			public void run(){
 				
-				setBackground(ANSWERED_COLOUR);
-				connectedToLabel.setText(answered);
+				setBackground(ANSWERED_ME_COLOUR);
+				
+				if(answered != null)
+					connectedToLabel.setText(answered);
 				
 			}
 			
@@ -549,7 +565,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 			
 			public void run(){
 				
-				setBackground(QUEUED_COLOUR);
+				setBackground(QUEUED_ME_COLOUR);
 				
 			}
 			
@@ -602,7 +618,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 			
 			public void run(){
 				
-				setBackground(ON_AIR_COLOUR);
+				setBackground(ON_AIR_ME_COLOUR);
 				
 				if(studio != null)
 					connectedToLabel.setText(studio);
@@ -708,7 +724,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 							+ channelID + "/" + myExtension); //$NON-NLS-1$
 				}
 			}else if(messageMode == MODE_RINGING_ME || messageMode == MODE_QUEUED_ME 
-					|| messageMode == MODE_ON_AIR_ME){
+					|| messageMode == MODE_ON_AIR_ME || messageMode == MODE_ANSWERED_ME){
 				
 				if(hangupActive){
 					
@@ -733,7 +749,9 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 						case MODE_ON_AIR_ME:
 							setOnAirMe(null, false);
 							break;
-					
+						case MODE_ANSWERED_ME:
+							setAnsweredMe(null, false);
+							break;
 					}
 					
 				}
@@ -795,9 +813,6 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 			
 		}else
 			LOGGER.severe(xStrings.getString("CallInfoPanel.noControlRoomSet")); //$NON-NLS-1$
-		
-		//TODO Mode for hangup need to think about how it interacts with gui
-		//E.g. hangup clicked should now cancel hangup mode elsewhere
 		
 	}
 	
