@@ -591,7 +591,9 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 			public void run(){
 				
 				setBackground(ON_AIR_COLOUR);
-				connectedToLabel.setText(studio);
+				
+				if(studio != null)
+					connectedToLabel.setText(studio);
 				
 			}
 			
@@ -796,7 +798,12 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 				}else{
 					
 					//Set call back to answered elsewhere don't reset timer
-					setAnsweredElseWhere();
+					
+					if(messageMode == MODE_ANSWERED_ELSEWHERE)
+						setAnsweredElseWhere();
+					else
+						setOnAir(null);
+					//TODO does notify need to be here?
 					notifyManualHangupListeners();
 					
 				}
