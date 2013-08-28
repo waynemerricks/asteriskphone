@@ -253,7 +253,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 				call.setQueuedMe(true);
 				break;
 			case CallInfoPanel.MODE_ON_AIR:
-				call.setOnAir(friendlyConnected);
+				call.setOnAir(connectedTo);
 				break;
 			case CallInfoPanel.MODE_ON_AIR_ME:
 				call.setOnAirMe(friendlyConnected, true);
@@ -497,23 +497,23 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								/* If second argument is a system extension, this is an
 								 * outside call coming in but not to my phone
 								 */
-								if(isStudioExtension(command[1]))
-									callPanels.get(command[3]).setAnsweredElseWhere(
-											studioExtensions.get(command[1]));
+								if(isStudioExtension(command[2]))
+									callPanels.get(command[3]).setOnAir(
+											studioExtensions.get(command[2]));
 								else{
 									
 									/* Lookup the extension, if we have a reference
 									 * exchange the number for a friendly name e.g.
 									 * 5001 = Steve, if its null leave it as 5001
 									 */
-									String connectedTo = userExtensions.get(command[1]);
+									String connectedTo = userExtensions.get(command[2]);
 									
 									if(connectedTo != null)
 										callPanels.get(command[3]).setAnsweredElseWhere(
 												connectedTo);
 									else
 										callPanels.get(command[3]).setAnsweredElseWhere(
-												command[1]);
+												command[2]);
 									
 								}
 								
@@ -562,6 +562,14 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 											CallInfoPanel.MODE_ANSWERED, null);
 								
 									notifyListeners(callPanels.get(command[3]));
+									
+								}else{
+									
+									/* If already connected is an older channel then we dialled this 
+									 * channel so need to change the mode to an answered_me
+									 * instead of generic answered 
+									 */
+									//TODO
 									
 								}
 								
