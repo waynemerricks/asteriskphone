@@ -521,7 +521,6 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 							
 						}else{
 							
-							//TODO Check This for bugs as I think its incomplete
 							//Not exists so check details in case something slipped through
 							if(!isMyPhone(command[1]) && !isMyPhone(command[2])){
 								
@@ -565,11 +564,18 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									
 								}else{
 									
-									/* If already connected is an older channel then we dialled this 
-									 * channel so need to change the mode to an answered_me
-									 * instead of generic answered 
+									/* If already connected is an older channel then we 
+									 * dialled this channel so need to change the mode to 
+									 * an answered_me instead of generic answered 
 									 */
-									//TODO
+									double oldChannel = Double.parseDouble(
+											getAlreadyConnectedChannel(command[1]));
+									double newChannel = Double.parseDouble(command[3]);
+									
+									if(oldChannel < newChannel && callPanels.get(
+											oldChannel + "") != null) //$NON-NLS-1$
+										callPanels.get(oldChannel + "").setAnsweredMe( //$NON-NLS-1$
+												command[1], false);
 									
 								}
 								
@@ -612,6 +618,45 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		
 	}
 	
+	/**
+	 * Gets the channel ID where this number is already connected to
+	 * @param number
+	 * @return Asterisk channel ID or null if not found 
+	 */
+	private String getAlreadyConnectedChannel(String number) {
+		
+		boolean found = false;
+		String channelID = null;
+		
+		Iterator<String> panels = callPanels.keySet().iterator();
+		
+		while(panels.hasNext() && found == false){
+			
+			CallInfoPanel panel = callPanels.get(panels.next());
+			
+			if(panel.getConnectedTo() != null && panel.getConnectedTo().length() > 0){
+				
+				//5001 || tvaadmin
+				try{
+					Integer.parseInt(panel.getConnectedTo());
+					
+					if(panel.getConnectedTo().equals(number))
+						channelID = panel.getChannelID();
+				}catch(NumberFormatException e){
+					
+					if(number.equals(getNumberFromFriendlyName(panel.getConnectedTo())))
+							channelID = panel.getChannelID();
+					
+				}
+				
+			}
+			
+		}
+		
+		return channelID;
+		
+	}
+
 	/**
 	 * Checks the panels to make sure we're not already connected to this number.  E.g.
 	 * When connecting you get 5001 -> 5002 and the reverse, 5002 -> 5001 so you know
@@ -1063,4 +1108,11 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 
 	//TODO BUG Update gives incorrect call times get channel creation date?
 	//Don't think I could ever figure out stage time
+	/* TODO New Command: TRANSFERENDPOINT
+	 * Transfers the other end of the call
+	 * Scenario: You dial hot new celebrity A and then you want to put him on air
+	 * at the moment you can't hold your own call (for good reasons) but you could
+	 * transfer the celebrity's side of the call
+	 */
+	//TODO Multi Icons
 }
