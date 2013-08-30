@@ -68,7 +68,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	
 	/** CLASS VARS **/
 	private I18NStrings xStrings;
-	private int mode;
+	private int mode, modeWhenClicked;
 	private Color defaultColour;
 	private Timer ringingTimer;
 	private TimerTask ringingTask;
@@ -80,6 +80,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	
 	/** GUI SPECIFIC **/
 	private TransparentLabel alertIcon, connectedToLabel, conversationLabel;
+	//private CallIconPanel alertIcon;
 	private TimerLabel timeLabel;
 	private BoldLabel nameLabel, locationLabel;
 	
@@ -99,7 +100,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 			String callerLocation, String conversation,	int alertLevel,
 			String channelID, boolean hangupActive, boolean canTakeCall,
 			MultiUserChat controlRoom, String myExtension, String myNickName,
-			int hourOffset){
+			int hourOffset,	String badgeIconPath){
 	
 		xStrings = new I18NStrings(language, country);
 		this.addMouseListener(this);
@@ -335,17 +336,19 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	/**
 	 * Sets this panel to ringing mode
 	 */
-	public void setRinging(String connectedTo){
+	public void setRinging(String connectedTo, boolean reset){
 		
 		if(mode != MODE_RINGING){
 			
-			timeLabel.resetStageTime(); //Reset Stage Time
+			if(reset)
+				timeLabel.resetStageTime(); //Reset Stage Time
+			
 			final String connected = connectedTo;
 			ringingTask = new TimerTask(){//Setup new ringing animation
 				
 				public void run(){
 					
-					setRinging(null);
+					setRinging(null, false);
 					
 					if(connected != null)
 						connectedToLabel.setText(connected);
@@ -385,6 +388,8 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	 */
 	public void setClicked(){
 		
+		modeWhenClicked = mode;
+		
 		if(mode == MODE_RINGING || mode == MODE_RINGING_ME)
 			ringingTask.cancel();
 		
@@ -415,13 +420,15 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	/**
 	 * Sets the panel to answered mode
 	 */
-	public void setAnswered(){
+	public void setAnswered(boolean reset){
 		
 		if(mode == MODE_RINGING || mode == MODE_RINGING_ME)
 			ringingTask.cancel();
 		
 		mode = MODE_ANSWERED;
-		timeLabel.resetStageTime();
+		
+		if(reset)
+			timeLabel.resetStageTime();
 		
 		if(phoneCallRecord != null)
 			phoneCallRecord.setAnsweredBy(myNickName);
@@ -508,7 +515,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	/**
 	 * Sets the panel to answered by someone else mode
 	 */
-	public void setAnsweredElseWhere(String answeredBy){
+	public void setAnsweredElseWhere(String answeredBy, boolean reset){
 		
 		if(mode == MODE_RINGING || mode == MODE_RINGING_ME)
 			ringingTask.cancel();
@@ -518,7 +525,8 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		if(phoneCallRecord != null)
 			phoneCallRecord.setAnsweredBy(answeredBy);
 		
-		timeLabel.resetStageTime();
+		if(reset)
+			timeLabel.resetStageTime();
 		
 		final String answered = answeredBy;
 		
@@ -527,7 +535,9 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 			public void run(){
 				
 				setBackground(ANSWERED_ELSEWHERE_COLOUR);
-				connectedToLabel.setText(answered);
+				
+				if(answered != null)
+					connectedToLabel.setText(answered);
 				
 			}
 			
@@ -538,13 +548,15 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	/**
 	 * Sets the panel to queued mode
 	 */
-	public void setQueued(){
+	public void setQueued(boolean reset){
 		
 		if(mode == MODE_RINGING || mode == MODE_RINGING_ME)
 			ringingTask.cancel();
 		
 		mode = MODE_QUEUED;
-		timeLabel.resetStageTime();
+		
+		if(reset)
+			timeLabel.resetStageTime();
 		
 		SwingUtilities.invokeLater(new Runnable(){
 			
@@ -692,14 +704,18 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		
 		ImageIcon icon = null;
 		
-		URL imgURL = getClass().getResource(path);
+		if(path != null){
+			
+			URL imgURL = getClass().getResource(path);
+			
+			if(imgURL != null)
+				icon = new ImageIcon(imgURL, description);
+			else{
+				
+				LOGGER.warning(xStrings.getString("CallInfoPanel.logLoadIconError") + path); //$NON-NLS-1$
+				
+			}
 		
-		if(imgURL != null)
-			icon = new ImageIcon(imgURL, description);
-		else{
-			
-			LOGGER.warning(xStrings.getString("CallInfoPanel.logLoadIconError") + path); //$NON-NLS-1$
-			
 		}
 		
 		return icon;
@@ -939,6 +955,47 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	public PhoneCall getPhoneCallRecord(){
 		
 		return phoneCallRecord;
+		
+	}
+	
+	/**
+	 * Resets this panel to the mode it was in before being clicked
+	 */
+	public void reset() {
+		
+		mode = modeWhenClicked;
+		
+		switch(mode){
+		
+			case MODE_RINGING:
+				setRinging(null, false);
+				break;
+			case MODE_ANSWERED:
+				setAnswered(false);
+				break;
+			case MODE_ANSWERED_ELSEWHERE:
+				setAnsweredElseWhere(null, false);
+				break;
+			case MODE_QUEUED:
+				setQueued(false);
+				break;
+			case MODE_ON_AIR:
+				setQueuedMe(false);
+				break;
+			case MODE_RINGING_ME:
+				setRingingMe(false);
+				break;
+			case MODE_QUEUED_ME:
+				setQueuedMe(false);
+				break;
+			case MODE_ANSWERED_ME:
+				setAnsweredMe(null, false);
+				break;
+			case MODE_ON_AIR_ME:
+				setOnAirMe(null, false);
+				break;
+				
+		}
 		
 	}
 	
