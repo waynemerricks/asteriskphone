@@ -67,8 +67,9 @@ public class ChatWindow extends JPanel implements MouseListener, LastActionTimer
 			messages.getTextPane().addMouseListener(this);
 			
 			this.setLayout(new BorderLayout());
-			//TODO BUG FIX On Startup check room topic and set buttons selected as required
-			ChatShortcutBar shortcuts = new ChatShortcutBar(language, country, chatManager.getChatRoom(), studio);
+			ChatShortcutBar shortcuts = new ChatShortcutBar(language, country, 
+					chatManager.getChatRoom(), studio, 
+					chatManager.getChatRoom().getSubject());
 			chatManager.addActionTimeRecorder(shortcuts, shortcuts.getClass().getName());
 			this.add(shortcuts, BorderLayout.NORTH);
 			this.add(messages, BorderLayout.CENTER);
