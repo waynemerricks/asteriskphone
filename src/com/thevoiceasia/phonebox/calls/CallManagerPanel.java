@@ -240,7 +240,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 				xStrings.getString("CallManagerPanel.callerUnknown"), //$NON-NLS-1$
 				location, "", CallInfoPanel.ALERT_OK, channelID,  //$NON-NLS-1$
 				dropMode, true, controlRoom, settings.get("myExtension"),//$NON-NLS-1$
-				settings.get("nickName"), timezoneOffset);//$NON-NLS-1$
+				settings.get("nickName"), timezoneOffset, null);//$NON-NLS-1$
 		
 		//Set the creation time as required
 		if(creationTime != -1)
@@ -255,22 +255,22 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		switch(mode){
 		
 			case CallInfoPanel.MODE_RINGING:
-				call.setRinging(friendlyConnected);
+				call.setRinging(friendlyConnected, true);
 				break;
 			case CallInfoPanel.MODE_RINGING_ME:
 				call.setRingingMe(true);
 				break;
 			case CallInfoPanel.MODE_ANSWERED:
-				call.setAnswered();
+				call.setAnswered(true);
 				break;
 			case CallInfoPanel.MODE_ANSWERED_ME:
 				call.setAnsweredMe(friendlyConnected, true);
 				break;
 			case CallInfoPanel.MODE_ANSWERED_ELSEWHERE:
-				call.setAnsweredElseWhere(friendlyConnected);
+				call.setAnsweredElseWhere(friendlyConnected, true);
 				break;
 			case CallInfoPanel.MODE_QUEUED:
-				call.setQueued();
+				call.setQueued(true);
 				break;
 			case CallInfoPanel.MODE_QUEUED_ME:
 				call.setQueuedMe(true);
@@ -459,7 +459,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									callPanels.get(command[3]).setQueuedMe(true);
 									LOGGER.info(xStrings.getString("CallManagerPanel.setQueueMeMode")); //$NON-NLS-1$
 								}else{
-									callPanels.get(command[3]).setQueued();
+									callPanels.get(command[3]).setQueued(true);
 									LOGGER.info(xStrings.getString("CallManagerPanel.setQueueMode")); //$NON-NLS-1$
 								}
 								
@@ -498,7 +498,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 							/* if 2nd argument = myphone its a call I've answered */
 							}else if(isMyPhone(command[2])){
 								
-								callPanels.get(command[3]).setAnswered();
+								callPanels.get(command[3]).setAnswered(true);
 								
 								/* This is us answering a call so we need to alert any 
 								 * listeners so that we can update the input panel as
@@ -514,7 +514,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								/* If 2nd argument is studio then internal call on air*/
 								if(isStudioExtension(command[2]))
 									callPanels.get(command[3]).setAnsweredElseWhere(
-											studioExtensions.get(command[2]));
+											studioExtensions.get(command[2]), true);
 								else{
 									
 									/* Lookup the extension, if we have a reference
@@ -525,10 +525,10 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									
 									if(connectedTo != null)
 										callPanels.get(command[3]).setAnsweredElseWhere(
-												connectedTo);
+												connectedTo, true);
 									else
 										callPanels.get(command[3]).setAnsweredElseWhere(
-												command[2]);
+												command[2], true);
 								}
 								
 							}else if(systemExtensions.contains(command[2])){
@@ -549,10 +549,10 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									
 									if(connectedTo != null)
 										callPanels.get(command[3]).setAnsweredElseWhere(
-												connectedTo);
+												connectedTo, true);
 									else
 										callPanels.get(command[3]).setAnsweredElseWhere(
-												command[2]);
+												command[2], true);
 									
 								}
 								
@@ -650,6 +650,18 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 					
 					//Transfer from another user, add their name to our extensions list
 					userExtensions.put(command[2], from);
+					
+				}else if(command.length == 2 &&
+						command[0].equals(xStrings.getString("CallManagerPanel.callLocked"))){ //$NON-NLS-1$
+					
+					/* Notification that call was locked wait 3 seconds and if panel is 
+					 * still clicked reset it to normal mode
+					 */
+					if(callPanels.get(command[1]) != null){
+						
+						new Thread(new LockedWaitThread(callPanels.get(command[1]))).start();
+						
+					}//If it doesn't exist then ignore it, the call probably ended
 					
 				}
 				
