@@ -299,14 +299,22 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	
 		AsteriskChannel channel = activeChannels.get(channelID);
 		
-		if(channel != null && !isLocked(channel))//null = channel not found
+		boolean locked = isLocked(channel);
+		
+		if(channel != null && !locked){//null = channel not found
+			
 			channel.redirect(autoAnswerContext, to, DEFAULT_PRIORITY);
 		
-		String callerNumber = channel.getCallerId().getNumber();
-		
-		if(callerNumber.length() >= 7 || callerNumber.equals("5003"))//DEBUG 5003 DEBUG //$NON-NLS-1$
 			dbLookUpService.execute(new PhoneCall(databaseManager, 
 					channel.getCallerId().getNumber(), channel.getId(), this, 'A', from));
+			
+		}else if(locked){
+			
+			String message = xStrings.getString("AsteriskManager.commandLocked") + "/" +  //$NON-NLS-1$ //$NON-NLS-2$
+			channel.getId();
+			sendMessage(message);
+			
+		}
 		
 	}
 	
@@ -353,11 +361,14 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		
 		AsteriskChannel channel = activeChannels.get(channelID);
 		
-		if(channel != null)
+		if(channel != null){
+			
 			channel.redirect(defaultContext, queueNumber, DEFAULT_PRIORITY);
 		
-		dbLookUpService.execute(new PhoneCall(databaseManager, 
-				channel.getCallerId().getNumber(), channel.getId(), this, 'Q', from));
+			dbLookUpService.execute(new PhoneCall(databaseManager, 
+					channel.getCallerId().getNumber(), channel.getId(), this, 'Q', from));
+			
+		}
 		
 	}
 	
