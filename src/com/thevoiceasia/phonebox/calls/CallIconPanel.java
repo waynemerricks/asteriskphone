@@ -1,12 +1,15 @@
 package com.thevoiceasia.phonebox.calls;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.net.URL;
 import java.util.logging.Logger;
 
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JLayeredPane;
 import javax.swing.SwingUtilities;
+import javax.swing.border.LineBorder;
 
 
 public class CallIconPanel extends JLayeredPane{
@@ -26,7 +29,7 @@ public class CallIconPanel extends JLayeredPane{
 	 * @param language
 	 * @param country
 	 */
-	public CallIconPanel(ImageIcon mainIcon, ImageIcon badgeIcon, String language, 
+	public CallIconPanel(Icon mainIcon, Icon badgeIcon, String language, 
 			String country) {
 		
 		super();
@@ -60,18 +63,20 @@ public class CallIconPanel extends JLayeredPane{
 	 * @param language
 	 * @param country
 	 */
-	private void setupPanel(ImageIcon mainIcon, ImageIcon mainBadge, String language, 
+	private void setupPanel(Icon mainIcon, Icon mainBadge, String language, 
 			String country){
 		
 		xStrings = new I18NStrings(language, country);
 		
-		this.setPreferredSize(new Dimension(100, 100));
+		this.setPreferredSize(new Dimension(64, 64));
+		this.setBorder(new LineBorder(Color.BLACK));
+		main = new JLabel(mainIcon, JLabel.CENTER);
+		main.setOpaque(false);
+		main.setBounds(0, 0, 64, 64);
 		
-		main = new JLabel(mainIcon);
-		main.setBounds(18, 18, 64, 64);
-		
-		badge = new JLabel(mainBadge);
-		badge.setBounds(50, 50, 32, 32);
+		badge = new JLabel(mainBadge, JLabel.CENTER);
+		badge.setOpaque(false);
+		badge.setBounds(32, 32, 32, 32);
 		
 		this.add(this.badge, 2);
 		this.add(this.main, 1);
@@ -92,9 +97,9 @@ public class CallIconPanel extends JLayeredPane{
 	 * Sets the main icon to the given icon
 	 * @param mainIcon
 	 */
-	public void setMainIcon(ImageIcon mainIcon){
+	public void setMainIcon(Icon mainIcon){
 		
-		final ImageIcon icon = mainIcon;
+		final Icon icon = mainIcon;
 		
 		SwingUtilities.invokeLater(new Runnable(){
 			
@@ -122,9 +127,9 @@ public class CallIconPanel extends JLayeredPane{
 	 * Sets the badge icon to the given icon
 	 * @param badgeIcon
 	 */
-	public void setBadgeIcon(ImageIcon badgeIcon){
+	public void setBadgeIcon(Icon badgeIcon){
 		
-		final ImageIcon icon = badgeIcon;
+		final Icon icon = badgeIcon;
 		
 		SwingUtilities.invokeLater(new Runnable(){
 			
