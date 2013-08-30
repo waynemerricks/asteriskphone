@@ -37,7 +37,7 @@ public class ChatManager implements UserStatusListener, PacketListener {
 	private boolean hasErrors = false; //Error Flag used internally
 	private I18NStrings xStrings; //Link to external string resources
 	private Vector<LastActionTimer> actionTimers = new Vector<LastActionTimer>();
-	private boolean available = true;
+	private boolean available = true, manualAway = false;
 	private IdleCheckThread idleCheckThread;
 	
 	/** STATICS **/
@@ -73,12 +73,19 @@ public class ChatManager implements UserStatusListener, PacketListener {
 		
 	}
 	
+	/**
+	 * Returns the connection to the XMPP server
+	 * @return
+	 */
 	public XMPPConnection getConnection(){
 		
 		return (XMPPConnection)XMPPServerConnection;
 		
 	}
 	
+	/**
+	 * Starts a thread which checks if the user is idle
+	 */
 	public void startIdleDetectThread(){
 	
 		LOGGER.info(xStrings.getString("ChatManager.logStartIdleDetect")); //$NON-NLS-1$
@@ -101,12 +108,11 @@ public class ChatManager implements UserStatusListener, PacketListener {
 		
 	}
 	
+	/**
+	 * Called by checkIdle thread to see if the user is idle
+	 */
 	public void checkIdle(){
 		
-		/* TODO IdleCheckThread overrides presence
-		 * If we were idle and click the away button, we are set to away (no change) but
-		 * the idle thread kicks on its periodic check and sets us available.
-		 */
 		LOGGER.info(xStrings.getString("ChatManager.logCheckingIdle")); //$NON-NLS-1$
 		
 		if(actionTimers.size() > 0){
@@ -131,13 +137,12 @@ public class ChatManager implements UserStatusListener, PacketListener {
 			
 			if(!alive && available)
 				setPresenceAway();
-			else if(alive && !available)
+			else if(alive && !available && !manualAway)
 				setPresenceAvailable();
 			
 		}
 		
 	}
-	
 	
 	/**
 	 * Helper method to create a new XMPP user based on the current credentials
@@ -453,7 +458,7 @@ public class ChatManager implements UserStatusListener, PacketListener {
 				if(b.equals(xStrings.getString("ChatManager.chatReturned"))) //$NON-NLS-1$
 					setPresenceAvailable();
 				else if(b.equals(xStrings.getString("ChatManager.chatBackSoon"))) //$NON-NLS-1$
-					setPresenceAway();
+					setPresenceAwayManual();
 				
 			}
 			
@@ -461,9 +466,14 @@ public class ChatManager implements UserStatusListener, PacketListener {
 		
 	}
 	
+	/**
+	 * Sets the XMPP Presence to available
+	 */
 	private void setPresenceAvailable(){
 		
 		available = true;
+		manualAway = false;
+		
 		Presence presence = new Presence(Presence.Type.available, 
 				xStrings.getString("ChatManager.available"), 1, //$NON-NLS-1$
 				Presence.Mode.available); 
@@ -474,6 +484,20 @@ public class ChatManager implements UserStatusListener, PacketListener {
 		
 	}
 	
+	/**
+	 * Flags that we've manually set ourselves away so checkIdle won't interfere
+	 * then calls setPresenceAway to complete the process
+	 */
+	private void setPresenceAwayManual(){
+		
+		manualAway = true;
+		setPresenceAway();
+		
+	}
+	
+	/**
+	 * Sets our presence to away
+	 */
 	private void setPresenceAway(){
 		
 		available = false;
