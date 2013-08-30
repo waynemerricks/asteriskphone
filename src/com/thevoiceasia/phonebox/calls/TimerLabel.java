@@ -103,6 +103,16 @@ public class TimerLabel extends TransparentLabel {
 	}
 	
 	/**
+	 * Sets the creation time of this label
+	 * @param time in the form of Date().getTime()
+	 */
+	public void setCreationTime(long time){
+		
+		creationTimer = time;
+		
+	}
+	
+	/**
 	 * Sets the text of this label to the time lapsed (in mm:ss) since the creation and stage
 	 * time
 	 */
