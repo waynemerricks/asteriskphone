@@ -225,6 +225,16 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	}
 	
 	/**
+	 * Sets the callCreation time to the given long (in the form of Date().getTime()
+	 * @param time
+	 */
+	public void setCallCreationTime(long time){
+		
+		timeLabel.setCreationTime(time);
+		
+	}
+	
+	/**
 	 * Helper method, used for LOGGER reporting
 	 * @return
 	 */
