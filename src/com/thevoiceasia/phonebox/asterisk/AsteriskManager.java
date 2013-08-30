@@ -224,7 +224,8 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
         	String command = xStrings.getString("AsteriskManager.callConnected") + "/"  //$NON-NLS-1$ //$NON-NLS-2$
         			+ orderedChannels.get(i).getCallerId().getNumber() + "/"  //$NON-NLS-1$
         			+ orderedChannels.get(i).getLinkedChannel().getCallerId().getNumber() 
-        			+ "/" + orderedChannels.get(i).getId(); //$NON-NLS-1$
+        			+ "/" + orderedChannels.get(i).getId() + "/" + //$NON-NLS-1$ //$NON-NLS-2$
+        			orderedChannels.get(i).getDateOfCreation().getTime(); 
         	
         	//System.out.println(command);
         	sendPrivateMessage(recipient, command);
@@ -241,7 +242,8 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 				String command = xStrings.getString("AsteriskManager.callRingingFrom") + "/"   //$NON-NLS-1$//$NON-NLS-2$
 						+ entry.getChannel().getCallerId().getNumber() + "/"  //$NON-NLS-1$
 						+ asteriskQueue.getName() + "/"  //$NON-NLS-1$
-						+ entry.getChannel().getId();
+						+ entry.getChannel().getId() + "/" +  //$NON-NLS-1$
+						entry.getChannel().getDateOfCreation().getTime();
 				
 				//System.out.println(command);
 				sendPrivateMessage(recipient, command);
