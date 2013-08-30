@@ -79,8 +79,8 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	private Vector<ManualHangupListener> hangupListeners = new Vector<ManualHangupListener>();
 	
 	/** GUI SPECIFIC **/
-	private TransparentLabel alertIcon, connectedToLabel, conversationLabel;
-	//private CallIconPanel alertIcon;
+	private TransparentLabel connectedToLabel, conversationLabel;//alertIcon
+	private CallIconPanel alertIcon;
 	private TimerLabel timeLabel;
 	private BoldLabel nameLabel, locationLabel;
 	
@@ -118,8 +118,9 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		GridBagConstraints c = new GridBagConstraints();
 		
 		//Alert Icon, 3 rows high
-		alertIcon = new TransparentLabel(UIManager.getIcon(ALERT_ICONS[alertLevel]));
-		
+		//alertIcon = new TransparentLabel(UIManager.getIcon(ALERT_ICONS[alertLevel]));
+		alertIcon = new CallIconPanel(UIManager.getIcon(ALERT_ICONS[alertLevel]),
+				createImageIcon(badgeIconPath, badgeIconPath), language, country);
 		c.gridx = 0;
 		c.gridy = 0;
 		c.gridheight = 3;
@@ -665,7 +666,8 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 			
 			public void run(){
 				
-				alertIcon.setIcon(UIManager.getIcon(ALERT_ICONS[slevel]));
+				//alertIcon.setIcon(UIManager.getIcon(ALERT_ICONS[slevel]));
+				alertIcon.setMainIcon(UIManager.getIcon(ALERT_ICONS[slevel]));
 				
 			}
 			
@@ -686,7 +688,8 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 			
 			public void run(){
 				
-				alertIcon.setIcon(createImageIcon(apath, apath));
+				//alertIcon.setIcon(createImageIcon(apath, apath));
+				alertIcon.setMainIcon(createImageIcon(apath, apath));
 				
 			}
 			
@@ -894,7 +897,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 					else if(p.getShortAlertLevel() == 'B')
 						setAlertLevel(ALERT_BANNED);
 					
-					//TODO old conversation?
+					//TODO old conversation as tooltip?
 					if(p.currentConversation != null && p.currentConversation.length() > 0)
 						conversationLabel.setText(p.currentConversation);
 					
