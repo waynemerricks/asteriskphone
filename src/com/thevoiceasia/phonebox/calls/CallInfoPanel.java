@@ -803,8 +803,6 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 						setAnsweredElseWhere();
 					else
 						setOnAir(null);
-					//TODO does notify need to be here?
-					notifyManualHangupListeners();
 					
 				}
 					
