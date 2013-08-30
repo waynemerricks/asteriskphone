@@ -97,6 +97,25 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		//to handle
 		systemExtensions = database.getSystemExtensions();
 		
+		//Store what the time zone offset is for this instance
+		/*timezoneOffset = 0;
+		
+		if(settings.get("timezoneHourOffset") != null){ //$NON-NLS-1$
+			
+			try{
+				
+				timezoneOffset = Integer.parseInt(settings.get("timezoneHourOffset")); //$NON-NLS-1$
+				timezoneOffset = timezoneOffset * 60000;
+				
+			}catch(NumberFormatException e){
+				
+				LOGGER.warning(xStrings.getString(
+						"CallManagerPanel.errorParsingDBTimezoneOffset")); //$NON-NLS-1$
+				
+			}
+			
+		}*/
+		
 	}
 	
 	/**
@@ -186,7 +205,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	 * @param connectedTo Name or extension this panel is connected to
 	 */
 	private void createSkeletonCallInfoPanel(String phoneNumber, String channelID, int mode,
-			String connectedTo){
+			String connectedTo, long creationTime){
 		
 		String location = null;
 		LOGGER.info(xStrings.getString("CallManagerPanel.createSkeletonCallPanel") + //$NON-NLS-1$
@@ -222,6 +241,10 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 				location, "", CallInfoPanel.ALERT_OK, channelID,  //$NON-NLS-1$
 				dropMode, true, controlRoom, settings.get("myExtension"),//$NON-NLS-1$
 				settings.get("nickName"), timezoneOffset);//$NON-NLS-1$
+		
+		//Set the creation time as required
+		if(creationTime != -1)
+			call.setCallCreationTime(creationTime);
 		
 		//Lookup ConnectedTo if we have an entry in the userExtensions map swap to this name
 		String friendlyConnected = ""; //$NON-NLS-1$
@@ -329,7 +352,13 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 				//RINGING - Can Ignore
 				
 				//CALL - Entry point to handler
-				if(command.length == 4){
+				if(command.length == 4 || command.length == 5){
+					
+					//Creation time here if command.length = 5
+					long creationTime = -1;
+					
+					if(command.length == 5)
+						creationTime = getCreationTime(command[4]);
 					
 					if(command[0].equals(xStrings.getString("CallManagerPanel.callRingingFrom"))){//$NON-NLS-1$
 						
@@ -358,10 +387,12 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								//Internal call amongst ourselves
 								if(isMyPhone(command[1]))
 									createSkeletonCallInfoPanel(command[1], command[3], 
-											CallInfoPanel.MODE_RINGING_ME, command[2]);
+											CallInfoPanel.MODE_RINGING_ME, command[2], 
+											creationTime);
 								else
 									createSkeletonCallInfoPanel(command[1], command[3], 
-											CallInfoPanel.MODE_RINGING, command[2]);
+											CallInfoPanel.MODE_RINGING, command[2], 
+											creationTime);
 								
 							}else if(systemExtensions.contains(command[1]) && 
 									!systemExtensions.contains(command[2])){
@@ -369,26 +400,34 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								//Internal call to outside from me
 								if(isMyPhone(command[1]))
 									createSkeletonCallInfoPanel(command[1], command[3], 
-											CallInfoPanel.MODE_RINGING_ME, command[2]);
+											CallInfoPanel.MODE_RINGING_ME, command[2], 
+											creationTime);
 								else//Internal call to outside not from me
 									createSkeletonCallInfoPanel(command[1], command[3], 
-											CallInfoPanel.MODE_ANSWERED_ELSEWHERE, command[2]);
+											CallInfoPanel.MODE_ANSWERED_ELSEWHERE, command[2], 
+											creationTime);
 								
 							}else if(!systemExtensions.contains(command[1]) && 
 									systemExtensions.contains(command[2])){
 								
 								//Outside call coming in
-								if(isQueueNumber(command[2])){
+								if(isIncomingQueue(command[2])){
 									
 									//Outside call coming into a queue as normal
 									createSkeletonCallInfoPanel(command[1], command[3], 
-											CallInfoPanel.MODE_RINGING, null);
+											CallInfoPanel.MODE_RINGING, null, creationTime);
+									
+								}else if(isOnAirQueue(command[2])){
+									
+									//Outside call coming into a queue as normal
+									createSkeletonCallInfoPanel(command[1], command[3], 
+											CallInfoPanel.MODE_QUEUED, null, creationTime);
 									
 								}else{
 									
 									//Outside call coming direct to a phone
 									createSkeletonCallInfoPanel(command[1], command[3], 
-											CallInfoPanel.MODE_RINGING, command[2]);
+											CallInfoPanel.MODE_RINGING, command[2], creationTime);
 									
 								}
 								
@@ -430,10 +469,10 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								//queue, name, number, channel
 								if(isMyPhone(command[2]))
 									createSkeletonCallInfoPanel(command[2], command[3], 
-											CallInfoPanel.MODE_QUEUED_ME, null);
+											CallInfoPanel.MODE_QUEUED_ME, null, -1);
 								else
 									createSkeletonCallInfoPanel(command[2], command[3], 
-											CallInfoPanel.MODE_QUEUED, null);
+											CallInfoPanel.MODE_QUEUED, null, -1);
 								
 							}
 							
@@ -532,12 +571,14 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									//Check to see if someone else = studio
 									if(!isStudioExtension(command[2]))
 										createSkeletonCallInfoPanel(command[1], command[3], 
-												CallInfoPanel.MODE_ANSWERED_ELSEWHERE, command[2]);
+												CallInfoPanel.MODE_ANSWERED_ELSEWHERE, command[2], 
+												creationTime);
 									else{
 										
 										createSkeletonCallInfoPanel(command[1], command[3], 
 												CallInfoPanel.MODE_ON_AIR, 
-												studioExtensions.get(command[2]));
+												studioExtensions.get(command[2]), 
+												creationTime);
 										
 									}
 									
@@ -558,7 +599,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									 * internal or external phone
 									 */
 									createSkeletonCallInfoPanel(command[1], command[3],
-											CallInfoPanel.MODE_ANSWERED, null);
+											CallInfoPanel.MODE_ANSWERED, null, creationTime);
 								
 									notifyListeners(callPanels.get(command[3]));
 									
@@ -615,6 +656,29 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 			}
 			
 		}
+		
+	}
+	
+	/**
+	 * Parses the given time (should be in the form of Date().getTime())
+	 * @param time time to parse
+	 * @return a Date().getTime() based on the given time
+	 */
+	private long getCreationTime(String time){
+		
+		long created = new Date().getTime();
+		
+		try{
+			
+			created = Long.parseLong(time);
+			
+		}catch(NumberFormatException e){
+			
+			LOGGER.warning(xStrings.getString("CallManagerPanel.errorParsingCreationTime")); //$NON-NLS-1$
+			
+		}
+		
+		return created;
 		
 	}
 	
@@ -725,13 +789,46 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		
 	}
 
+			
+	/**
+	 * Checks if the given number is the on air queue
+	 * @param number
+	 * @return true if it is the on air queue
+	 */
+	private boolean isOnAirQueue(String number){
+	
+		boolean isOnAir = false;
+		
+		if(settings.get("onAirQueueNumber").equals(number)) //$NON-NLS-1$
+			isOnAir = true;
+		
+		return isOnAir;
+		
+	}
+	
+	/**
+	 * Checks if the given number is the on air queue
+	 * @param number
+	 * @return true if it is the on air queue
+	 */
+	private boolean isIncomingQueue(String number){
+	
+		boolean isIncoming = false;
+		
+		if(settings.get("incomingQueueNumber").equals(number)) //$NON-NLS-1$
+			isIncoming = true;
+		
+		return isIncoming;
+		
+	}
+	
 	/**
 	 * Checks if the given number is one of our system queues
 	 * @param number number to check
 	 * @return true if it is in the queue (currently settings => incomingQueueNumber OR
 	 * settings => onAirQueueNumber)
 	 */
-	private boolean isQueueNumber(String number){
+	/*private boolean isQueueNumber(String number){
 		
 		boolean isQueue = false;
 		
@@ -741,7 +838,8 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		
 		return isQueue;
 		
-	}
+	}*/
+	
 	/**
 	 * Notifies any object listening to this CallManagerPanel
 	 * Primarily used to 
@@ -1106,8 +1204,6 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	@Override
 	public void mouseReleased(MouseEvent evt){}
 
-	//TODO BUG Update gives incorrect call times get channel creation date?
-	//Don't think I could ever figure out stage time
 	/* TODO New Command: TRANSFERENDPOINT
 	 * Transfers the other end of the call
 	 * Scenario: You dial hot new celebrity A and then you want to put him on air
