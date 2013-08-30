@@ -1222,5 +1222,4 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	 * at the moment you can't hold your own call (for good reasons) but you could
 	 * transfer the celebrity's side of the call
 	 */
-	//TODO Multi Icons
 }
