@@ -1,6 +1,8 @@
 package com.thevoiceasia.phonebox.calls;
 import java.awt.Color;
-import java.awt.Dimension;
+import java.awt.Component;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.net.URL;
 import java.util.logging.Logger;
 
@@ -12,7 +14,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.border.LineBorder;
 
 
-public class CallIconPanel extends JLayeredPane{
+public class CallIconPanel extends JLayeredPane implements ComponentListener{
 
 	/** STATICS */
 	private static final long serialVersionUID = 1L;
@@ -67,8 +69,6 @@ public class CallIconPanel extends JLayeredPane{
 			String country){
 		
 		xStrings = new I18NStrings(language, country);
-		
-		this.setPreferredSize(new Dimension(64, 64));
 		this.setBorder(new LineBorder(Color.BLACK));
 		main = new JLabel(mainIcon, JLabel.CENTER);
 		main.setOpaque(false);
@@ -78,6 +78,7 @@ public class CallIconPanel extends JLayeredPane{
 		badge.setOpaque(false);
 		badge.setBounds(32, 32, 32, 32);
 		
+		this.addComponentListener(this);
 		this.add(this.badge, 2);
 		this.add(this.main, 1);
 		
@@ -166,5 +167,33 @@ public class CallIconPanel extends JLayeredPane{
 		return icon;
 		
 	}
+
+	/* COMPONENT LISTENER */
+	@Override
+	public void componentResized(ComponentEvent evt) {
+		
+		if(evt.getSource() instanceof Component){
+			
+			Component c = (Component)evt.getSource();
+			
+			int width = c.getSize().width;
+			int height = c.getSize().height;
+			
+			main.setBounds(width / 2 - 32, height / 2 - 32, 64, 64);
+			badge.setBounds(width / 2, height / 2, 32, 32);
+			
+		}
+		
+	}
+
+	/* UNUSED ComponentListener events */
+	@Override
+	public void componentShown(ComponentEvent arg0) {}
+
+	@Override
+	public void componentHidden(ComponentEvent evt) {}
+
+	@Override
+	public void componentMoved(ComponentEvent evt) {}
 
 }
