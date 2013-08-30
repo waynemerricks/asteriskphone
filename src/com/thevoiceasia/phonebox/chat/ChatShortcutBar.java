@@ -47,7 +47,8 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 	 * @param chatRoom Room to send messages and other changes to
 	 * @param isStudio if true enables studio specific behaviour
 	 */
-	public ChatShortcutBar(String language, String country, MultiUserChat chatRoom, boolean isStudio){
+	public ChatShortcutBar(String language, String country, MultiUserChat chatRoom, 
+			boolean isStudio, String currentTopic){
 		
 		xStrings = new I18NStrings(language, country);
 		
@@ -66,12 +67,28 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 		callToggle.setActionCommand("nocalls"); //$NON-NLS-1$
 		callToggle.addActionListener(this);
 		callToggle.setEnabled(isStudio);
+		
+		if(currentTopic.equals(xStrings.getString("ChatShortcutBar.subjectNoCalls"))){ //$NON-NLS-1$
+			callToggle.setSelected(true);
+			callPressed = true;
+			breakPressed = false;
+			helpPressed = false;
+		}
+		
 		this.add(callToggle);
 		
 		breakToggle = new JToggleButton(createImageIcon("images/backsoon.png", "backsoon"), false);  //$NON-NLS-1$//$NON-NLS-2$
 		breakToggle.setToolTipText(xStrings.getString("ChatShortcutBar.buttonBackSoonToolTip")); //$NON-NLS-1$
 		breakToggle.setActionCommand("backsoon"); //$NON-NLS-1$
 		breakToggle.addActionListener(this);
+		
+		if(currentTopic.equals(xStrings.getString("ChatShortcutBar.subjectBackSoon"))){ //$NON-NLS-1$
+			breakToggle.setSelected(true);
+			callPressed = false;
+			breakPressed = true;
+			helpPressed = false;
+		}
+		
 		this.add(breakToggle);
 		
 		//Spacer
@@ -81,6 +98,14 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 		helpToggle.setToolTipText(xStrings.getString("ChatShortcutBar.buttonHelpToolTip")); //$NON-NLS-1$
 		helpToggle.setActionCommand("help"); //$NON-NLS-1$
 		helpToggle.addActionListener(this);
+		
+		if(currentTopic.equals(xStrings.getString("ChatShortcutBar.subjectHelp"))){ //$NON-NLS-1$
+			helpToggle.setSelected(true);
+			callPressed = false;
+			breakPressed = false;
+			helpPressed = true;
+		}
+		
 		this.add(helpToggle);
 		
 		//Add buttons to group so only one is selected (cuts down on duplicate offs)
@@ -204,6 +229,8 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 		
 		if(breakToggle.isSelected() && !breakPressed){
 			
+			//Set LastActionTime to something really old so we don't kick the idle thread
+			lastActionTime = 1;
 			breakPressed = true;
 			callPressed = false;
 			helpPressed = false;
@@ -266,7 +293,9 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 	 */
 	public void actionPerformed(ActionEvent evt) {
 		
-		lastActionTime = new Date().getTime();
+		//Don't interfere with idle check if we've set ourselves away
+		if(!evt.getActionCommand().equals("backsoon")) //$NON-NLS-1$
+			lastActionTime = new Date().getTime();
 		
 		if(evt.getActionCommand().equals("nocalls")) //$NON-NLS-1$
 			noCallsPressed();
