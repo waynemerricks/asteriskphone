@@ -120,7 +120,7 @@ public class CallIconPanel extends JLayeredPane implements ComponentListener{
 	 */
 	public void setBadgeIcon(String iconPath){
 		
-		setMainIcon(createImageIcon(iconPath, iconPath));
+		setBadgeIcon(createImageIcon(iconPath, iconPath));
 		
 	}
 	
