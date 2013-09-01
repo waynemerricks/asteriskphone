@@ -111,13 +111,6 @@ public class Client extends JFrame implements WindowListener{
 				
 				callManagerPanel.sendUpdateRequest();
 				
-				/* TODO Call to other queues having custom icon, dealing with prayer line
-				 * for example.  Will have to find a way of doing this via DB to keep things
-				 * generic.
-				 * 
-				 * Will mean we need to splice icons together e.g. caller warning + custom 
-				 * line icon = ?
-				 */
 				//TODO GUI For Call Input
 				
 				loadingSplash.setStatus(xStrings.getString("Client.loadingComplete")); //$NON-NLS-1$
