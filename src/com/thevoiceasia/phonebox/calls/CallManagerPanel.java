@@ -417,11 +417,17 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									createSkeletonCallInfoPanel(command[1], command[3], 
 											CallInfoPanel.MODE_RINGING, null, creationTime);
 									
+									if(settings.get("queue_" + command[2] + "_icon") != null) //$NON-NLS-1$ //$NON-NLS-2$
+										callPanels.get(command[3]).getIconPanel().setBadgeIcon(settings.get("queue_" + command[2] + "_icon"));  //$NON-NLS-1$//$NON-NLS-2$
+									
 								}else if(isOnAirQueue(command[2])){
 									
 									//Outside call coming into a queue as normal
 									createSkeletonCallInfoPanel(command[1], command[3], 
 											CallInfoPanel.MODE_QUEUED, null, creationTime);
+									
+									if(settings.get("queue_" + command[2] + "_icon") != null) //$NON-NLS-1$ //$NON-NLS-2$
+										callPanels.get(command[3]).getIconPanel().setBadgeIcon(settings.get("queue_" + command[2] + "_icon"));  //$NON-NLS-1$//$NON-NLS-2$
 									
 								}else{
 									
