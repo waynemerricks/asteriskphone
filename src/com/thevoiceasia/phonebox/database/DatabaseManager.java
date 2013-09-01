@@ -289,7 +289,11 @@ public class DatabaseManager {
 			getSettingsFromDB("GLOBAL"); //$NON-NLS-1$
 			getSettingsFromDB(machineName);
 				
-			if(!getSettingsFromDB(userName)){//If this user has no settings in DB
+			/* Check to see if we don't already have a user account tied to the machine name
+			 * If we do, use that, if we don't try and create a new account
+			 */
+			if(!getSettingsFromDB(userName) && settings.get("XMPPLogin") == null){//If this user has no settings in DB //$NON-NLS-1$
+				
 				if(!createUser(userName))//try and create a new user, if not error
 					showError(new Exception(xStrings.getString("DatabaseManager.errorCreatingUser")), //$NON-NLS-1$
 							xStrings.getString("DatabaseManager.errorCreatingUser")); //$NON-NLS-1$
