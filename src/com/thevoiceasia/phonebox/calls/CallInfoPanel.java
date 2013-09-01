@@ -187,6 +187,16 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	}
 	
 	/**
+	 * Gets the icon panel associated with this info panel
+	 * @return
+	 */
+	public CallIconPanel getIconPanel(){
+		
+		return alertIcon;
+		
+	}
+	
+	/**
 	 * Helper method to return who this panel is connectedTo
 	 * @return
 	 */
