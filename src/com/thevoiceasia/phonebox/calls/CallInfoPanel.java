@@ -801,9 +801,12 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 					
 				}else{
 					
-					/* We can't do anything to our own call so ignore it if we're not 
-					 * hanging up, but we do need to reset it back to state */
-					//TODO TRANSFER ENDPOINT
+					/* We can't do anything to our own call unless we are in the ANSWERED_ME
+					 * state so ignore it if we're not hanging up, but we do need to reset 
+					 * it back to state 
+					 * 
+					 * If we are in ANSWERED_ME send a request to transfer the other side
+					 * of the call to the on air queue */
 					switch(messageMode){
 					
 						case MODE_RINGING_ME:
@@ -816,7 +819,11 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 							setOnAirMe(null, false);
 							break;
 						case MODE_ANSWERED_ME:
-							setAnsweredMe(null, false);
+							//If this is our call we can transfer the end point
+							message = xStrings.getString("calls.transferEndPoint") + "/" + channelID;  //$NON-NLS-1$//$NON-NLS-2$
+							LOGGER.info(xStrings.getString(
+									"CallInfoPanel.requestTransferEndpoint")  //$NON-NLS-1$
+									+ channelID);
 							break;
 					}
 					
