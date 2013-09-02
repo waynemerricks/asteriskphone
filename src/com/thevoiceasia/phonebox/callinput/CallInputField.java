@@ -41,6 +41,80 @@ public class CallInputField {
 		
 	}
 
+	/**
+	 * JLabel Check
+	 * @return true if JLabel
+	 */
+	public boolean isLabel(){
+		
+		boolean label = false;
+		
+		if(type.equals(TYPE_LABEL))
+			label = true;
+		
+		return label;
+		
+	}
+	
+	/**
+	 * JTextField check
+	 * @return true if JTextField
+	 */
+	public boolean isTextField(){
+	
+		boolean text = false;
+		
+		if(type.equals(TYPE_TEXT_FIELD))
+			text = true;
+		
+		return text;
+		
+	}
+	
+	/**
+	 * JTextArea check
+	 * @return true if JTextArea
+	 */
+	public boolean isTextArea(){
+		
+		boolean text = false;
+		
+		if(type.equals(TYPE_TEXT_AREA))
+			text = true;
+		
+		return text;
+	}
+	
+	/**
+	 * JComboBox Check
+	 * @return true if JComboBox
+	 */
+	public boolean isCombo(){
+		
+		boolean combo = false;
+		
+		if(type.equals(TYPE_COMBO))
+			combo = true;
+		
+		return combo;
+		
+	}
+	
+	/**
+	 * Checks if we're a parent tab
+	 * @return true if parent tab
+	 */
+	public boolean isTab(){
+		
+		boolean tab = false;
+		
+		if(type.equals(TYPE_TAB))
+			tab = true;
+		
+		return tab;
+		
+	}
+	
 	/** 
 	 * Make the component
 	 */
