@@ -1255,10 +1255,5 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	@Override
 	public void mouseReleased(MouseEvent evt){}
 
-	/* TODO New Command: TRANSFERENDPOINT
-	 * Transfers the other end of the call
-	 * Scenario: You dial hot new celebrity A and then you want to put him on air
-	 * at the moment you can't hold your own call (for good reasons) but you could
-	 * transfer the celebrity's side of the call
-	 */
+	//TODO When server connects, request an update?
 }
