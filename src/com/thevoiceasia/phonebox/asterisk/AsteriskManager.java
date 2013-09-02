@@ -499,6 +499,13 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 					
 					createCall(command[1], command[2], from);
 					
+				}else if(command.length == 2 && command[0].equals(
+						xStrings.getString("AsteriskManager.commandTransferEndPoint"))){ //$NON-NLS-1$
+					
+					//We're transfering the other side of the call here
+					redirectCallToQueue(activeChannels.get(command[1]).getLinkedChannel()
+							.getId(), from);
+					
 				}
 				
 			}
@@ -560,16 +567,18 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 					else if(hangupCause.equals(HANGUP_USER_BUSY))
 						logCause = xStrings.getString("AsteriskManager.channelHangupUserBusy"); //$NON-NLS-1$
 					else
-						logCause = hangupCause;
+						logCause = xStrings.getString("AsteriskManager.channelHangup") + " "   //$NON-NLS-1$//$NON-NLS-2$
+								+ hangupCause;
 					
 					//Log this in the DB
 					if(logHangup)
 						dbLookUpService.execute(new PhoneCall(databaseManager, 
-								hangup.getCallerId().getNumber(), hangup.getId(), this, 'H', "NA")); //$NON-NLS-1$
+								hangup.getCallerId().getNumber(), hangup.getId(), this, 
+								'H', "NA")); //$NON-NLS-1$
 					
 					//Send XMPP Message
-					String message = logCause + "/" + hangup.getCallerId().getNumber() + "/" + //$NON-NLS-1$ //$NON-NLS-2$
-							hangup.getId(); 
+					String message = logCause + "/" + hangup.getCallerId().getNumber() + //$NON-NLS-1$
+							"/" + hangup.getId();  //$NON-NLS-1$
 					LOGGER.info(message);
 					sendMessage(message);
 					removeActiveChannel(hangup.getId());
