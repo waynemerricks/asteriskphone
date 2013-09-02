@@ -73,7 +73,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	private Timer ringingTimer;
 	private TimerTask ringingTask;
 	private MultiUserChat controlRoom;
-	private String channelID, myExtension, myNickName; 
+	private String channelID, myExtension, myNickName, originator; 
 	private boolean hangupActive, canTakeCall;
 	private PhoneCall phoneCallRecord;
 	private Vector<ManualHangupListener> hangupListeners = new Vector<ManualHangupListener>();
@@ -183,6 +183,30 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		this.setPreferredSize(new Dimension(600, 150));
 		this.setMinimumSize(new Dimension(400, 150));
 		//this.validate();
+		
+	}
+	
+	/**
+	 * Set where this panel came from, used when something is dialled or
+	 * a call comes in.  This way we can get around the problem whereby
+	 * callerIDs may change to the external ID of the company and then you lose
+	 * track of if this is a channel belonging to your phone or someone else
+	 * @param originator
+	 */
+	public void setOriginator(String originator){
+		
+		this.originator = originator;
+		
+	}
+	
+	/**
+	 * Returns the creation number of this panel
+	 * Can be null!
+	 * @return
+	 */
+	public String getOriginator() {
+		
+		return originator;
 		
 	}
 	
@@ -779,6 +803,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 					
 					/* We can't do anything to our own call so ignore it if we're not 
 					 * hanging up, but we do need to reset it back to state */
+					//TODO TRANSFER ENDPOINT
 					switch(messageMode){
 					
 						case MODE_RINGING_ME:

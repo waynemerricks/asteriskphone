@@ -385,28 +385,33 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									systemExtensions.contains(command[2])){
 								
 								//Internal call amongst ourselves
-								if(isMyPhone(command[1]))
+								if(isMyPhone(command[1])){
 									createSkeletonCallInfoPanel(command[1], command[3], 
 											CallInfoPanel.MODE_RINGING_ME, command[2], 
 											creationTime);
-								else
+									callPanels.get(command[3]).setOriginator(command[1]);
+								}else{
 									createSkeletonCallInfoPanel(command[1], command[3], 
 											CallInfoPanel.MODE_RINGING, command[2], 
 											creationTime);
+									callPanels.get(command[3]).setOriginator(command[1]);
+								}
 								
 							}else if(systemExtensions.contains(command[1]) && 
 									!systemExtensions.contains(command[2])){
 								
 								//Internal call to outside from me
-								if(isMyPhone(command[1]))
+								if(isMyPhone(command[1])){
 									createSkeletonCallInfoPanel(command[1], command[3], 
 											CallInfoPanel.MODE_RINGING_ME, command[2], 
 											creationTime);
-								else//Internal call to outside not from me
+									callPanels.get(command[3]).setOriginator(command[1]);
+								}else{//Internal call to outside not from me
 									createSkeletonCallInfoPanel(command[1], command[3], 
 											CallInfoPanel.MODE_ANSWERED_ELSEWHERE, command[2], 
 											creationTime);
-								
+									callPanels.get(command[3]).setOriginator(command[1]);
+								}
 							}else if(!systemExtensions.contains(command[1]) && 
 									systemExtensions.contains(command[2])){
 								
@@ -416,6 +421,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									//Outside call coming into a queue as normal
 									createSkeletonCallInfoPanel(command[1], command[3], 
 											CallInfoPanel.MODE_RINGING, null, creationTime);
+									callPanels.get(command[3]).setOriginator(command[1]);
 									
 									if(settings.get("queue_" + command[2] + "_icon") != null) //$NON-NLS-1$ //$NON-NLS-2$
 										callPanels.get(command[3]).getIconPanel().setBadgeIcon(settings.get("queue_" + command[2] + "_icon"));  //$NON-NLS-1$//$NON-NLS-2$
@@ -426,6 +432,8 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									createSkeletonCallInfoPanel(command[1], command[3], 
 											CallInfoPanel.MODE_QUEUED, null, creationTime);
 									
+									callPanels.get(command[3]).setOriginator(command[1]);
+									
 									if(settings.get("queue_" + command[2] + "_icon") != null) //$NON-NLS-1$ //$NON-NLS-2$
 										callPanels.get(command[3]).getIconPanel().setBadgeIcon(settings.get("queue_" + command[2] + "_icon"));  //$NON-NLS-1$//$NON-NLS-2$
 									
@@ -434,7 +442,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									//Outside call coming direct to a phone
 									createSkeletonCallInfoPanel(command[1], command[3], 
 											CallInfoPanel.MODE_RINGING, command[2], creationTime);
-									
+									callPanels.get(command[3]).setOriginator(command[1]);
 								}
 								
 							}
@@ -560,6 +568,31 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 										callPanels.get(command[3]).setAnsweredElseWhere(
 												command[2], true);
 									
+								}
+								
+							}else{
+								
+								/* Here we arrive in an odd state because neither number
+								 * is registering as any phone in the system.  However, when dialling out
+								 * the callerid is swapped to the outgoing caller id so a call that 
+								 * would start as:
+								 * 
+								 * 5002 -> 907886123456
+								 * 
+								 * Would become:
+								 * 
+								 * 01211234567 -> 907886123456
+								 * 
+								 * This channel obviously exists so we need to look at it, figure out
+								 * if its us and then set this as ANSWERED_ME
+								 */
+								if(isMyPhone(callPanels.get(command[3]).getOriginator())){ 
+									//ANSWERED_ME
+									callPanels.get(command[3]).setAnsweredMe(command[2], true);
+									
+								}else{
+									//ANSWERED_ELSEWHERE
+									callPanels.get(command[3]).setAnsweredElseWhere(command[2], true);
 								}
 								
 							}
