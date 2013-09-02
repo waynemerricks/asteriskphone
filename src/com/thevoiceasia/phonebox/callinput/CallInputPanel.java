@@ -55,6 +55,13 @@ public class CallInputPanel extends JTabbedPane {
 		
 		//TODO
 		
+		//Find the parent tabs
+		for(int i = 0; i < components.size(); i++){
+		
+			if(components.get(i).isTab())
+			
+		}
+		
 	}
 	
 	/**
