@@ -598,6 +598,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 			public void run(){
 				
 				setBackground(QUEUED_COLOUR);
+				connectedToLabel.setText(""); //$NON-NLS-1$
 				
 			}
 			
