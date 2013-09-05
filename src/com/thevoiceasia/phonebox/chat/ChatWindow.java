@@ -1,6 +1,7 @@
 package com.thevoiceasia.phonebox.chat;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.Date;
@@ -55,6 +56,9 @@ public class ChatWindow extends JPanel implements MouseListener, LastActionTimer
 		 *   UserStatusPanel (toggle hide)
 		 */
 		ChatMessagePanel messages = new ChatMessagePanel(language, country, myNickName);
+		messages.setMaximumSize(new Dimension(300, 768));
+		messages.setPreferredSize(new Dimension(300, 768));
+		messages.setMinimumSize(new Dimension(200, 500));
 		chatManager.connect();
 		
 		if(!chatManager.hasErrors()){
