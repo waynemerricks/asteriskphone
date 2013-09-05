@@ -239,48 +239,5 @@ public class CallInputPanel extends JTabbedPane {
 		LOGGER.severe(friendlyErrorMessage);
 		
 	}
-	
-	/*public static void main(String[] args){
-		
-		CallInputPanel input;
-		try {
-		    for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-		        if ("Nimbus".equals(info.getName())) { //$NON-NLS-1$
-		            UIManager.setLookAndFeel(info.getClassName());
-		            break;
-		        }
-		    }
-		} catch (Exception e) {
-		    // Will use default L&F at this point, don't really care which it is
-		}
-		//Create a DB connection
-		try{
-			
-			Class.forName("com.mysql.jdbc.Driver").newInstance(); //$NON-NLS-1$
-			Connection connection = DriverManager.getConnection(
-					"jdbc:mysql://10.43.5.50/TVAPhoneManager?user=phonemanager&password=Ph0n3m4n4g3r");
-			
-			input = new CallInputPanel(connection, "en", "GB");
-			
-			JFrame frame = new JFrame("test");
-			frame.setLayout(new BorderLayout());
-			frame.setSize(480, 240);
-			frame.add(input, BorderLayout.CENTER);
-			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			frame.setVisible(true);
-			
-		}catch(SQLException e){
-			
-			System.err.println(e.getMessage());
-			e.printStackTrace();
-			
-		}catch(Exception e){
-			
-			System.err.println(e.getMessage());
-			e.printStackTrace();
-			
-		}
-		
-	}*/
 
 }
