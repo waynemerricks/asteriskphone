@@ -11,6 +11,7 @@ import java.util.logging.Logger;
 
 import javax.swing.*;
 
+import com.thevoiceasia.phonebox.callinput.CallInputPanel;
 import com.thevoiceasia.phonebox.calls.CallManagerPanel;
 import com.thevoiceasia.phonebox.calls.CallShortcutBar;
 import com.thevoiceasia.phonebox.chat.ChatManager;
@@ -79,8 +80,10 @@ public class Client extends JFrame implements WindowListener{
 			loadingSplash.setStatus(xStrings.getString("Client.loadingChatModule")); //$NON-NLS-1$
 			
 			//Chat Module
-			this.add(new ChatWindow(chatManager, language, country, userSettings.get("nickName"), //$NON-NLS-1$
-					userSettings.get("isStudio")), BorderLayout.EAST); //$NON-NLS-1$ 
+			JPanel east = new JPanel(new BorderLayout());
+			east.add(new ChatWindow(chatManager, language, country, userSettings.get("nickName"), //$NON-NLS-1$
+					userSettings.get("isStudio")), BorderLayout.CENTER); //$NON-NLS-1$
+			
 			
 			if(chatManager.hasErrors())
 				hasErrors = true;
@@ -112,7 +115,9 @@ public class Client extends JFrame implements WindowListener{
 				callManagerPanel.sendUpdateRequest();
 				
 				//TODO GUI For Call Input
-				
+				east.add(new CallInputPanel(databaseManager.getReadConnection(), language, 
+						country), BorderLayout.SOUTH);
+				this.add(east, BorderLayout.EAST);
 				loadingSplash.setStatus(xStrings.getString("Client.loadingComplete")); //$NON-NLS-1$
 				
 			}
