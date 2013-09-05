@@ -42,6 +42,26 @@ public class CallInputField {
 	}
 
 	/**
+	 * Returns the component referenced by this class
+	 * @return
+	 */
+	public Component getComponent(){
+		
+		return component;
+		
+	}
+	
+	/**
+	 * Returns the JLabel associated with this component
+	 * @return
+	 */
+	public JLabel getLabel(){
+		
+		return label;
+		
+	}
+	
+	/**
 	 * JLabel Check
 	 * @return true if JLabel
 	 */
@@ -211,6 +231,9 @@ public class CallInputField {
 		String[] itemsArray = options.split(","); //$NON-NLS-1$
 		Vector<String> items = new Vector<String>(itemsArray.length);
 		
+		for(int i = 0; i < itemsArray.length; i++)
+			items.add(itemsArray[i]);
+		
 		JComboBox<String> combo = new JComboBox<String>(items);
 		combo.setEditable(false);
 		
@@ -247,7 +270,7 @@ public class CallInputField {
 		if(tooltip != null && tooltip.length() > 0)
 			text.setToolTipText(tooltip);
 		
-		text.setRows(3);
+		text.setRows(4);
 		text.setWrapStyleWord(true);
 		text.setLineWrap(true);
 		JScrollPane scroll = new JScrollPane(text);
