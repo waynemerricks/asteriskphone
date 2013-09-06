@@ -2,8 +2,6 @@ package com.thevoiceasia.phonebox.calls;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.net.URL;
@@ -17,6 +15,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+
+import net.miginfocom.swing.MigLayout;
 
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.muc.MultiUserChat;
@@ -95,6 +95,11 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	 * @param channelID id of the asterisk channel this panel applies to
 	 * @param hangupActive indicates whether hangup mode is active at time of creation
 	 * @param canTakeCall indicates whether this user can steal calls from others
+	 * @param controlRoom room to send control messages to
+	 * @param myExtension The current users extension number (or null)
+	 * @param myNickName The current users chat name
+	 * @param hourOffSet Offset for time keeping purposes so that timer starts at 0
+	 * @param badgeIconPath path to the icon to use as a badge
 	 */
 	public CallInfoPanel(String language, String country, String callerName, 
 			String callerLocation, String conversation,	int alertLevel,
@@ -113,76 +118,57 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		this.myExtension = myExtension;
 		this.myNickName = myNickName;
 		
-		//Argh the horror!
-		this.setLayout(new GridBagLayout());
-		GridBagConstraints c = new GridBagConstraints();
+		this.setLayout(new MigLayout("insets 0, fillx", "[]0", "[]0")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		
 		//Alert Icon, 3 rows high
 		//alertIcon = new TransparentLabel(UIManager.getIcon(ALERT_ICONS[alertLevel]));
 		alertIcon = new CallIconPanel(UIManager.getIcon(ALERT_ICONS[alertLevel]),
 				createImageIcon(badgeIconPath, badgeIconPath), language, country);
-		c.gridx = 0;
-		c.gridy = 0;
-		c.gridheight = 3;
-		c.weightx = 0.3;
-		c.weighty = 0.25;
-		c.fill = GridBagConstraints.BOTH;
-		
-		this.add(alertIcon, c); //Add Alert to Panel, 3 rows high
+		alertIcon.setMinimumSize(new Dimension(100, 64));
 		
 		//Timer Label 1 row/column
 		timeLabel = new TimerLabel(xStrings.getString("CallInfoPanel.callTimeInit"), //$NON-NLS-1$
 				TransparentLabel.CENTER, hourOffset); 
+		timeLabel.setPreferredSize(new Dimension(100, 30));
+		timeLabel.setMinimumSize(new Dimension(100, 30));
 		
-		c.weightx = 0.25;
-		c.gridx = 1;
-		c.gridheight = 1;
-		c.gridwidth = 1;
-		c.fill = GridBagConstraints.BOTH;
-
-		this.add(timeLabel, c);
+		this.add(timeLabel, "growx"); //$NON-NLS-1$
 		
 		//Connected To Label, will be blank by default, fill row
 		connectedToLabel = new TransparentLabel(" ", TransparentLabel.CENTER); //$NON-NLS-1$
 		
-		c.weightx = 1;
-		c.gridx = 2;
-		c.gridwidth = 3;
-		c.fill = GridBagConstraints.BOTH;
+		connectedToLabel.setPreferredSize(new Dimension(300, 30));
+		connectedToLabel.setMinimumSize(new Dimension(200, 30));
 		
-		this.add(connectedToLabel, c);
+		this.add(connectedToLabel, "growx, wrap"); //$NON-NLS-1$
 		
 		//Name Label, 2nd Row, fill horizontal
 		nameLabel = new BoldLabel(callerName, TransparentLabel.CENTER);
 		
-		c.gridx = 1;
-		c.gridy = 1;
-		c.gridwidth = 4;
+		nameLabel.setPreferredSize(new Dimension(400, 30));
+		nameLabel.setMinimumSize(new Dimension(300, 30));
 		
-		this.add(nameLabel, c);
+		this.add(nameLabel, "grow, span 3, wrap"); //$NON-NLS-1$
 		
 		//Location Label, 3rd Row, fill horizontal
 		locationLabel = new BoldLabel(callerLocation, TransparentLabel.CENTER);
 		
-		c.gridx = 1;
-		c.gridy = 2;
+		locationLabel.setPreferredSize(new Dimension(400, 30));
+		locationLabel.setMinimumSize(new Dimension(300, 30));
 		
-		this.add(locationLabel, c);
+		this.add(locationLabel, "growx, span 3, wrap"); //$NON-NLS-1$
 		
 		//Conversation Label, 4th Row, fill height/horiz
 		conversationLabel = new TransparentLabel(conversation);
 		
-		c.gridx = 0;
-		c.gridy = 3;
-		c.weighty = 1;
-		c.gridwidth = 6;
-		c.fill = GridBagConstraints.BOTH;
+		conversationLabel.setPreferredSize(new Dimension(500, 60));
+		conversationLabel.setMinimumSize(new Dimension(400, 30));
 		
-		this.add(conversationLabel, c);
+		this.add(conversationLabel, "south"); //$NON-NLS-1$
+		this.add(alertIcon, "west"); //Add Alert to Panel, west //$NON-NLS-1$
 		
-		this.setPreferredSize(new Dimension(600, 150));
+		this.setPreferredSize(new Dimension(500, 150));
 		this.setMinimumSize(new Dimension(400, 150));
-		//this.validate();
 		
 	}
 	
