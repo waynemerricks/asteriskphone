@@ -386,14 +386,24 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								
 								//Internal call amongst ourselves
 								if(isMyPhone(command[1])){
+									int mode = CallInfoPanel.MODE_RINGING_ME;
+									
+									if(isOnAirQueue(command[2]))
+										mode = CallInfoPanel.MODE_QUEUED_ME;
+									
 									createSkeletonCallInfoPanel(command[1], command[3], 
-											CallInfoPanel.MODE_RINGING_ME, command[2], 
-											creationTime);
+											mode, command[2], creationTime);
+									
 									callPanels.get(command[3]).setOriginator(command[1]);
 								}else{
+									int mode = CallInfoPanel.MODE_RINGING;
+									
+									if(isOnAirQueue(command[2]))
+										mode = CallInfoPanel.MODE_QUEUED;
+									
 									createSkeletonCallInfoPanel(command[1], command[3], 
-											CallInfoPanel.MODE_RINGING, command[2], 
-											creationTime);
+											mode, command[2], creationTime);
+									
 									callPanels.get(command[3]).setOriginator(command[1]);
 								}
 								
