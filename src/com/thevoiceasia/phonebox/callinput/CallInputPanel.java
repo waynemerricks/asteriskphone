@@ -6,12 +6,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Vector;
 import java.util.logging.Logger;
 
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.ScrollPaneConstants;
@@ -69,19 +67,22 @@ public class CallInputPanel extends JTabbedPane {
 	 */
 	private void createTabbedPane(){
 		
-		HashMap<Integer, JPanel> tabs = new HashMap<Integer, JPanel>();
+		Vector<TabPanel> tabs = new Vector<TabPanel>();
+		HashMap<Integer, TabPanel> tabHash = new HashMap<Integer, TabPanel>();
 		
 		//Find the parent tabs
 		for(int i = 0; i < components.size(); i++){
 		
 			if(components.get(i).isTab()){
 				
-				JPanel tab = new JPanel(new MigLayout("fillx")); //$NON-NLS-1$
-				tab.setName(components.get(i).name);
+				TabPanel tab = new TabPanel(components.get(i).id, components.get(i).name, 
+						new MigLayout("fillx")); //$NON-NLS-1$
 				tab.setPreferredSize(new Dimension(400, 350));
 				tab.setMinimumSize(new Dimension(200, 350));
 				tab.setMaximumSize(new Dimension(400, 350));
-				tabs.put(components.get(i).id, tab);
+				
+				tabs.add(tab);
+				tabHash.put(tab.id, tab);
 				
 			}
 			
@@ -94,23 +95,23 @@ public class CallInputPanel extends JTabbedPane {
 				
 				if(components.get(i).isLabel()){
 					
-					tabs.get(components.get(i).parent).add(components.get(i).getComponent(),
+					tabHash.get(components.get(i).parent).add(components.get(i).getComponent(),
 							"growx, spanx, wrap"); //$NON-NLS-1$
 					
 				}else if(components.get(i).isCombo() || components.get(i).isTextField()){
 					
 					if(components.get(i).getLabel() != null)
-						tabs.get(components.get(i).parent).add(components.get(i).getLabel());
+						tabHash.get(components.get(i).parent).add(components.get(i).getLabel());
 					
-					tabs.get(components.get(i).parent).add(components.get(i).getComponent(),
+					tabHash.get(components.get(i).parent).add(components.get(i).getComponent(),
 							"growx, spanx, wrap"); //$NON-NLS-1$
 					
 				}else if(components.get(i).isTextArea()){
 					
 					if(components.get(i).getLabel() != null)
-						tabs.get(components.get(i).parent).add(components.get(i).getLabel());
+						tabHash.get(components.get(i).parent).add(components.get(i).getLabel());
 					
-					tabs.get(components.get(i).parent).add(components.get(i).getComponent(),
+					tabHash.get(components.get(i).parent).add(components.get(i).getComponent(),
 							"growx, spanx, wrap"); //$NON-NLS-1$
 					
 				}
@@ -120,43 +121,11 @@ public class CallInputPanel extends JTabbedPane {
 		}
 		
 		//Add the tabs to the panel
-		Iterator<Integer> tabIterator = tabs.keySet().iterator();
-		Vector<Integer> ids = new Vector<Integer>();
-		
-		while(tabIterator.hasNext()){
+		for(int i = 0; i < tabs.size(); i++){
 			
-			int componentID = tabIterator.next();
+			TabPanel tab = tabs.get(i);
 			
-			if(ids.size() == 0)
-				ids.add(componentID);
-			else{
-			
-				int i = 0;
-				boolean found = false;
-				
-				while(i < ids.size() && !found){
-				
-					if(ids.get(i) > componentID){
-						found = true;
-						ids.add(i, componentID);
-					}	
-					
-					i++;
-					
-				}
-				
-				if(!found)
-					ids.add(componentID);
-				
-			}
-			
-		}
-		
-		for(int i = 0; i < ids.size(); i++){
-			
-			JPanel tab = tabs.get(ids.get(i));
-			
-			this.addTab(tab.getName(), new JScrollPane(tab, 
+			this.addTab(tab.name, new JScrollPane(tab, 
 					ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, 
 					ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED));	
 			
