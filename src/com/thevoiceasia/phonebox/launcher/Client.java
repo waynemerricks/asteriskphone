@@ -34,15 +34,15 @@ public class Client extends JFrame implements WindowListener{
 	
 	//Statics
 	private static final Logger LOGGER = Logger.getLogger(Client.class.getName());//Logger
-	private static final Level LOG_LEVEL = Level.INFO;
+	private static final Level LOG_LEVEL = Level.WARNING;
 	private static final Logger CHAT_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.chat"); //$NON-NLS-1$
 	private static final Level CHAT_LOG_LEVEL = Level.WARNING;
 	private static final Logger DATABASE_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.database"); //$NON-NLS-1$
-	private static final Level DATABASE_LOG_LEVEL = Level.WARNING;
+	private static final Level DATABASE_LOG_LEVEL = Level.INFO;
 	private static final Logger RECORDS_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.records"); //$NON-NLS-1$
-	private static final Level RECORDS_LOG_LEVEL = Level.INFO;
+	private static final Level RECORDS_LOG_LEVEL = Level.WARNING;
 	private static final Logger CALL_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.calls"); //$NON-NLS-1$
-	private static final Level CALL_LOG_LEVEL = Level.INFO;
+	private static final Level CALL_LOG_LEVEL = Level.WARNING;
 	
 	private static I18NStrings xStrings;
 	
@@ -114,7 +114,6 @@ public class Client extends JFrame implements WindowListener{
 				
 				callManagerPanel.sendUpdateRequest();
 				
-				//TODO GUI For Call Input
 				east.add(new CallInputPanel(databaseManager.getReadConnection(), language, 
 						country), BorderLayout.SOUTH);
 				this.add(east, BorderLayout.EAST);
