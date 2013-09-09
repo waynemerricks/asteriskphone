@@ -118,10 +118,9 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		this.myExtension = myExtension;
 		this.myNickName = myNickName;
 		
-		this.setLayout(new MigLayout("insets 0, fillx", "[]0", "[]0")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		this.setLayout(new MigLayout("insets 0, gap 0, fillx")); //$NON-NLS-1$
 		
-		//Alert Icon, 3 rows high
-		//alertIcon = new TransparentLabel(UIManager.getIcon(ALERT_ICONS[alertLevel]));
+		//Alert Icon
 		alertIcon = new CallIconPanel(UIManager.getIcon(ALERT_ICONS[alertLevel]),
 				createImageIcon(badgeIconPath, badgeIconPath), language, country);
 		alertIcon.setMinimumSize(new Dimension(100, 64));
@@ -129,46 +128,46 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		//Timer Label 1 row/column
 		timeLabel = new TimerLabel(xStrings.getString("CallInfoPanel.callTimeInit"), //$NON-NLS-1$
 				TransparentLabel.CENTER, hourOffset); 
-		timeLabel.setPreferredSize(new Dimension(100, 30));
+		//timeLabel.setPreferredSize(new Dimension(100, 30));
 		timeLabel.setMinimumSize(new Dimension(100, 30));
 		
-		this.add(timeLabel, "growx"); //$NON-NLS-1$
+		this.add(timeLabel, "growx 25, split"); //$NON-NLS-1$
 		
 		//Connected To Label, will be blank by default, fill row
 		connectedToLabel = new TransparentLabel(" ", TransparentLabel.CENTER); //$NON-NLS-1$
 		
-		connectedToLabel.setPreferredSize(new Dimension(300, 30));
-		connectedToLabel.setMinimumSize(new Dimension(200, 30));
+		connectedToLabel.setPreferredSize(new Dimension(150, 30));
+		connectedToLabel.setMinimumSize(new Dimension(150, 30));
 		
-		this.add(connectedToLabel, "growx, wrap"); //$NON-NLS-1$
+		this.add(connectedToLabel, "growx, gap 0, wrap"); //$NON-NLS-1$
 		
 		//Name Label, 2nd Row, fill horizontal
 		nameLabel = new BoldLabel(callerName, TransparentLabel.CENTER);
 		
-		nameLabel.setPreferredSize(new Dimension(400, 30));
-		nameLabel.setMinimumSize(new Dimension(300, 30));
+		nameLabel.setPreferredSize(new Dimension(250, 30));
+		nameLabel.setMinimumSize(new Dimension(250, 30));
 		
-		this.add(nameLabel, "grow, span 3, wrap"); //$NON-NLS-1$
+		this.add(nameLabel, "growx, span 3, wrap"); //$NON-NLS-1$
 		
 		//Location Label, 3rd Row, fill horizontal
 		locationLabel = new BoldLabel(callerLocation, TransparentLabel.CENTER);
 		
-		locationLabel.setPreferredSize(new Dimension(400, 30));
-		locationLabel.setMinimumSize(new Dimension(300, 30));
+		locationLabel.setPreferredSize(new Dimension(250, 30));
+		locationLabel.setMinimumSize(new Dimension(250, 30));
 		
 		this.add(locationLabel, "growx, span 3, wrap"); //$NON-NLS-1$
 		
 		//Conversation Label, 4th Row, fill height/horiz
 		conversationLabel = new TransparentLabel(conversation);
 		
-		conversationLabel.setPreferredSize(new Dimension(500, 60));
-		conversationLabel.setMinimumSize(new Dimension(400, 30));
+		conversationLabel.setPreferredSize(new Dimension(350, 60));
+		conversationLabel.setMinimumSize(new Dimension(350, 30));
 		
 		this.add(conversationLabel, "south"); //$NON-NLS-1$
 		this.add(alertIcon, "west"); //Add Alert to Panel, west //$NON-NLS-1$
 		
-		this.setPreferredSize(new Dimension(500, 150));
-		this.setMinimumSize(new Dimension(400, 150));
+		this.setPreferredSize(new Dimension(350, 150));
+		this.setMinimumSize(new Dimension(350, 150));
 		
 	}
 	
