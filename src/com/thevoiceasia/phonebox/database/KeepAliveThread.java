@@ -54,7 +54,7 @@ public class KeepAliveThread implements Runnable {
 		Statement statement = null;
 		ResultSet resultSet = null;
 		
-		String SQL = "SELECT 1"; //$NON-NLS-1$
+		String SQL = "SELECT id FROM callinputfields WHERE id = 1"; //$NON-NLS-1$
 		
 		try{
 			
