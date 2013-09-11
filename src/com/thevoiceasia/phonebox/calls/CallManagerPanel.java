@@ -39,6 +39,10 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									LastActionTimer, ChatManagerListener, MessageListener,
 									ManualHangupListener, DialListener {
 
+	/* TODO
+	 * When on a call, you can't answer another one unless that first one gets queued
+	 * first? 
+	 */
 	/** STATICS */
 	private static final long serialVersionUID = 1L;
 	private static final Logger LOGGER = Logger.getLogger(CallManagerPanel.class.getName());//Logger
@@ -64,6 +68,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	private boolean dropMode = false;
 	private Vector<ManualHangupListener> hangupListeners = new Vector<ManualHangupListener>();
 	private DialPanel dialler = null;
+	private Vector<AnswerListener> answerListeners = new Vector<AnswerListener>();
 	
 	/* We need to spawn threads for event response with db lookups, in order to guard against
 	 * craziness, we'll use the ExecutorService to have X threads available to use (set via
@@ -96,25 +101,6 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		//Store a copy of all the system extensions so we can decide what calls we need
 		//to handle
 		systemExtensions = database.getSystemExtensions();
-		
-		//Store what the time zone offset is for this instance
-		/*timezoneOffset = 0;
-		
-		if(settings.get("timezoneHourOffset") != null){ //$NON-NLS-1$
-			
-			try{
-				
-				timezoneOffset = Integer.parseInt(settings.get("timezoneHourOffset")); //$NON-NLS-1$
-				timezoneOffset = timezoneOffset * 60000;
-				
-			}catch(NumberFormatException e){
-				
-				LOGGER.warning(xStrings.getString(
-						"CallManagerPanel.errorParsingDBTimezoneOffset")); //$NON-NLS-1$
-				
-			}
-			
-		}*/
 		
 	}
 	
@@ -907,12 +893,24 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	 * @param callInfoPanel
 	 */
 	private void notifyListeners(CallInfoPanel callInfoPanel) {
-		/* TODO Need to notify any listeners of this CallManagerPanel, to be implemented
-		 * once we have components in place that will act as listeners (call data input 
-		 * panel?)
-		 */
+		
+		// Need to notify any listeners of this CallManagerPanel
 		LOGGER.info(xStrings.getString("CallManagerPanel.notifyListeners") + //$NON-NLS-1$
 				callInfoPanel.getChannelID()); 
+		
+		for(int i = 0; i < answerListeners.size(); i++)
+			answerListeners.get(i).callAnswered(callInfoPanel);
+		
+	}
+	
+	/**
+	 * Add a listener for a call being answered
+	 * @param listener
+	 */
+	public void addAnswerListener(AnswerListener listener){
+		
+		LOGGER.info(xStrings.getString("CallManagerPanel.addAnswerListener")); //$NON-NLS-1$
+		answerListeners.add(listener);
 		
 	}
 
