@@ -420,12 +420,23 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	public void sendNewQueueEntryMessage(AsteriskQueueEntry entry){
 		
 		//Transfers from handlers goes into Studio Queue
-		String message = xStrings.getString("AsteriskManager.populatedQueueEntry") + "/" + //$NON-NLS-1$ //$NON-NLS-2$
-				entry.getQueue().getName() + "/" + entry.getChannel().getCallerId() //$NON-NLS-1$
-				.getNumber() + "/" + entry.getChannel().getId(); //$NON-NLS-1$
-		
-		LOGGER.info(message);
-		sendMessage(message);
+		/* There seems to be two queue entries that are fired in the events.
+		 * The first is null :| so lets ignore those
+		 */
+		if(entry != null){
+			
+			AsteriskQueue queue = entry.getQueue();
+			String name = queue.getName();
+			String number = entry.getChannel().getCallerId().getNumber();
+			String id = entry.getChannel().getId();
+			
+			String message = xStrings.getString("AsteriskManager.populatedQueueEntry") + "/" + //$NON-NLS-1$ //$NON-NLS-2$
+					name + "/" + number + "/" + id; //$NON-NLS-1$ //$NON-NLS-2$
+			
+			LOGGER.info(message);
+			sendMessage(message);
+			
+		}
 		
 	}
 	
