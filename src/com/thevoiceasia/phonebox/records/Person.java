@@ -15,7 +15,7 @@ public class Person {
 	/** CLASS VARS **/
 	public int id;
 	public String alert, gender, name, location, postalAddress, 
-		postCode, email, language, religion, currentConversation;
+		postCode, email, language, religion, currentConversation, journey, notes;
 	private Vector<Conversation> conversationHistory = new Vector<Conversation>();
 	private I18NStrings xStrings; //Link to external string resources
 	
