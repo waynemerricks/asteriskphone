@@ -3,6 +3,7 @@ package com.thevoiceasia.phonebox.callinput;
 import java.awt.Component;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyListener;
+import java.util.HashMap;
 import java.util.Vector;
 
 import javax.swing.JComboBox;
@@ -10,6 +11,8 @@ import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.JViewport;
+import javax.swing.SwingUtilities;
 
 public class CallInputField {
 
@@ -21,13 +24,25 @@ public class CallInputField {
 	public static final String TYPE_TAB = "tab"; //$NON-NLS-1$
 	
 	/* CLASS VARS */
-	public String name, type, tooltip, options;
+	public String name, type, tooltip, options, mapping;
 	public int id, order, parent;
 	private Component component;
 	private JLabel label;
 	
+	/**
+	 * Creates an Input Field
+	 * @param id id of field
+	 * @param name name of field used for labels and things
+	 * @param type type to denote text field, area or combo
+	 * @param tooltip tooltip to use
+	 * @param order order to display component (lowest first)
+	 * @param parent id of the parent component (usually id of tab it belongs to)
+	 * @param options any options that a combo box might need (comma separated list of items)
+	 * @param recordMapping field that this maps to in the DB or custom for custom fields
+	 * @param notes notes for the caller
+	 */
 	public CallInputField(int id, String name, String type, String tooltip, int order, 
-			int parent, String options) {
+			int parent, String options, String recordMapping) {
 		
 		this.id = id;
 		this.name = name;
@@ -36,11 +51,22 @@ public class CallInputField {
 		this.order = order;
 		this.parent = parent;
 		this.options = options;
-		
+		this.mapping = recordMapping;
+				
 		createComponent();
 		
 	}
 
+	/**
+	 * Returns what this field maps to in the DB
+	 * @return
+	 */
+	public String getMapping(){
+		
+		return mapping;
+		
+	}
+	
 	/**
 	 * Returns the component referenced by this class
 	 * @return
@@ -159,8 +185,12 @@ public class CallInputField {
 	@SuppressWarnings("unchecked")
 	public void setSelected(String selected){
 		
-		if(type.equals(TYPE_COMBO))
+		if(type.equals(TYPE_COMBO)){
+			//Set first item so that we get the defaults
+			//As if we don't find the item it will not change from old info
+			((JComboBox<String>)component).setSelectedIndex(0);
 			((JComboBox<String>)component).setSelectedItem(selected);
+		}
 			
 	}
 	
@@ -181,6 +211,78 @@ public class CallInputField {
 			value = (String)((JComboBox<String>)component).getSelectedItem();
 
 		return value;
+		
+	}
+	
+	/**
+	 * Set the text of this object but only if its a TextArea/Field
+	 * @param text
+	 */
+	public void setText(String text){
+		
+		if(type.equals(TYPE_TEXT_FIELD)){
+			
+			final String t = text;
+			SwingUtilities.invokeLater(new Runnable(){
+				
+				public void run(){
+					
+					((JTextField)component).setText(t);
+					
+				}
+				
+			});
+			
+		}
+			
+		else if(type.equals(TYPE_TEXT_AREA)){
+			
+			final String t = text;
+			SwingUtilities.invokeLater(new Runnable(){
+				
+				public void run(){
+					
+					//Find the JTextArea
+					Component[] scrollComponents = ((JScrollPane)component).getComponents();
+					
+					int i = 0;
+					boolean set = false;
+					
+					while(!set && i < scrollComponents.length){
+						
+						//Loop to find the JViewport which will contain the JTextArea
+						if(scrollComponents[i] instanceof JViewport){
+							
+							//Found JViewport, loop to find JTextArea and set text
+							Component[] viewComponents = 
+									((JViewport)scrollComponents[i]).getComponents();
+							
+							int j = 0;
+							
+							while(!set && j < viewComponents.length){
+								
+								if(viewComponents[j] instanceof JTextArea){
+									
+									((JTextArea)viewComponents[j]).setText(t);
+									set = true;
+									
+								}
+								
+								j++;
+								
+							}
+							
+						}
+						
+						i++;
+						
+					}
+					
+				}
+				
+			});
+			
+		}
 		
 	}
 	
@@ -222,6 +324,7 @@ public class CallInputField {
 	}
 	
 	
+	
 	/**
 	 * Creates a JComboBox splitting the options field by , to get the items
 	 * If name is set, makes a JLabel to go with it
@@ -230,12 +333,26 @@ public class CallInputField {
 		
 		String[] itemsArray = options.split(","); //$NON-NLS-1$
 		Vector<String> items = new Vector<String>(itemsArray.length);
+		HashMap<String, String> itemMapping = new HashMap<String, String>(itemsArray.length);
 		
-		for(int i = 0; i < itemsArray.length; i++)
-			items.add(itemsArray[i]);
+		for(int i = 0; i < itemsArray.length; i++){
+			
+			if(itemsArray[i].contains("=>")){ //$NON-NLS-1$
+				
+				String[] maps = itemsArray[i].split("=>"); //$NON-NLS-1$
+				items.add(maps[0]);
+				itemMapping.put(maps[0], maps[1]);
+				
+			}else{
+			
+				itemMapping = null;
+				items.add(itemsArray[i]);
+				
+			}
+			
+		}
 		
-		JComboBox<String> combo = new JComboBox<String>(items);
-		combo.setEditable(false);
+		ComboField combo = new ComboField(items, itemMapping);
 		
 		if(name != null && name.length() > 0){
 			
@@ -274,7 +391,6 @@ public class CallInputField {
 		text.setWrapStyleWord(true);
 		text.setLineWrap(true);
 		JScrollPane scroll = new JScrollPane(text);
-		
 		component = scroll;
 		
 	}
