@@ -1,6 +1,8 @@
 package com.thevoiceasia.phonebox.callinput;
 
 import java.awt.Dimension;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -14,9 +16,12 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.ScrollPaneConstants;
 
+import com.thevoiceasia.phonebox.calls.AnswerListener;
+import com.thevoiceasia.phonebox.calls.CallInfoPanel;
+
 import net.miginfocom.swing.MigLayout;
 
-public class CallInputPanel extends JTabbedPane {
+public class CallInputPanel extends JTabbedPane implements AnswerListener{
 
 	/* CLASS VARS */
 	private String language, country;
@@ -24,6 +29,7 @@ public class CallInputPanel extends JTabbedPane {
 	private Vector<CallInputField> components = new Vector<CallInputField>();
 	private I18NStrings xStrings;
 	private boolean hasErrors = false;
+	private CallInfoPanel currentPanel = null;
 	
 	/** STATICS **/
 	private static final long serialVersionUID = 1L;
@@ -106,6 +112,66 @@ public class CallInputPanel extends JTabbedPane {
 					tabHash.get(components.get(i).parent).add(components.get(i).getComponent(),
 							"growx, spanx, wrap"); //$NON-NLS-1$
 					
+					//Checks for special components e.g. alert box updater etc
+					if(components.get(i).mapping != null &&
+							components.get(i).mapping.equals("alert")){ //$NON-NLS-1$
+						
+						//Add a Listener to update the alert levels
+						components.get(i).addItemListener(new ItemListener(){
+
+							@Override
+							public void itemStateChanged(ItemEvent evt) {
+								
+								//Update the alert icon as appropriate
+								if(currentPanel != null){
+									
+									ComboField field = (ComboField)evt.getSource();
+									
+									try{
+										
+										int alert = Integer.parseInt(
+												field.getItemMapping((String)evt.getItem()));
+										
+										currentPanel.setAlertLevel(alert);
+										
+									}catch(NumberFormatException e){
+										
+										//Not an int so must be a custom image
+										currentPanel.setAlertLevel(field.getItemMapping(
+												(String)evt.getItem()));
+										
+									}
+									
+								}
+								
+							}
+							
+						});
+					//Call Type e.g. On Air/Off Air
+					}else if(components.get(i).mapping != null && 
+							components.get(i).mapping.equals("calltype")){ //$NON-NLS-1$
+					
+						//Add a Listener to update the alert levels
+						components.get(i).addItemListener(new ItemListener(){
+
+							@Override
+							public void itemStateChanged(ItemEvent evt) {
+								
+								//Update the alert icon as appropriate
+								if(currentPanel != null){
+									
+									ComboField field = (ComboField)evt.getSource();
+									
+									String map = field.getItemMapping((String)evt.getItem());
+									currentPanel.getIconPanel().setBadgeIcon(map);
+									
+								}
+								
+							}
+							
+						});
+						
+					}
 				}else if(components.get(i).isTextArea()){
 					
 					if(components.get(i).getLabel() != null)
@@ -162,7 +228,8 @@ public class CallInputPanel extends JTabbedPane {
 		    			resultSet.getString("tooltip"), //$NON-NLS-1$
 		    			resultSet.getInt("order"), //$NON-NLS-1$
 		    			resultSet.getInt("parent"), //$NON-NLS-1$
-		    			resultSet.getString("options"))); //$NON-NLS-1$
+		    			resultSet.getString("options"), //$NON-NLS-1$
+		    			resultSet.getString("mapping"))); //$NON-NLS-1$
 		    	
 		    }
 		    
@@ -206,6 +273,75 @@ public class CallInputPanel extends JTabbedPane {
 				xStrings.getString("CallInputPanel.errorBoxTitle"), //$NON-NLS-1$
 				JOptionPane.ERROR_MESSAGE); 
 		LOGGER.severe(friendlyErrorMessage);
+		
+	}
+	
+	/**
+	 * Sets the value of the given field, only works with combo, text area and text field
+	 * @param fieldName name of the field to set
+	 * @param value value to set it to
+	 * @return true if successful or false if field not found
+	 */
+	private boolean setFieldValue(String fieldName, String value){
+		
+		boolean set = false;
+		
+		int i = 0;
+		
+		while(!set && i < components.size()){
+			
+			if(components.get(i).getMapping() != null 
+					&& components.get(i).getMapping().equals(fieldName)){
+				
+				if(components.get(i).isCombo())
+					components.get(i).setSelected(value);
+				else if(components.get(i).isTextArea() || components.get(i).isTextField())
+					components.get(i).setText(value);
+				
+				set = true;
+				
+			}
+			
+			i++;
+				
+		}
+		
+		return set;
+		
+	}
+
+	@Override
+	public void callAnswered(CallInfoPanel call) {
+		
+		LOGGER.info(xStrings.getString("CallInputPanel.answeredCall") + //$NON-NLS-1$
+				call.getPhoneCallRecord().getActivePerson().name); 
+		
+		/* This panel has been answered so we need to update the fields as necessary */
+		if(call != null){
+			
+			currentPanel = null; //Set to null so update listeners won't activate on an 
+			//old panel
+			setFieldValue("alert", call.getPhoneCallRecord().getActivePerson().alert); //$NON-NLS-1$
+			setFieldValue("gender", call.getPhoneCallRecord().getActivePerson().gender); //$NON-NLS-1$
+			setFieldValue("name", call.getPhoneCallRecord().getActivePerson().name); //$NON-NLS-1$
+			setFieldValue("location", call.getPhoneCallRecord().getActivePerson().location); //$NON-NLS-1$
+			setFieldValue("address", //$NON-NLS-1$
+					call.getPhoneCallRecord().getActivePerson().postalAddress); 
+			setFieldValue("postcode", call.getPhoneCallRecord().getActivePerson().postCode); //$NON-NLS-1$
+			setFieldValue("email", call.getPhoneCallRecord().getActivePerson().email); //$NON-NLS-1$
+			setFieldValue("language", call.getPhoneCallRecord().getActivePerson().language); //$NON-NLS-1$
+			setFieldValue("religion", call.getPhoneCallRecord().getActivePerson().religion); //$NON-NLS-1$
+			setFieldValue("journey", call.getPhoneCallRecord().getActivePerson().journey); //$NON-NLS-1$
+			setFieldValue("conversation", //$NON-NLS-1$
+					call.getPhoneCallRecord().getActivePerson().currentConversation); 
+			setFieldValue("notes", call.getPhoneCallRecord().getActivePerson().notes); //$NON-NLS-1$
+			
+			//TODO Custom Fields
+			
+			//Add to current panel so we can update things
+			currentPanel = call;
+			
+		}
 		
 	}
 
