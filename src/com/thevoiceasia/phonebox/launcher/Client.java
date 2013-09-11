@@ -38,11 +38,13 @@ public class Client extends JFrame implements WindowListener{
 	private static final Logger CHAT_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.chat"); //$NON-NLS-1$
 	private static final Level CHAT_LOG_LEVEL = Level.WARNING;
 	private static final Logger DATABASE_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.database"); //$NON-NLS-1$
-	private static final Level DATABASE_LOG_LEVEL = Level.INFO;
+	private static final Level DATABASE_LOG_LEVEL = Level.WARNING;
 	private static final Logger RECORDS_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.records"); //$NON-NLS-1$
 	private static final Level RECORDS_LOG_LEVEL = Level.WARNING;
 	private static final Logger CALL_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.calls"); //$NON-NLS-1$
 	private static final Level CALL_LOG_LEVEL = Level.WARNING;
+	private static final Logger CALL_INPUT_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.callinput"); //$NON-NLS-1$
+	private static final Level CALL_INPUT_LEVEL = Level.INFO;
 	
 	private static I18NStrings xStrings;
 	
@@ -114,8 +116,10 @@ public class Client extends JFrame implements WindowListener{
 				
 				callManagerPanel.sendUpdateRequest();
 				
-				east.add(new CallInputPanel(databaseManager.getReadConnection(), language, 
-						country), BorderLayout.SOUTH);
+				CallInputPanel callInput = new CallInputPanel(
+						databaseManager.getReadConnection(), language, country);
+				callManagerPanel.addAnswerListener(callInput);
+				east.add(callInput, BorderLayout.SOUTH);
 				this.add(east, BorderLayout.EAST);
 				loadingSplash.setStatus(xStrings.getString("Client.loadingComplete")); //$NON-NLS-1$
 				
@@ -293,6 +297,7 @@ public class Client extends JFrame implements WindowListener{
 		DATABASE_LOGGER.setLevel(DATABASE_LOG_LEVEL);
 		RECORDS_LOGGER.setLevel(RECORDS_LOG_LEVEL);
 		CALL_LOGGER.setLevel(CALL_LOG_LEVEL);
+		CALL_INPUT_LOGGER.setLevel(CALL_INPUT_LEVEL);
 		
 		LOGGER.info(xStrings.getString("Client.logSetupLogging")); //$NON-NLS-1$
 		
@@ -302,6 +307,7 @@ public class Client extends JFrame implements WindowListener{
 			DATABASE_LOGGER.addHandler(new FileHandler("databaseLog.log")); //$NON-NLS-1$
 			RECORDS_LOGGER.addHandler(new FileHandler("recordsLog.log")); //$NON-NLS-1$
 			CALL_LOGGER.addHandler(new FileHandler("callLog.log")); //$NON-NLS-1$
+			CALL_INPUT_LOGGER.addHandler(new FileHandler("callInputLog.log")); //$NON-NLS-1$
 		}catch(IOException e){
 			
 			e.printStackTrace();
