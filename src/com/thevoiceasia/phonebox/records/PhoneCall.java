@@ -456,6 +456,18 @@ public class PhoneCall implements Runnable{
 		    		if(person.religion == null || person.religion.equals("null")) //$NON-NLS-1$
 		    			person.religion = ""; //$NON-NLS-1$
 		    		
+		    		//Journey
+		    		person.journey = personResultSet.getString("journey"); //$NON-NLS-1$
+		    		
+		    		if(person.journey == null || person.journey.equals("null")) //$NON-NLS-1$
+		    			person.journey = ""; //$NON-NLS-1$
+		    		
+		    		//Notes
+		    		person.notes = personResultSet.getString("notes"); //$NON-NLS-1$
+		    		
+		    		if(person.notes == null || person.notes.equals("null")) //$NON-NLS-1$
+		    			person.notes = ""; //$NON-NLS-1$
+		    		
 		    		//Get the conversation history for this person
 		    		getConversationHistory(person);
 		    		
