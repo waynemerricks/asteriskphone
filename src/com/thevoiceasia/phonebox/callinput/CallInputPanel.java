@@ -3,6 +3,8 @@ package com.thevoiceasia.phonebox.callinput;
 import java.awt.Dimension;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -14,6 +16,8 @@ import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
 
 import com.thevoiceasia.phonebox.calls.AnswerListener;
@@ -104,7 +108,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 					tabHash.get(components.get(i).parent).add(components.get(i).getComponent(),
 							"growx, spanx, wrap"); //$NON-NLS-1$
 					
-				}else if(components.get(i).isCombo() || components.get(i).isTextField()){
+				}else if(components.get(i).isCombo()){// || components.get(i).isTextField()
 					
 					if(components.get(i).getLabel() != null)
 						tabHash.get(components.get(i).parent).add(components.get(i).getLabel());
@@ -170,8 +174,8 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 							}
 							
 						});
-						
 					}
+					
 				}else if(components.get(i).isTextArea()){
 					
 					if(components.get(i).getLabel() != null)
@@ -179,6 +183,95 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 					
 					tabHash.get(components.get(i).parent).add(components.get(i).getComponent(),
 							"growx, spanx, wrap"); //$NON-NLS-1$
+					//Conversation
+					if(components.get(i).mapping != null &&
+							components.get(i).mapping.equals("conversation")){ //$NON-NLS-1$
+						
+						components.get(i).addKeyListener(new KeyListener(){
+
+							@Override
+							public void keyReleased(KeyEvent evt) {
+								
+								if(currentPanel != null){
+									
+									//Get the text area inside the JScrollPane
+									JTextArea txt = (JTextArea)evt.getSource();
+									currentPanel.setConversation(txt.getText());
+									
+								}
+								
+							}
+							
+							@Override
+							public void keyTyped(KeyEvent evt) {}
+							@Override
+							public void keyPressed(KeyEvent evt) {}
+							
+						});
+						
+					}
+					
+				}else if(components.get(i).isTextField()){
+					
+					if(components.get(i).getLabel() != null)
+						tabHash.get(components.get(i).parent).add(components.get(i).getLabel());
+					
+					tabHash.get(components.get(i).parent).add(components.get(i).getComponent(),
+							"growx, spanx, wrap"); //$NON-NLS-1$
+					
+					//Name Field
+					if(components.get(i).mapping != null && 
+							components.get(i).mapping.equals("name")){ //$NON-NLS-1$
+						
+						components.get(i).addKeyListener(new KeyListener(){
+
+							@Override
+							public void keyReleased(KeyEvent evt) {
+								
+								if(currentPanel != null){
+									
+									//Get the text area inside the JScrollPane
+									JTextField txt = (JTextField)evt.getSource();
+									currentPanel.setCallerName(txt.getText());
+									
+								}
+								
+							}
+							
+							@Override
+							public void keyTyped(KeyEvent evt) {}
+							@Override
+							public void keyPressed(KeyEvent evt) {}
+							
+						});
+						
+					}else if(components.get(i).mapping != null && 
+							components.get(i).mapping.equals("location")){ //$NON-NLS-1$
+						
+						components.get(i).addKeyListener(new KeyListener(){
+
+							@Override
+							public void keyReleased(KeyEvent evt) {
+								
+								if(currentPanel != null){
+									
+									//Get the text area inside the JScrollPane
+									JTextField txt = (JTextField)evt.getSource();
+									currentPanel.setCallerLocation(txt.getText());
+									
+								}
+								
+							}
+							
+							@Override
+							public void keyTyped(KeyEvent evt) {}
+							@Override
+							public void keyPressed(KeyEvent evt) {}
+							
+						});
+						
+					}
+					
 					
 				}
 				
