@@ -2,6 +2,7 @@ package com.thevoiceasia.phonebox.calls;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.net.URL;
@@ -159,6 +160,8 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		
 		//Conversation Label, 4th Row, fill height/horiz
 		conversationLabel = new TransparentLabel(conversation);
+		conversationLabel.setFont(new Font(conversationLabel.getFont().getName(), 
+				Font.PLAIN, 16));
 		
 		conversationLabel.setPreferredSize(new Dimension(350, 60));
 		conversationLabel.setMinimumSize(new Dimension(350, 30));
@@ -986,6 +989,36 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	public PhoneCall getPhoneCallRecord(){
 		
 		return phoneCallRecord;
+		
+	}
+	
+	/**
+	 * Sets the conversation field on this panel to the given text
+	 * @param text text to set the conversation to
+	 */
+	public void setConversation(String text) {
+		
+		conversationLabel.setText(text);
+		
+	}
+	
+	/**
+	 * Sets the caller name field on this panel to the given text
+	 * @param text
+	 */
+	public void setCallerName(String text) {
+		
+		nameLabel.setText(text);
+		
+	}
+	
+	/**
+	 * Sets the caller location field on this panel to the given text
+	 * @param text
+	 */
+	public void setCallerLocation(String text) {
+		
+		locationLabel.setText(text);
 		
 	}
 	
