@@ -316,7 +316,8 @@ public class CallInputField {
 			
 		}else if(type.equals(TYPE_TEXT_AREA)){
 			
-			JTextArea text = (JTextArea)component;
+			JScrollPane scroll = (JScrollPane)component;
+			JTextArea text = (JTextArea)scroll.getViewport().getComponent(0);
 			text.addKeyListener(listener);
 			
 		}
