@@ -28,6 +28,9 @@ import com.thevoiceasia.phonebox.misc.LastActionTimer;
  */
 public class ChatShortcutBar extends JPanel implements ActionListener, LastActionTimer {
 
+	/* TODO BUG! If you're not the studio, it still sets the buttons as if you've changed
+	 * the topic.  Buttons don't need to be set if you're not the studio
+	 */
 	/** STATICS **/
 	private static final Logger LOGGER = Logger.getLogger(ChatShortcutBar.class.getName());//Logger
 	private static final long serialVersionUID = 1L;
