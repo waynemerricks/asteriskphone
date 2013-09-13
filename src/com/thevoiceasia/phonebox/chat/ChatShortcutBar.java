@@ -28,9 +28,6 @@ import com.thevoiceasia.phonebox.misc.LastActionTimer;
  */
 public class ChatShortcutBar extends JPanel implements ActionListener, LastActionTimer {
 
-	/* TODO BUG! If you're not the studio, it still sets the buttons as if you've changed
-	 * the topic.  Buttons don't need to be set if you're not the studio
-	 */
 	/** STATICS **/
 	private static final Logger LOGGER = Logger.getLogger(ChatShortcutBar.class.getName());//Logger
 	private static final long serialVersionUID = 1L;
@@ -71,7 +68,8 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 		callToggle.addActionListener(this);
 		callToggle.setEnabled(isStudio);
 		
-		if(currentTopic.equals(xStrings.getString("ChatShortcutBar.subjectNoCalls"))){ //$NON-NLS-1$
+		if(isStudio && currentTopic.equals(xStrings.getString(
+				"ChatShortcutBar.subjectNoCalls"))){ //$NON-NLS-1$
 			callToggle.setSelected(true);
 			callPressed = true;
 			breakPressed = false;
@@ -80,12 +78,15 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 		
 		this.add(callToggle);
 		
-		breakToggle = new JToggleButton(createImageIcon("images/backsoon.png", "backsoon"), false);  //$NON-NLS-1$//$NON-NLS-2$
-		breakToggle.setToolTipText(xStrings.getString("ChatShortcutBar.buttonBackSoonToolTip")); //$NON-NLS-1$
+		breakToggle = new JToggleButton(createImageIcon("images/backsoon.png", "backsoon"), //$NON-NLS-1$//$NON-NLS-2$
+				false); 
+		breakToggle.setToolTipText(xStrings.getString(
+				"ChatShortcutBar.buttonBackSoonToolTip")); //$NON-NLS-1$
 		breakToggle.setActionCommand("backsoon"); //$NON-NLS-1$
 		breakToggle.addActionListener(this);
 		
-		if(currentTopic.equals(xStrings.getString("ChatShortcutBar.subjectBackSoon"))){ //$NON-NLS-1$
+		if(isStudio && currentTopic.equals(xStrings.getString(
+				"ChatShortcutBar.subjectBackSoon"))){ //$NON-NLS-1$
 			breakToggle.setSelected(true);
 			callPressed = false;
 			breakPressed = true;
@@ -102,7 +103,8 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 		helpToggle.setActionCommand("help"); //$NON-NLS-1$
 		helpToggle.addActionListener(this);
 		
-		if(currentTopic.equals(xStrings.getString("ChatShortcutBar.subjectHelp"))){ //$NON-NLS-1$
+		if(isStudio && currentTopic.equals(xStrings.getString(
+				"ChatShortcutBar.subjectHelp"))){ //$NON-NLS-1$
 			helpToggle.setSelected(true);
 			callPressed = false;
 			breakPressed = false;
