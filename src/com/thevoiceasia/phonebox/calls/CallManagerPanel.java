@@ -31,6 +31,7 @@ import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 
 import com.thevoiceasia.misc.CountryCodes;
+import com.thevoiceasia.phonebox.callinput.CallerUpdater;
 import com.thevoiceasia.phonebox.database.DatabaseManager;
 import com.thevoiceasia.phonebox.launcher.Client;
 import com.thevoiceasia.phonebox.misc.LastActionTimer;
@@ -39,8 +40,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									LastActionTimer, ChatManagerListener, MessageListener,
 									ManualHangupListener, DialListener {
 
-	/* TODO
-	 * When on a call, you can't answer another one unless that first one gets queued
+	/* TODO When on a call, you can't answer another one unless that first one gets queued
 	 * first? 
 	 */
 	/** STATICS */
@@ -69,16 +69,22 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	private Vector<ManualHangupListener> hangupListeners = new Vector<ManualHangupListener>();
 	private DialPanel dialler = null;
 	private Vector<AnswerListener> answerListeners = new Vector<AnswerListener>();
+	private CallerUpdater updateCallerThread = null;
 	
-	/* We need to spawn threads for event response with db lookups, in order to guard against
-	 * craziness, we'll use the ExecutorService to have X threads available to use (set via
-	 * DB threadPoolMax
+	/* We need to spawn threads for event response with db lookups, in order to guard 
+	 * against craziness, we'll use the ExecutorService to have X threads available 
+	 * to use (set via DB threadPoolMax)
 	 */
 	private ExecutorService dbLookUpService; 
 	private int maxExecutorThreads;
 	
 	public CallManagerPanel(HashMap<String, String> settings, MultiUserChat controlRoom, 
 			DatabaseManager database, XMPPConnection connection){
+		
+		//Spawn a thread to update any callinfo panels in response to user input
+		updateCallerThread = new CallerUpdater(controlRoom, settings.get("language"), //$NON-NLS-1$
+					settings.get("country")); //$NON-NLS-1$
+		new Thread(updateCallerThread).start();
 		
 		this.controlRoom = controlRoom;
 		this.controlRoom.addMessageListener(this);
@@ -270,6 +276,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 				
 		}
 		
+		call.setUpdaterThread(updateCallerThread);
 		call.addManualHangupListener(this);
 		final CallInfoPanel addMe = call;
 		
@@ -288,6 +295,16 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		//Spawn thread to populate details
 		dbLookUpService.execute(
 				new InfoPanelPopulator(database, call, phoneNumber, channelID, location));
+		
+	}
+	
+	/**
+	 * Gets the update thread for use with the CallInfo when it is updated
+	 * @return
+	 */
+	public CallerUpdater getCallerUpdateThread(){
+		
+		return updateCallerThread;
 		
 	}
 	
@@ -663,7 +680,34 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 							}
 							
 						}
+						//UPDATEFIELD
+					}else if(command[0].equals(xStrings.getString(
+							"CallManagerPanel.commandUpdateField"))){ //$NON-NLS-1$
+						//		0			1			2			3
+						//UPDATEFIELD/field mapping/channel id/field value
+						/*if(command[3].equals("<CLEAR>")) //$NON-NLS-1$
+							command[3] = ""; //$NON-NLS-1$*/
 						
+						if(command[1].equals("name")) //$NON-NLS-1$
+							callPanels.get(command[2]).setCallerName(command[3], false);
+						else if(command[1].equals("location")) //$NON-NLS-1$
+							callPanels.get(command[2]).setCallerLocation(command[3], false);
+						else if(command[1].equals("conversation")) //$NON-NLS-1$
+							callPanels.get(command[2]).setConversation(command[3], false);
+						else if(command[1].equals("alert")){ //$NON-NLS-1$
+							
+							try{
+								int level = Integer.parseInt(command[3]);
+								callPanels.get(command[2]).setAlertLevel(level, false);
+							}catch(NumberFormatException e){
+								callPanels.get(command[2]).setAlertLevel(
+										command[3].replace("+", "/"), false);  //$NON-NLS-1$//$NON-NLS-2$
+							}
+							
+						}else if(command[1].equals("badge")) //$NON-NLS-1$
+							callPanels.get(command[2]).setBadgeIcon(
+										command[3].replace("+", "/"), false);  //$NON-NLS-1$//$NON-NLS-2$
+							
 					}
 					
 				}else if(command.length == 3 && 
@@ -1264,4 +1308,5 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	public void mouseReleased(MouseEvent evt){}
 
 	//TODO When server connects, request an update?
+	
 }
