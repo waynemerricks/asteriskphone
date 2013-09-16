@@ -22,6 +22,7 @@ import net.miginfocom.swing.MigLayout;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 
+import com.thevoiceasia.phonebox.callinput.CallerUpdater;
 import com.thevoiceasia.phonebox.records.Person;
 import com.thevoiceasia.phonebox.records.PhoneCall;
 
@@ -78,6 +79,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	private boolean hangupActive, canTakeCall;
 	private PhoneCall phoneCallRecord;
 	private Vector<ManualHangupListener> hangupListeners = new Vector<ManualHangupListener>();
+	private CallerUpdater updateThread = null;
 	
 	/** GUI SPECIFIC **/
 	private TransparentLabel connectedToLabel, conversationLabel;//alertIcon
@@ -184,6 +186,17 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	public void setOriginator(String originator){
 		
 		this.originator = originator;
+		
+	}
+	
+	/**
+	 * Sets the updater thread for this panel so that you can send info to other
+	 * clients when names change etc
+	 * @param thread
+	 */
+	public void setUpdaterThread(CallerUpdater thread){
+		
+		updateThread = thread;
 		
 	}
 	
@@ -681,7 +694,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	 * Sets the icon for the call info panel to the given alert level
 	 * @param level
 	 */
-	public void setAlertLevel(int level){
+	public void setAlertLevel(int level, boolean updateOthers){
 		
 		final int slevel = level;
 		
@@ -696,14 +709,18 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 			
 		});
 		
+		if(updateOthers)
+			sendCallerUpdated("alert", "" + level); //$NON-NLS-1$ //$NON-NLS-2$
+		
 	}
 	
 	/**
 	 * Set a custom image as the alert icon
-	 * Recommend 48x48 image files (png, jpg should work probably others but ymmv)
+	 * Recommend 64x64 image files (png, jpg should work probably others but ymmv)
 	 * @param pathToImage relative path to image
+	 * @param updateOthers true if we need to update other clients that this has changed
 	 */
-	public void setAlertLevel(String pathToImage){
+	public void setAlertLevel(String pathToImage, boolean updateOthers){
 		
 		final String apath = pathToImage;
 		
@@ -717,6 +734,24 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 			}
 			
 		});
+		
+		if(updateOthers)
+			sendCallerUpdated("alert", pathToImage.replace("/", "+")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		
+	}
+	
+	/**
+	 * Sets a custom image as the badge icon
+	 * Recommend 32x32 images 
+	 * @param pathToImage
+	 * @param updateOthers true if we need to update other clients that this has changed
+	 */
+	public void setBadgeIcon(String pathToImage, boolean updateOthers){
+		
+		getIconPanel().setBadgeIcon(pathToImage);
+		
+		if(updateOthers)
+			sendCallerUpdated("badge", pathToImage.replace("/", "+")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		
 	}
 	
@@ -924,9 +959,9 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 					locationLabel.setText(p.location);
 					
 					if(p.getShortAlertLevel() == 'W')
-						setAlertLevel(ALERT_WARNING);
+						setAlertLevel(ALERT_WARNING, false);
 					else if(p.getShortAlertLevel() == 'B')
-						setAlertLevel(ALERT_BANNED);
+						setAlertLevel(ALERT_BANNED, false);
 					
 					//TODO old conversation as tooltip?
 					if(p.currentConversation != null && p.currentConversation.length() > 0)
@@ -995,30 +1030,66 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	/**
 	 * Sets the conversation field on this panel to the given text
 	 * @param text text to set the conversation to
+	 * @param updateOthers true if we should update other clients with this information
+	 * Should only be true when called from CallInputPanel (as its our call in theory)
 	 */
-	public void setConversation(String text) {
+	public void setConversation(String text, boolean updateOthers) {
 		
 		conversationLabel.setText(text);
+		
+		//Update Others
+		if(updateOthers)
+			sendCallerUpdated("conversation", text); //$NON-NLS-1$
 		
 	}
 	
 	/**
 	 * Sets the caller name field on this panel to the given text
 	 * @param text
+	 * @param updateOthers true if we should update other clients with this information
+	 * Should only be true when called from CallInputPanel (as its our call in theory)
 	 */
-	public void setCallerName(String text) {
+	public void setCallerName(String text, boolean updateOthers) {
 		
 		nameLabel.setText(text);
+		
+		//Update Others
+		if(updateOthers)
+			sendCallerUpdated("name", text); //$NON-NLS-1$
 		
 	}
 	
 	/**
 	 * Sets the caller location field on this panel to the given text
 	 * @param text
+	 * @param updateOthers true if we should update other clients with this information
+	 * Should only be true when called from CallInputPanel (as its our call in theory)
 	 */
-	public void setCallerLocation(String text) {
+	public void setCallerLocation(String text, boolean updateOthers) {
 		
 		locationLabel.setText(text);
+		
+		//Update Others
+		if(updateOthers)
+			sendCallerUpdated("location", text); //$NON-NLS-1$
+		
+	}
+	
+	/**
+	 * Sends a message to the client updater thread to show that a field has been
+	 * updated with new information.  This is to keep updates looking realtime
+	 * while cutting down on excessive DB requests
+	 * @param field field to update
+	 * @param value value to set it to
+	 */
+	private void sendCallerUpdated(String field, String value){
+		
+		/*
+		 * Create a queue for updates, send max every 2 seconds
+		 * If field already exists in queue then overwrite it
+		 */
+		if(updateThread != null)
+			updateThread.addUpdate(channelID, field, value);
 		
 	}
 	
