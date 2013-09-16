@@ -136,13 +136,13 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 										int alert = Integer.parseInt(
 												field.getItemMapping((String)evt.getItem()));
 										
-										currentPanel.setAlertLevel(alert);
+										currentPanel.setAlertLevel(alert, true);
 										
 									}catch(NumberFormatException e){
 										
 										//Not an int so must be a custom image
 										currentPanel.setAlertLevel(field.getItemMapping(
-												(String)evt.getItem()));
+												(String)evt.getItem()), true);
 										
 									}
 									
@@ -167,7 +167,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 									ComboField field = (ComboField)evt.getSource();
 									
 									String map = field.getItemMapping((String)evt.getItem());
-									currentPanel.getIconPanel().setBadgeIcon(map);
+									currentPanel.setBadgeIcon(map, true);
 									
 								}
 								
@@ -196,7 +196,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 									
 									//Get the text area inside the JScrollPane
 									JTextArea txt = (JTextArea)evt.getSource();
-									currentPanel.setConversation(txt.getText());
+									currentPanel.setConversation(txt.getText(), true);
 									
 								}
 								
@@ -232,7 +232,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 									
 									//Get the text area inside the JScrollPane
 									JTextField txt = (JTextField)evt.getSource();
-									currentPanel.setCallerName(txt.getText());
+									currentPanel.setCallerName(txt.getText(), true);
 									
 								}
 								
@@ -257,7 +257,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 									
 									//Get the text area inside the JScrollPane
 									JTextField txt = (JTextField)evt.getSource();
-									currentPanel.setCallerLocation(txt.getText());
+									currentPanel.setCallerLocation(txt.getText(), true);
 									
 								}
 								
