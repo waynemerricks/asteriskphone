@@ -70,6 +70,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	private DialPanel dialler = null;
 	private Vector<AnswerListener> answerListeners = new Vector<AnswerListener>();
 	private CallerUpdater updateCallerThread = null;
+	private CallInfoPanel storedAnsweredPanel = null;
 	
 	/* We need to spawn threads for event response with db lookups, in order to guard 
 	 * against craziness, we'll use the ExecutorService to have X threads available 
@@ -914,24 +915,6 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	}
 	
 	/**
-	 * Checks if the given number is one of our system queues
-	 * @param number number to check
-	 * @return true if it is in the queue (currently settings => incomingQueueNumber OR
-	 * settings => onAirQueueNumber)
-	 */
-	/*private boolean isQueueNumber(String number){
-		
-		boolean isQueue = false;
-		
-		if(settings.get("incomingQueueNumber").equals(number) ||  //$NON-NLS-1$
-				settings.get("onAirQueueNumber").equals(number)) //$NON-NLS-1$
-			isQueue = true;
-		
-		return isQueue;
-		
-	}*/
-	
-	/**
 	 * Notifies any object listening to this CallManagerPanel
 	 * Primarily used to 
 	 * @param callInfoPanel
@@ -939,11 +922,25 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	private void notifyListeners(CallInfoPanel callInfoPanel) {
 		
 		// Need to notify any listeners of this CallManagerPanel
-		LOGGER.info(xStrings.getString("CallManagerPanel.notifyListeners") + //$NON-NLS-1$
-				callInfoPanel.getChannelID()); 
 		
-		for(int i = 0; i < answerListeners.size(); i++)
-			answerListeners.get(i).callAnswered(callInfoPanel);
+		if(answerListeners.size() < 1){
+			
+			LOGGER.info(xStrings.getString("CallManagerPanel.storeForNotifyListeners")); //$NON-NLS-1$
+			storedAnsweredPanel = callInfoPanel;
+			
+		}else{
+			
+			LOGGER.info(xStrings.getString("CallManagerPanel.notifyListeners") + //$NON-NLS-1$
+					callInfoPanel.getChannelID()); 
+			
+			for(int i = 0; i < answerListeners.size(); i++)
+				answerListeners.get(i).callAnswered(callInfoPanel);
+			
+			//We've notified so reset stored to null if applicable
+			if(storedAnsweredPanel != null)
+				storedAnsweredPanel = null;
+			
+		}
 		
 	}
 	
@@ -956,6 +953,10 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		LOGGER.info(xStrings.getString("CallManagerPanel.addAnswerListener")); //$NON-NLS-1$
 		answerListeners.add(listener);
 		
+		//If we have a stored panel notify
+		if(storedAnsweredPanel != null)
+			notifyListeners(storedAnsweredPanel);
+			
 	}
 
 	/**
