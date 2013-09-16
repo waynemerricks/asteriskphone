@@ -42,7 +42,7 @@ public class Client extends JFrame implements WindowListener{
 	private static final Logger RECORDS_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.records"); //$NON-NLS-1$
 	private static final Level RECORDS_LOG_LEVEL = Level.WARNING;
 	private static final Logger CALL_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.calls"); //$NON-NLS-1$
-	private static final Level CALL_LOG_LEVEL = Level.WARNING;
+	private static final Level CALL_LOG_LEVEL = Level.INFO;
 	private static final Logger CALL_INPUT_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.callinput"); //$NON-NLS-1$
 	private static final Level CALL_INPUT_LEVEL = Level.WARNING;
 	
@@ -85,7 +85,6 @@ public class Client extends JFrame implements WindowListener{
 			JPanel east = new JPanel(new BorderLayout());
 			east.add(new ChatWindow(chatManager, language, country, userSettings.get("nickName"), //$NON-NLS-1$
 					userSettings.get("isStudio")), BorderLayout.CENTER); //$NON-NLS-1$
-			
 			
 			if(chatManager.hasErrors())
 				hasErrors = true;
