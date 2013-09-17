@@ -26,7 +26,7 @@ public class PhoneCall implements Runnable{
 	private I18NStrings xStrings; //Link to external string resources
 	private Vector<Integer> numberIDs = new Vector<Integer>(); 
 	private char threadMode;
-	private String threadOperator, answeredBy, callerID, channelID, callLocation;
+	private String threadOperator, answeredBy, callerID, channelID, callLocation, calltype;
 	
 	/** STATICS **/
 	private static final Logger LOGGER = Logger.getLogger(PhoneCall.class.getName());//Logger
@@ -98,6 +98,16 @@ public class PhoneCall implements Runnable{
 	public String getAnsweredBy(){
 		
 		return answeredBy;
+		
+	}
+	
+	/**
+	 * Returns the type of this call
+	 * @return
+	 */
+	public String getCallType(){
+		
+		return calltype;
 		
 	}
 	
@@ -723,6 +733,85 @@ public class PhoneCall implements Runnable{
 			trackHangup(threadOperator); 
 		}else if(threadMode == 'A'){
 			trackAnswered(threadOperator);
+		}
+		
+	}
+	
+	/**
+	 * Set the value of the given field, background work for custom fields in the future
+	 * @param fieldName use the mapping value to get the correct field
+	 * @param value
+	 */
+	public void setField(String fieldName, String value){
+		
+		if(fieldName.equals("name")) //$NON-NLS-1$
+			getActivePerson().name = value;
+		else if(fieldName.equals("location")) //$NON-NLS-1$
+			getActivePerson().location = value;
+		else if(fieldName.equals("email")) //$NON-NLS-1$
+			getActivePerson().email = value;
+		else if(fieldName.equals("postcode")) //$NON-NLS-1$
+			getActivePerson().postCode = value;
+		else if(fieldName.equals("address")) //$NON-NLS-1$
+			getActivePerson().postalAddress = value;
+		else if(fieldName.equals("notes")) //$NON-NLS-1$
+			getActivePerson().notes = value;
+		else if(fieldName.equals("alert")) //$NON-NLS-1$
+			getActivePerson().alert = value;
+		else if(fieldName.equals("journey")) //$NON-NLS-1$
+			getActivePerson().journey = value;
+		else if(fieldName.equals("religion")) //$NON-NLS-1$
+			getActivePerson().religion = value;
+		else if(fieldName.equals("language")) //$NON-NLS-1$
+			getActivePerson().language = value;
+		else if(fieldName.equals("gender")) //$NON-NLS-1$
+			getActivePerson().gender = value;
+		else if(fieldName.equals("conversation")) //$NON-NLS-1$
+			addConversation(value);
+		else if(fieldName.equals("calltype")) //$NON-NLS-1$
+			setCallType(value, false);
+		else{
+			
+			//TODO some sort of custom field
+			
+		}
+		
+	}
+	
+	/**
+	 * Internal method to set this phone calls type
+	 * @param type
+	 * @param updateDB flag to indicate whether we need to update the DB with this value
+	 */
+	private void setCallType(String type, boolean updateDB){
+		
+		calltype = type;
+		
+		if(updateDB){
+			
+			Statement statement = null;
+			
+			String SQL = "INSERT INTO callhistory(phonenumber, state, callchannel, type) VALUES("  //$NON-NLS-1$
+					+ "'" + callerID + "', 'T', " //$NON-NLS-1$ //$NON-NLS-2$ 
+					+ channelID + ", '" + type + "')"; //$NON-NLS-1$ //$NON-NLS-2$
+			
+			try{
+				
+				statement = database.getWriteConnection().createStatement();
+				statement.executeUpdate(SQL);
+		        
+			}catch(SQLException e){
+	        	
+	        	showError(e, xStrings.getString("PhoneCall.errorChangingCallType") //$NON-NLS-1$ 
+	        			+ callerID);
+	        	
+	        }finally{
+	            if(statement != null)
+	            	try{
+	            		statement.close();
+	            	}catch(Exception e){}
+	        }
+			
 		}
 		
 	}
