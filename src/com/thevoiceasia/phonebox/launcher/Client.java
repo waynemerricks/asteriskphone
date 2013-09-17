@@ -1,9 +1,12 @@
 package com.thevoiceasia.phonebox.launcher;
 
 import java.awt.BorderLayout;
+import java.awt.Image;
+import java.awt.Toolkit;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.IOException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
@@ -58,6 +61,7 @@ public class Client extends JFrame implements WindowListener{
 		
 		/** Initialise component daemons **/
 		xStrings = new I18NStrings(language, country);
+		this.setIconImage(createImage("images/app.png")); //$NON-NLS-1$
 		setupLogging();
 		
 		loadingSplash = new Splash(""); //$NON-NLS-1$
@@ -125,6 +129,29 @@ public class Client extends JFrame implements WindowListener{
 			}
 			
 		}
+		
+	}
+	
+	/**
+	 * Gets the image from a relative path and creates an icon for use with buttons
+	 * @param path path where image resides
+	 * @return the image loaded as a Java Icon
+	 */
+	private Image createImage(String path){
+		
+		Image icon = null;
+		
+		URL imgURL = getClass().getResource(path);
+		
+		if(imgURL != null)
+			icon = Toolkit.getDefaultToolkit().createImage(imgURL);
+		else{
+			
+			LOGGER.warning(xStrings.getString("Client.logLoadIconError")); //$NON-NLS-1$
+			
+		}
+		
+		return icon;
 		
 	}
 	
