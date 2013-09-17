@@ -694,7 +694,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	 * Sets the icon for the call info panel to the given alert level
 	 * @param level
 	 */
-	public void setAlertLevel(int level, boolean updateOthers){
+	public void setAlertLevel(String alertText, int level, boolean updateOthers){
 		
 		final int slevel = level;
 		
@@ -710,7 +710,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		});
 		
 		if(updateOthers)
-			sendCallerUpdated("alert", "" + level); //$NON-NLS-1$ //$NON-NLS-2$
+			sendCallerUpdated("alert", alertText + "@@" + level); //$NON-NLS-1$ //$NON-NLS-2$
 		
 	}
 	
@@ -720,7 +720,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	 * @param pathToImage relative path to image
 	 * @param updateOthers true if we need to update other clients that this has changed
 	 */
-	public void setAlertLevel(String pathToImage, boolean updateOthers){
+	public void setAlertLevel(String alertText, String pathToImage, boolean updateOthers){
 		
 		final String apath = pathToImage;
 		
@@ -736,7 +736,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		});
 		
 		if(updateOthers)
-			sendCallerUpdated("alert", pathToImage.replace("/", "+")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			sendCallerUpdated("alert", alertText + "@@" + pathToImage.replace("/", "+")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		
 	}
 	
@@ -746,12 +746,12 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	 * @param pathToImage
 	 * @param updateOthers true if we need to update other clients that this has changed
 	 */
-	public void setBadgeIcon(String pathToImage, boolean updateOthers){
+	public void setBadgeIcon(String badgeText, String pathToImage, boolean updateOthers){
 		
 		getIconPanel().setBadgeIcon(pathToImage);
 		
 		if(updateOthers)
-			sendCallerUpdated("badge", pathToImage.replace("/", "+")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			sendCallerUpdated("calltype", badgeText + "@@" + pathToImage.replace("/", "+")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		
 	}
 	
@@ -959,9 +959,9 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 					locationLabel.setText(p.location);
 					
 					if(p.getShortAlertLevel() == 'W')
-						setAlertLevel(ALERT_WARNING, false);
+						setAlertLevel(p.alert, ALERT_WARNING, false);
 					else if(p.getShortAlertLevel() == 'B')
-						setAlertLevel(ALERT_BANNED, false);
+						setAlertLevel(p.alert, ALERT_BANNED, false);
 					
 					//TODO old conversation as tooltip?
 					if(p.currentConversation != null && p.currentConversation.length() > 0)
@@ -1017,6 +1017,21 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		
 	}
 	
+	/**
+	 * Method to update a custom field that is not visible on the panel but is tied
+	 * to the PhoneCallRecord
+	 * @param fieldName mapping to update
+	 * @param value value to update to
+	 * @param updateOthers whether we need to send an XMPP update message or not
+	 */
+	public void setPhoneCallField(String fieldName, String value, boolean updateOthers){
+		
+		getPhoneCallRecord().setField(fieldName, value);
+		
+		if(updateOthers)
+			sendCallerUpdated(fieldName, value);
+		
+	}
 	/**
 	 * Returns the PhoneCall object associated with this panel
 	 * @return Can be null if no record attached
