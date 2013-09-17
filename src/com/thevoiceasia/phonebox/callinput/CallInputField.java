@@ -353,7 +353,7 @@ public class CallInputField {
 			
 		}
 		
-		ComboField combo = new ComboField(items, itemMapping);
+		ComboField combo = new ComboField(items, itemMapping, mapping);
 		
 		if(name != null && name.length() > 0){
 			
@@ -374,7 +374,7 @@ public class CallInputField {
 	 */
 	private void createTextArea() {
 		
-		JTextArea text = new JTextArea();
+		AreaField text = new AreaField(mapping);
 		
 		if(name != null && name.length() > 0){
 			
@@ -402,7 +402,7 @@ public class CallInputField {
 	 */
 	private void createTextField() {
 		
-		JTextField text = new JTextField();
+		TextField text = new TextField(mapping);
 		
 		if(name != null && name.length() > 0){
 			
