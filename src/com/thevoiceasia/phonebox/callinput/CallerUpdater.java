@@ -1,5 +1,6 @@
 package com.thevoiceasia.phonebox.callinput;
 
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.logging.Logger;
@@ -85,22 +86,32 @@ public class CallerUpdater implements Runnable{
 		
 		while(go){
 			
-			if(updateFields.size() > 0){
-				
-				//We have fields to update so update it you fool
-				Iterator<String> keys = updateFields.keySet().iterator();
-				
-				while(keys.hasNext()){
+			synchronized(updateFields){
+			
+				if(updateFields.size() > 0){
 					
-					String field = keys.next();
-					
-					sendMessage(xStrings.getString("CallerUpdater.commandUpdateField") + "/" //$NON-NLS-1$ //$NON-NLS-2$
-							+ field + "/" + updateFields.get(field)); //$NON-NLS-1$
-					
-					updateFields.remove(field);
-					
+					//We have fields to update so update it you fool
+					try{
+						Iterator<String> keys = updateFields.keySet().iterator();
+						
+						while(keys.hasNext()){
+							
+							String field = keys.next();
+							
+							sendMessage(xStrings.getString("CallerUpdater.commandUpdateField") + "/" //$NON-NLS-1$ //$NON-NLS-2$
+									+ field + "/" + updateFields.get(field)); //$NON-NLS-1$
+							
+							updateFields.remove(field);
+							
+						}
+					}catch(ConcurrentModificationException e){
+						
+						//Don't care just try again next time
+						
+					}
+						
 				}
-					
+				
 			}
 			
 			try {
