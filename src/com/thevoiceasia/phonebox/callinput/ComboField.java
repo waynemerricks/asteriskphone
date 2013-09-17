@@ -12,13 +12,22 @@ public class ComboField extends JComboBox<String>{
 
 	/* CLASS VARS */
 	private HashMap<String, String> itemMapping = null;
+	private String fieldMapping = null;
 	
-	public ComboField(Vector<String> items, HashMap<String, String> itemMapping) {
+	public ComboField(Vector<String> items, HashMap<String, String> itemMapping, 
+			String fieldMapping) {
 	
 		super(items);
 		
 		this.itemMapping = itemMapping;
+		this.fieldMapping = fieldMapping;
 		this.setEditable(false);
+		
+	}
+	
+	public String getFieldMapping(){
+		
+		return fieldMapping;
 		
 	}
 	
