@@ -689,26 +689,55 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 						/*if(command[3].equals("<CLEAR>")) //$NON-NLS-1$
 							command[3] = ""; //$NON-NLS-1$*/
 						
-						if(command[1].equals("name")) //$NON-NLS-1$
-							callPanels.get(command[2]).setCallerName(command[3], false);
-						else if(command[1].equals("location")) //$NON-NLS-1$
+						if(command[1].equals("name")){ //$NON-NLS-1$
+							callPanels.get(command[2]).setPhoneCallField(command[1], 
+									command[3].replace("^^%%$$", "/"),  //$NON-NLS-1$ //$NON-NLS-2$
+									false);
+							callPanels.get(command[2]).setCallerName(
+									command[3].replace("^^%%$$", "/"), false);  //$NON-NLS-1$//$NON-NLS-2$
+						}else if(command[1].equals("location")){ //$NON-NLS-1$
+							callPanels.get(command[2]).setPhoneCallField(command[1], 
+									command[3].replace("^^%%$$", "/"),  //$NON-NLS-1$ //$NON-NLS-2$
+									false);
 							callPanels.get(command[2]).setCallerLocation(command[3], false);
-						else if(command[1].equals("conversation")) //$NON-NLS-1$
+						}else if(command[1].equals("conversation")){ //$NON-NLS-1$
+							callPanels.get(command[2]).setPhoneCallField(command[1], 
+									command[3].replace("^^%%$$", "/"),  //$NON-NLS-1$ //$NON-NLS-2$
+									false);
 							callPanels.get(command[2]).setConversation(command[3], false);
-						else if(command[1].equals("alert")){ //$NON-NLS-1$
+						}else if(command[1].equals("alert")){ //$NON-NLS-1$
+							
+							String[] temp = command[3].split("@@"); //$NON-NLS-1$
 							
 							try{
-								int level = Integer.parseInt(command[3]);
-								callPanels.get(command[2]).setAlertLevel(level, false);
+								int level = Integer.parseInt(temp[1]);
+								callPanels.get(command[2]).setAlertLevel(null, level, false);
 							}catch(NumberFormatException e){
-								callPanels.get(command[2]).setAlertLevel(
-										command[3].replace("+", "/"), false);  //$NON-NLS-1$//$NON-NLS-2$
+								callPanels.get(command[2]).setAlertLevel(null,
+										temp[1].replace("+", "/"), false);  //$NON-NLS-1$//$NON-NLS-2$
 							}
 							
-						}else if(command[1].equals("badge")) //$NON-NLS-1$
-							callPanels.get(command[2]).setBadgeIcon(
-										command[3].replace("+", "/"), false);  //$NON-NLS-1$//$NON-NLS-2$
+							callPanels.get(command[2]).setPhoneCallField("alert", //$NON-NLS-1$
+									temp[0], false);
 							
+						}else if(command[1].equals("calltype")){ //$NON-NLS-1$
+							
+							//Split the image from the value:
+							String[] temp = command[3].replace("+", "/").split("@@");//$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
+							callPanels.get(command[2]).setBadgeIcon(null,
+										temp[1], false);  
+							//Set the record call type
+							callPanels.get(command[2]).setPhoneCallField("calltype",  //$NON-NLS-1$
+									temp[0], false);
+						}else{
+							
+							//Custom Field
+							callPanels.get(command[2]).setPhoneCallField(command[1], 
+									command[3].replace("^^%%$$", "/"),  //$NON-NLS-1$ //$NON-NLS-2$
+									false);
+							
+						}
+						
 					}
 					
 				}else if(command.length == 3 && 
