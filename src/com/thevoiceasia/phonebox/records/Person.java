@@ -46,6 +46,8 @@ public class Person {
 			shortAlert = 'W';
 		else if(alert.equals(xStrings.getString("PhoneCall.alertBanned"))) //$NON-NLS-1$
 			shortAlert = 'B';
+		else if(alert.equals(xStrings.getString("PhoneCall.alertFavourite"))) //$NON-NLS-1$
+			shortAlert = 'F';
 		
 		return shortAlert;
 		
@@ -113,7 +115,7 @@ public class Person {
 		
 		String SQL = "UPDATE person SET alert_level = ?, name = ?, gender = ?, location = ?, " + //$NON-NLS-1$
 				"postal_address = ?, post_code = ?, email_address = ?, language = ?, " + //$NON-NLS-1$
-				"religion = ? WHERE person_id = ?";  //$NON-NLS-1$
+				"religion = ?, notes = ? WHERE person_id = ?";  //$NON-NLS-1$
 		
 		try{
 			
@@ -128,7 +130,8 @@ public class Person {
 			statement.setString(7, email);
 			statement.setString(8, language);
 			statement.setString(9, religion);
-			statement.setInt(10, id);
+			statement.setString(10, notes);
+			statement.setInt(11, id);
 			
 			statement.executeUpdate(SQL);
 	        
@@ -178,7 +181,7 @@ public class Person {
 	 */
 	public void addCurrentConversation(String conversation){
 		
-		currentConversation += conversation + " "; //$NON-NLS-1$
+		currentConversation = conversation;
 		
 	}
 	
