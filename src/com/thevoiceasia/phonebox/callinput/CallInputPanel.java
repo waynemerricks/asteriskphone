@@ -136,12 +136,14 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 										int alert = Integer.parseInt(
 												field.getItemMapping((String)evt.getItem()));
 										
-										currentPanel.setAlertLevel(alert, true);
+										currentPanel.setAlertLevel((String)evt.getItem(), 
+												alert, true);
 										
 									}catch(NumberFormatException e){
 										
 										//Not an int so must be a custom image
-										currentPanel.setAlertLevel(field.getItemMapping(
+										currentPanel.setAlertLevel((String)evt.getItem(),
+												field.getItemMapping(
 												(String)evt.getItem()), true);
 										
 									}
@@ -167,13 +169,39 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 									ComboField field = (ComboField)evt.getSource();
 									
 									String map = field.getItemMapping((String)evt.getItem());
-									currentPanel.setBadgeIcon(map, true);
+									currentPanel.setBadgeIcon((String)evt.getItem(), map, true);
 									
 								}
 								
 							}
 							
 						});
+						
+					}else if(components.get(i).mapping != null){
+						
+						//Custom Field
+						//Add a Listener to update the custom field
+						components.get(i).addItemListener(new ItemListener(){
+
+							@Override
+							public void itemStateChanged(ItemEvent evt) {
+								
+								//Update the alert icon as appropriate
+								if(currentPanel != null){
+									
+									ComboField field = (ComboField)evt.getSource();
+									
+									currentPanel.setPhoneCallField(
+											field.getFieldMapping(), 
+											((String)evt.getItem()).replace("/", "^^%%$$"),  //$NON-NLS-1$ //$NON-NLS-2$, 
+											true);
+									
+								}
+								
+							}
+							
+						});
+						
 					}
 					
 				}else if(components.get(i).isTextArea()){
@@ -197,6 +225,35 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 									//Get the text area inside the JScrollPane
 									JTextArea txt = (JTextArea)evt.getSource();
 									currentPanel.setConversation(txt.getText(), true);
+									
+								}
+								
+							}
+							
+							@Override
+							public void keyTyped(KeyEvent evt) {}
+							@Override
+							public void keyPressed(KeyEvent evt) {}
+							
+						});
+						
+					}else if(components.get(i).mapping != null){
+						
+						//Custom Field
+						components.get(i).addKeyListener(new KeyListener(){
+							
+							@Override
+							public void keyReleased(KeyEvent evt) {
+								
+								if(currentPanel != null){
+									
+									//Get the text area
+									AreaField txt = (AreaField)evt.getSource();
+									
+									currentPanel.setPhoneCallField(
+											txt.getFieldMapping(), 
+											txt.getText().replace("/", "^^%%$$"),  //$NON-NLS-1$ //$NON-NLS-2$, 
+											true);
 									
 								}
 								
@@ -258,6 +315,34 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 									//Get the text area inside the JScrollPane
 									JTextField txt = (JTextField)evt.getSource();
 									currentPanel.setCallerLocation(txt.getText(), true);
+									
+								}
+								
+							}
+							
+							@Override
+							public void keyTyped(KeyEvent evt) {}
+							@Override
+							public void keyPressed(KeyEvent evt) {}
+							
+						});
+						
+					}else if(components.get(i).mapping != null){
+						
+						//Custom TextField
+						components.get(i).addKeyListener(new KeyListener(){
+
+							@Override
+							public void keyReleased(KeyEvent evt) {
+								
+								if(currentPanel != null){
+									
+									//Get the text field
+									TextField txt = (TextField)evt.getSource();
+									currentPanel.setPhoneCallField(
+											txt.getFieldMapping(), 
+											txt.getText().replace("/", "^^%%$$"),  //$NON-NLS-1$ //$NON-NLS-2$
+											true);
 									
 								}
 								
@@ -415,6 +500,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 			currentPanel = null; //Set to null so update listeners won't activate on an 
 			//old panel
 			setFieldValue("alert", call.getPhoneCallRecord().getActivePerson().alert); //$NON-NLS-1$
+			setFieldValue("calltype", call.getPhoneCallRecord().getCallType()); //$NON-NLS-1$
 			setFieldValue("gender", call.getPhoneCallRecord().getActivePerson().gender); //$NON-NLS-1$
 			setFieldValue("name", call.getPhoneCallRecord().getActivePerson().name); //$NON-NLS-1$
 			setFieldValue("location", call.getPhoneCallRecord().getActivePerson().location); //$NON-NLS-1$
