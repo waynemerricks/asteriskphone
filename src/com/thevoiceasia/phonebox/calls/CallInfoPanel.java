@@ -709,9 +709,14 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 			
 		});
 		
+		//Update the record held by this panel
+		this.getPhoneCallRecord().getActivePerson().alert = "" + level; //$NON-NLS-1$
+		
+		//If we need to notify others then do so
 		if(updateOthers)
 			sendCallerUpdated("alert", alertText + "@@" + level); //$NON-NLS-1$ //$NON-NLS-2$
 		
+			
 	}
 	
 	/**
@@ -735,9 +740,11 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 			
 		});
 		
-		if(updateOthers)
+		if(updateOthers){
 			sendCallerUpdated("alert", alertText + "@@" + pathToImage.replace("/", "+")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-		
+			//We can also save to DB here
+			this.getPhoneCallRecord().getActivePerson().alert = alertText;
+		}
 	}
 	
 	/**
