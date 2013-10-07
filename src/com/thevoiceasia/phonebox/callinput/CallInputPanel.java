@@ -39,7 +39,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 	private static final long serialVersionUID = 1L;
 	private static final Logger LOGGER = Logger.getLogger(CallInputPanel.class.getName());//Logger
 	
-	public CallInputPanel(Connection readConnection, String language, String country) {
+	public CallInputPanel(Connection readConnection, Connection writeConnection, String language, String country) {
 		
 		super(JTabbedPane.BOTTOM);
 		
