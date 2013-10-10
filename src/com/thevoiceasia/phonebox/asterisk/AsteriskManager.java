@@ -487,7 +487,6 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 					//Received a transfer command
 					redirectCall(command[1], command[2], from);
 					
-					
 				}else if(command.length == 2 && command[0].equals(
 						xStrings.getString("AsteriskManager.commandQueue"))){ //$NON-NLS-1$
 					
