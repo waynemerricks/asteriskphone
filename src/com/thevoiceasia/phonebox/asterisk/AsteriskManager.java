@@ -527,7 +527,6 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 							databaseManager.getWriteConnection(), command[1], 
 							command[2], command[3]));
 				
-					//TODO BUG Record mapping needs to match the db field names!
 				}
 				
 			}
