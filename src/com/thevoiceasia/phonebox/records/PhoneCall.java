@@ -220,7 +220,7 @@ public class PhoneCall implements Runnable{
 	 */
 	public void trackQueue(String operator){
 		
-		Statement statement = null;
+		Statement statement = null, updateStatement = null;
 		
 		String SQL = "INSERT INTO callhistory(phonenumber, state, callchannel, operator) VALUES("  //$NON-NLS-1$
 				+ "'" + callerID + "', 'Q', " //$NON-NLS-1$ //$NON-NLS-2$ 
@@ -229,7 +229,24 @@ public class PhoneCall implements Runnable{
 		try{
 			
 			statement = database.getWriteConnection().createStatement();
-			statement.executeUpdate(SQL);
+			statement.executeUpdate(SQL, Statement.RETURN_GENERATED_KEYS);
+			
+			ResultSet rs = statement.getGeneratedKeys();
+			int rowID = -1;
+			
+			if(rs.next())
+				rowID = rs.getInt(1);
+			
+			// If operator is NA then add the active person to this entry
+			if(operator.equals("NA")){ //$NON-NLS-1$
+				
+				SQL = "UPDATE callhistory SET activePerson = " + getPersonFromNumber(callerID) +  //$NON-NLS-1$
+						" WHERE callhistory_id = " + rowID; //$NON-NLS-1$
+				
+				updateStatement = database.getWriteConnection().createStatement();
+				updateStatement.executeUpdate(SQL);
+				
+			}
 	        
 		}catch(SQLException e){
         	
@@ -241,10 +258,63 @@ public class PhoneCall implements Runnable{
             	try{
             		statement.close();
             	}catch(Exception e){}
+            
+            if(updateStatement != null)
+            	try{
+            		updateStatement.close();
+            	}catch(Exception e){}
         }
 		
 	}
 	
+	/**
+	 * Gets the most recently updated person_id associated with the number parameter
+	 * @param number number to search for
+	 * @return person id
+	 */
+	private String getPersonFromNumber(String number) {
+		//TODO LOGGER
+		//Get the most recently updated person id associated with this number
+		String id = null;
+		
+		Statement statement = null;
+		ResultSet resultSet = null;
+		
+		try{
+			
+			String SQL = "SELECT person_id FROM phonenumbers WHERE phone_number = '"  //$NON-NLS-1$
+					+ number  + "' ORDER BY lastUpdate DESC LIMIT 1"; //$NON-NLS-1$
+			
+			statement = database.getConnection().createStatement();
+		    resultSet = statement.executeQuery(SQL);
+		    
+		    while(resultSet.next())
+		    	id = resultSet.getString("person_id"); //$NON-NLS-1$
+		    
+		}catch (SQLException e){
+			showError(e, xStrings.getString("PhoneCall.databaseSQLError")); //$NON-NLS-1$
+		}finally {
+			
+			if (resultSet != null) {
+		        try {
+		        	resultSet.close();
+		        } catch (SQLException sqlEx) { } // ignore
+		        resultSet = null;
+		    }
+			
+		    if (statement != null) {
+		        try {
+		        	statement.close();
+		        } catch (SQLException sqlEx) { } // ignore
+		        statement = null;
+		    }
+		    
+		}	
+		
+		return id;
+		
+	}
+
 	/**
 	 * Sets answered by to the given string.  This DOES NOT save tracking to the DB
 	 * Used by CallManagerPanel internally to keep client states correct without
