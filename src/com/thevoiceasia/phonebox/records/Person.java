@@ -113,8 +113,8 @@ public class Person {
 	
 		PreparedStatement statement = null;
 		
-		String SQL = "UPDATE person SET alert_level = ?, name = ?, gender = ?, location = ?, " + //$NON-NLS-1$
-				"postal_address = ?, post_code = ?, email_address = ?, language = ?, " + //$NON-NLS-1$
+		String SQL = "UPDATE person SET alert = ?, name = ?, gender = ?, location = ?, " + //$NON-NLS-1$
+				"address = ?, postcode = ?, email = ?, language = ?, " + //$NON-NLS-1$
 				"religion = ?, notes = ? WHERE person_id = ?";  //$NON-NLS-1$
 		
 		try{
