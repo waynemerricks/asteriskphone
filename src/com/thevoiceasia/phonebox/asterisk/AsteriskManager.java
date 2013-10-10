@@ -35,6 +35,7 @@ import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 
 import com.thevoiceasia.phonebox.database.DatabaseManager;
+import com.thevoiceasia.phonebox.database.RecordUpdater;
 import com.thevoiceasia.phonebox.records.PhoneCall;
 
 public class AsteriskManager implements AsteriskServerListener, PropertyChangeListener, OriginateCallback, PacketListener, MessageListener {
@@ -60,6 +61,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	private MultiUserChat controlRoom;
 	private DatabaseManager databaseManager;
 	private HashSet<String> systemExtensions = new HashSet<String>();
+	private HashMap<String, String> settings;
 	
 	/* We need to spawn threads for event response with db lookups, in order to guard against
 	 * craziness, we'll use the ExecutorService to have X threads available to use (set via
@@ -77,7 +79,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	public AsteriskManager(DatabaseManager databaseManager, MultiUserChat controlRoom){
 		
 		this.databaseManager = databaseManager;
-		HashMap<String, String> settings = databaseManager.getUserSettings();
+		settings = databaseManager.getUserSettings();
 		this.autoAnswerContext = settings.get("autoAnswerContext"); //$NON-NLS-1$
 		this.defaultContext = settings.get("defaultContext"); //$NON-NLS-1$
 		this.contextMacroAuto = settings.get("contextMacroAuto"); //$NON-NLS-1$
@@ -516,6 +518,16 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 					redirectCallToQueue(activeChannels.get(command[1]).getLinkedChannel()
 							.getId(), from);
 					
+				}else if(command.length == 4 && command[0].equals(
+						xStrings.getString("AsteriskManager.commandUpdateField"))){ //$NON-NLS-1$
+					
+					//Spawn a thread to do a DB update
+					dbLookUpService.execute(new RecordUpdater(settings.get("language"),  //$NON-NLS-1$
+							settings.get("country"), databaseManager.getReadConnection(), //$NON-NLS-1$
+							databaseManager.getWriteConnection(), command[1], 
+							command[2], command[3]));
+				
+					//TODO BUG Record mapping needs to match the db field names!
 				}
 				
 			}
@@ -527,8 +539,6 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	/** PropertyChangeListener **/
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
-		
-		//System.out.println("PROPCHANGE: " + evt); //$NON-NLS-1$
 		
 		if(evt.getPropertyName().equals("state") && //$NON-NLS-1$
 				evt.getSource() instanceof AsteriskChannel){ 
