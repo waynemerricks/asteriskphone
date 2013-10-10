@@ -29,7 +29,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 
 	/* CLASS VARS */
 	private String language, country;
-	private Connection databaseConnection;
+	private Connection databaseReadConnection;
 	private Vector<CallInputField> components = new Vector<CallInputField>();
 	private I18NStrings xStrings;
 	private boolean hasErrors = false;
@@ -39,7 +39,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 	private static final long serialVersionUID = 1L;
 	private static final Logger LOGGER = Logger.getLogger(CallInputPanel.class.getName());//Logger
 	
-	public CallInputPanel(Connection readConnection, Connection writeConnection, String language, String country) {
+	public CallInputPanel(Connection readConnection, String language, String country) {
 		
 		super(JTabbedPane.BOTTOM);
 		
@@ -47,7 +47,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 		this.country = country;
 		
 		xStrings = new I18NStrings(language, country);
-		databaseConnection = readConnection;
+		databaseReadConnection = readConnection;
 		
 		//Read components from DB
 		if(getComponentDetails())
@@ -393,7 +393,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 			String SQL = "SELECT * FROM callinputfields WHERE language = '" + language +  //$NON-NLS-1$
 					"," + country + "' ORDER BY `order` ASC"; //$NON-NLS-1$ //$NON-NLS-2$
 			
-			statement = databaseConnection.createStatement();
+			statement = databaseReadConnection.createStatement();
 		    resultSet = statement.executeQuery(SQL);
 		    
 		    while(resultSet.next()){
