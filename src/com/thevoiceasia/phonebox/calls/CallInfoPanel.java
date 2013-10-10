@@ -1059,6 +1059,9 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		
 		conversationLabel.setText(text);
 		
+		if(text.contains("/")) //$NON-NLS-1$
+			text = text.replaceAll("/", "^^%%$$");  //$NON-NLS-1$//$NON-NLS-2$
+		
 		//Update Others
 		if(updateOthers)
 			sendCallerUpdated("conversation", text); //$NON-NLS-1$
