@@ -469,7 +469,7 @@ public class PhoneCall implements Runnable{
 		    				database.getUserSettings().get("country")); //$NON-NLS-1$
 		    		
 		    		//Alert level e.g. person banned or warning because they're awkward
-		    		person.alert = personResultSet.getString("alert_level"); //$NON-NLS-1$
+		    		person.alert = personResultSet.getString("alert"); //$NON-NLS-1$
 		    		
 		    		if(person.alert.equals("N")) //$NON-NLS-1$
 		    			person.alert = xStrings.getString("PhoneCall.alertNormal"); //$NON-NLS-1$
@@ -507,19 +507,19 @@ public class PhoneCall implements Runnable{
 		    		}
 		    		
 		    		//Postal Address
-		    		person.postalAddress = personResultSet.getString("postal_address"); //$NON-NLS-1$
+		    		person.postalAddress = personResultSet.getString("address"); //$NON-NLS-1$
 		    		
 		    		if(person.postalAddress == null || person.postalAddress.equals("null")) //$NON-NLS-1$
 		    			person.postalAddress = ""; //$NON-NLS-1$
 		    		
 		    		//Post Code
-		    		person.postCode = personResultSet.getString("post_code"); //$NON-NLS-1$
+		    		person.postCode = personResultSet.getString("postcode"); //$NON-NLS-1$
 		    		
 		    		if(person.postCode == null || person.postCode.equals("null")) //$NON-NLS-1$
 		    			person.postCode = ""; //$NON-NLS-1$
 		    		
 		    		//Email Address
-		    		person.email = personResultSet.getString("email_address"); //$NON-NLS-1$
+		    		person.email = personResultSet.getString("email"); //$NON-NLS-1$
 		    		
 		    		if(person.email == null || person.email.equals("null")) //$NON-NLS-1$
 		    			person.email = ""; //$NON-NLS-1$
