@@ -66,6 +66,19 @@ public class RecordUpdater implements Runnable {
 				
 				statement.executeUpdate(SQL);
 				
+			}else if(fieldMapping.equals("conversation")){ //$NON-NLS-1$
+				
+				//TODO special case for conversation
+				/*
+				 * If already exists update else insert
+				 */
+				SQL = "INSERT INTO conversations (person_id, conversation, channel) VALUES " //$NON-NLS-1$
+						+ "(?, ?, ?)"; //$NON-NLS-1$
+				
+				SQL = "UPDATE conversations SET person_id = ?, conversation = ?"; //$NON-NLS-1$
+				
+				//PreparedStatement blah blah//TODO TODO TODO
+				
 			}else{
 				
 				//TODO Update field on person table still not sure how we'll do custom
