@@ -68,16 +68,22 @@ public class RecordUpdater implements Runnable {
 				
 			}else if(fieldMapping.equals("conversation")){ //$NON-NLS-1$
 				
-				//TODO special case for conversation
+				//Special case for conversation
 				/*
 				 * If already exists update else insert
 				 */
-				SQL = "INSERT INTO conversations (person_id, conversation, channel) VALUES " //$NON-NLS-1$
-						+ "(?, ?, ?)"; //$NON-NLS-1$
+				if(conversationExists(channelID))
+					SQL = "UPDATE conversations SET conversation = ? "  //$NON-NLS-1$
+							+ "WHERE channel = ?"; //$NON-NLS-1$
+				else
+					SQL = "INSERT INTO conversations (conversation, channel) VALUES " //$NON-NLS-1$
+							+ "(?, ?)"; //$NON-NLS-1$
 				
-				SQL = "UPDATE conversations SET person_id = ?, conversation = ?"; //$NON-NLS-1$
+				statement = writeConnection.prepareStatement(SQL);
+				statement.setString(1, value);
+				statement.setString(2, channelID);
 				
-				//PreparedStatement blah blah//TODO TODO TODO
+				statement.executeUpdate(SQL);
 				
 			}else{
 				
@@ -106,6 +112,13 @@ public class RecordUpdater implements Runnable {
             
         }
 
+	}
+
+	private boolean conversationExists(String channel) {
+		// TODO Auto-generated method stub
+		
+		
+		return false;
 	}
 
 	/**
