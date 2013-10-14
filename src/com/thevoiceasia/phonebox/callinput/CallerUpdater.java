@@ -1,6 +1,7 @@
 package com.thevoiceasia.phonebox.callinput;
 
 import java.util.ConcurrentModificationException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.logging.Logger;
@@ -11,7 +12,7 @@ import org.jivesoftware.smackx.muc.MultiUserChat;
 public class CallerUpdater implements Runnable{
 
 	/** STATIC VARS **/
-	private static final long UPDATE_PERIOD = 2000;
+	private static final long UPDATE_PERIOD = 2000, SLEEP_PERIOD = 100;
 	private static final Logger LOGGER = Logger.getLogger(CallerUpdater.class.getName());//Logger
 	
 	/* CLASS VARS */
@@ -19,6 +20,7 @@ public class CallerUpdater implements Runnable{
 	private HashMap<String, String> updateFields = new HashMap<String, String>();
 	private boolean go = true;
 	private I18NStrings xStrings;
+	private long lastUpdate;
 	
 	/**
 	 * Creates a CallerUpdater that takes in update commands and sends them to clients 
@@ -31,6 +33,7 @@ public class CallerUpdater implements Runnable{
 		
 		this.controlRoom = controlRoom;
 		xStrings = new I18NStrings(language, country);
+		lastUpdate = new Date().getTime();
 		
 	}
 	
@@ -43,6 +46,7 @@ public class CallerUpdater implements Runnable{
 	public synchronized void addUpdate(String channelID, String field, String value){
 		
 		LOGGER.info(xStrings.getString("CallerUpdater.addingUpdateToQueue")); //$NON-NLS-1$
+		lastUpdate = new Date().getTime();
 		
 		if( value == null || value.length() == 0)
 			value = " "; //$NON-NLS-1$
@@ -88,7 +92,8 @@ public class CallerUpdater implements Runnable{
 			
 			synchronized(updateFields){
 			
-				if(updateFields.size() > 0){
+				if(updateFields.size() > 0 && 
+						new Date().getTime() - lastUpdate > UPDATE_PERIOD){
 					
 					//We have fields to update so update it you fool
 					try{
@@ -115,7 +120,7 @@ public class CallerUpdater implements Runnable{
 			}
 			
 			try {
-				Thread.sleep(UPDATE_PERIOD);
+				Thread.sleep(SLEEP_PERIOD);
 			} catch (InterruptedException e) {
 				go = false;
 			}
