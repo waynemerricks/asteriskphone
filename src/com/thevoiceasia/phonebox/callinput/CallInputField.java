@@ -188,8 +188,11 @@ public class CallInputField {
 		if(type.equals(TYPE_COMBO)){
 			//Set first item so that we get the defaults
 			//As if we don't find the item it will not change from old info
-			((JComboBox<String>)component).setSelectedIndex(0);
 			((JComboBox<String>)component).setSelectedItem(selected);
+			
+			if(((JComboBox<String>)component).getSelectedIndex() == -1)
+				((JComboBox<String>)component).setSelectedIndex(0);
+			
 		}
 			
 	}
