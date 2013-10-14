@@ -133,7 +133,7 @@ public class Person {
 			statement.setString(10, notes);
 			statement.setInt(11, id);
 			
-			statement.executeUpdate(SQL);
+			statement.executeUpdate();
 	        
 			//Save Conversation
 			saved = saveConversationToDB(dbConnection);
