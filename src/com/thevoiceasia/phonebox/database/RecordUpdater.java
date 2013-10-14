@@ -18,8 +18,15 @@ public class RecordUpdater implements Runnable {
 			Connection writeConnection, String fieldMapping, String channelID, String value) {
 		
 		xStrings = new I18NStrings(language, country);
+		
+		this.fieldMapping = fieldMapping;
+		this.channelID = channelID;
+		this.readConnection = readConnection;
+		this.writeConnection = writeConnection;
+		
 		//Parse out the ^^%%$$ to /
 		value = value.replaceAll("^^%%$$", "/");  //$NON-NLS-1$//$NON-NLS-2$
+		
 		
 		if(isImageMappedCombo(fieldMapping)){
 			
@@ -38,11 +45,11 @@ public class RecordUpdater implements Runnable {
 				
 		}
 		
-		this.fieldMapping = fieldMapping;
-		this.channelID = channelID;
 		this.value = value;
-		this.readConnection = readConnection;
-		this.writeConnection = writeConnection;
+		
+		LOGGER.info(xStrings.getString("RecordUpdater.updatingRecord") +  //$NON-NLS-1$
+				"\n\tChannel: " + channelID + "\n\tField: " + fieldMapping +  //$NON-NLS-1$ //$NON-NLS-2$
+				"\n\tValue: " + value); //$NON-NLS-1$
 		
 	}
 
@@ -64,7 +71,7 @@ public class RecordUpdater implements Runnable {
 				statement.setString(1, value);
 				statement.setString(2, channelID);
 				
-				statement.executeUpdate(SQL);
+				statement.executeUpdate();
 				
 			}else if(fieldMapping.equals("conversation")){ //$NON-NLS-1$
 				
@@ -73,29 +80,32 @@ public class RecordUpdater implements Runnable {
 				 * If already exists update else insert
 				 */
 				if(conversationExists(channelID))
-					SQL = "UPDATE conversations SET conversation = ? "  //$NON-NLS-1$
+					SQL = "UPDATE conversations SET conversation = ?, person_id = ? "  //$NON-NLS-1$
 							+ "WHERE channel = ?"; //$NON-NLS-1$
 				else
-					SQL = "INSERT INTO conversations (conversation, channel) VALUES " //$NON-NLS-1$
-							+ "(?, ?)"; //$NON-NLS-1$
+					SQL = "INSERT INTO conversations (conversation, channel, person_id) VALUES " //$NON-NLS-1$
+							+ "(?, ?, ?)"; //$NON-NLS-1$
 				
 				statement = writeConnection.prepareStatement(SQL);
 				statement.setString(1, value);
-				statement.setString(2, channelID);
+				statement.setString(2, getPersonID(channelID));
+				statement.setString(3, channelID);
 				
-				statement.executeUpdate(SQL);
+				statement.executeUpdate();
 				
 			}else{
 				
 				//TODO Update field on person table still not sure how we'll do custom
-				SQL = "UPDATE person SET ? = ? WHERE person_id = ?"; //$NON-NLS-1$
+				if(fieldMapping.equals("gender") || fieldMapping.equals("alert")) //$NON-NLS-1$ //$NON-NLS-2$
+					value = value.substring(0, 1);
+				
+				SQL = "UPDATE person SET " + fieldMapping + " = ? WHERE person_id = ?"; //$NON-NLS-1$ //$NON-NLS-2$
 				
 				statement = writeConnection.prepareStatement(SQL);
-				statement.setString(1, fieldMapping);
-				statement.setString(2, value);
-				statement.setString(3, getPersonID(channelID));
+				statement.setString(1, value);
+				statement.setString(2, getPersonID(channelID));
 				
-				statement.executeUpdate(SQL);
+				statement.executeUpdate();
 				
 			}
 		
@@ -105,6 +115,7 @@ public class RecordUpdater implements Runnable {
         			+ fieldMapping + "/" + channelID + "/" + value); //$NON-NLS-1$ //$NON-NLS-2$
         	
         }finally{
+        	
             if(statement != null)
             	try{
             		statement.close();
@@ -114,11 +125,54 @@ public class RecordUpdater implements Runnable {
 
 	}
 
+	/**
+	 * Checks to see if this conversation is already in the DB by looking up the channel
+	 * in the conversation table
+	 * @param channel channel to lookup
+	 * @return true if it exists
+	 */
 	private boolean conversationExists(String channel) {
-		// TODO Auto-generated method stub
 		
+		boolean exists = false;
 		
-		return false;
+		/* Look in the conversations table to see if this channel exists
+		 * If it does change conversation to this.
+		 * Possible issue if operator A type blah and B adds more, B will overwrite?
+		 */
+		String SQL = "SELECT conversations_id FROM conversations WHERE channel = " + channel; //$NON-NLS-1$
+		
+		Statement statement = null;
+		ResultSet results = null;
+		
+		try{
+			
+			statement = readConnection.createStatement();
+		    results = statement.executeQuery(SQL);
+		    
+			while(results.next())
+				exists = true;
+				
+		}catch (SQLException e){
+			showError(e, xStrings.getString("RecordUpdater.errorCheckingForConversation")); //$NON-NLS-1$
+		}finally {
+			
+			if (results != null) {
+		        try {
+		        	results.close();
+		        } catch (SQLException sqlEx) { } // ignore
+		        results = null;
+		    }
+		    
+			if (statement != null) {
+		        try {
+		        	statement.close();
+		        } catch (SQLException sqlEx) { } // ignore
+		        statement = null;
+		    }
+			
+		}
+		
+		return exists;
 	}
 
 	/**
@@ -147,8 +201,8 @@ public class RecordUpdater implements Runnable {
 		    results = statement.executeQuery(SQL);
 		    
 			while(results.next())
-				if(results.getString("type").equals("combo") &&//$NON-NLS-1$//$NON-NLS-2$
-						results.getString("options").contains("=>"))//$NON-NLS-1$//$NON-NLS-2$
+				if(results.getString("type").equals("combo") &&  //$NON-NLS-1$ //$NON-NLS-2$
+						results.getString("options").contains("=>")) //$NON-NLS-1$ //$NON-NLS-2$
 					mappedCombo = true;
 				
 		}catch (SQLException e){
@@ -189,6 +243,8 @@ public class RecordUpdater implements Runnable {
 		 */
 		String SQL = "SELECT activePerson FROM callhistory WHERE callchannel = " + channel //$NON-NLS-1$
 				+ " AND activePerson IS NOT NULL ORDER BY callhistory_id DESC LIMIT 1"; //$NON-NLS-1$
+		
+		LOGGER.info(SQL);
 		
 		Statement statement = null;
 		ResultSet results = null;
