@@ -34,6 +34,8 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	public static final int ALERT_INFORMATION = 1;
 	public static final int ALERT_WARNING = 2;
 	public static final int ALERT_BANNED = 3;
+	public static final String ALERT_FAVOURITE = "images/favourite.png"; //$NON-NLS-1$
+	
 	private static final String[] ALERT_ICONS = {"OptionPane.questionIcon", //$NON-NLS-1$
 		"OptionPane.informationIcon", "OptionPane.warningIcon", "OptionPane.errorIcon"};  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
 	/* Modes:
@@ -969,6 +971,8 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 						setAlertLevel(p.alert, ALERT_WARNING, false);
 					else if(p.getShortAlertLevel() == 'B')
 						setAlertLevel(p.alert, ALERT_BANNED, false);
+					else if(p.getShortAlertLevel() == 'F')
+						setAlertLevel(p.alert, ALERT_FAVOURITE, false);
 					
 					//TODO old conversation as tooltip?
 					if(p.currentConversation != null && p.currentConversation.length() > 0)
