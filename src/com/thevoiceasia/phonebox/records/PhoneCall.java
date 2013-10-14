@@ -477,6 +477,8 @@ public class PhoneCall implements Runnable{
 		    			person.alert = xStrings.getString("PhoneCall.alertWarning"); //$NON-NLS-1$
 		    		else if(person.alert.equals("B")) //$NON-NLS-1$
 		    			person.alert = xStrings.getString("PhoneCall.alertBanned"); //$NON-NLS-1$
+		    		else if(person.alert.equals("F")) //$NON-NLS-1$
+		    			person.alert = xStrings.getString("PhoneCall.alertFavourite"); //$NON-NLS-1$
 		    		
 		    		//Name
 		    		person.name = personResultSet.getString("name"); //$NON-NLS-1$
@@ -637,7 +639,7 @@ public class PhoneCall implements Runnable{
 		Statement statement = null;
 		ResultSet resultSet = null;
 		
-		String SQL = "SELECT time, conversation FROM conversations WHERE person_id = " +//$NON-NLS-1$ 
+		String SQL = "SELECT time, channel, conversation FROM conversations WHERE person_id = " +//$NON-NLS-1$ 
 						person.id; 
 		
 		try{
@@ -647,9 +649,18 @@ public class PhoneCall implements Runnable{
 	    
 			while(resultSet.next()){
 				
-				Date time = resultSet.getTimestamp("time"); //$NON-NLS-1$
-				person.addConversation(new Conversation(time, 
-						resultSet.getString("conversation"))); //$NON-NLS-1$
+				double dbChannel = Double.parseDouble(resultSet.getString("channel")); //$NON-NLS-1$
+				double localChannel = Double.parseDouble(channelID);
+				
+				if(dbChannel == localChannel){
+					person.currentConversation = resultSet.getString("conversation"); //$NON-NLS-1$
+				}else{
+
+					Date time = resultSet.getTimestamp("time"); //$NON-NLS-1$
+					person.addConversation(new Conversation(time, 
+							resultSet.getString("conversation"))); //$NON-NLS-1$
+					
+				}
 				
 			}
 			
