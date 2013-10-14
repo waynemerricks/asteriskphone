@@ -21,7 +21,7 @@ public class Server extends Thread{
 	private ChatManager chatManager;
 	
 	/** STATICS **/
-	private static final Logger LOGGER = Logger.getLogger(Client.class.getName());//Logger
+	private static final Logger LOGGER = Logger.getLogger("com.thevoiceasia.phonebox");//Logger //$NON-NLS-1$
 	private static final Level LOG_LEVEL = Level.INFO;
 	private static I18NStrings xStrings;
 	
