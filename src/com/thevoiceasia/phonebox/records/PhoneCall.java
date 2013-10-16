@@ -56,9 +56,10 @@ public class PhoneCall implements Runnable{
 				database.getUserSettings().get("country")); //$NON-NLS-1$
 		
 		populatePersonDetails();
+		lookupCallType(channelID);
 		
 	}
-	
+
 	public PhoneCall(DatabaseManager database, String callerID, String channelID, 
 			AsteriskManager asteriskManager, char mode, String from){
 	
@@ -74,7 +75,6 @@ public class PhoneCall implements Runnable{
 		
 	}
 	
-	
 	public PhoneCall(DatabaseManager database, AsteriskQueueEntry queueEntry, 
 			AsteriskManager asteriskManager) {
 		
@@ -88,6 +88,48 @@ public class PhoneCall implements Runnable{
 		
 		xStrings = new I18NStrings(database.getUserSettings().get("language"),  //$NON-NLS-1$
 				database.getUserSettings().get("country")); //$NON-NLS-1$
+		
+	}
+	
+	/**
+	 * Checks to see if this channel already has an associated type and updates accordingly
+	 * @param channel channel to lookup
+	 */
+	private void lookupCallType(String channel) {
+		
+		Statement statement = null;
+		ResultSet resultSet = null;
+		
+		try{
+			
+			String SQL = "SELECT type FROM callhistory WHERE callchannel = " + channel +  //$NON-NLS-1$
+					" AND type != 'NA' ORDER BY callhistory_id DESC LIMIT 1"; //$NON-NLS-1$
+			
+			statement = database.getConnection().createStatement();
+		    resultSet = statement.executeQuery(SQL);
+		    
+		    while(resultSet.next())
+		    	calltype = resultSet.getString("type"); //$NON-NLS-1$
+		    
+		}catch (SQLException e){
+			showError(e, xStrings.getString("PhoneCall.databaseSQLError")); //$NON-NLS-1$
+		}finally {
+			
+			if (resultSet != null) {
+		        try {
+		        	resultSet.close();
+		        } catch (SQLException sqlEx) { } // ignore
+		        resultSet = null;
+		    }
+			
+		    if (statement != null) {
+		        try {
+		        	statement.close();
+		        } catch (SQLException sqlEx) { } // ignore
+		        statement = null;
+		    }
+		    
+		}
 		
 	}
 	
@@ -858,6 +900,77 @@ public class PhoneCall implements Runnable{
 		}
 		
 	}
+	
+	/**
+	 * Returns the CallType expressed as a path to the badge icon
+	 * @return path to the badge icon usually images/blah.png
+	 */
+	public String getCallTypeIconPath(){
+		
+		String iconPath = null;
+		
+		String SQL = "SELECT options FROM callinputfields WHERE language = '"  //$NON-NLS-1$
+				+ xStrings.getLocale() + "' AND mapping = 'calltype'"; //$NON-NLS-1$
+		
+		Statement statement = null;
+		ResultSet resultSet = null;
+		
+		try{
+			
+			statement = database.getReadConnection().createStatement();
+			resultSet = statement.executeQuery(SQL);
+	    
+			while(resultSet.next()){
+				
+				
+				String[] types = resultSet.getString("options").split(",");//$NON-NLS-1$ //$NON-NLS-2$
+				
+				boolean found = false;
+				int i = 0;
+				
+				while(i < types.length && !found){
+					
+					String[] field = types[i].split("=>"); //$NON-NLS-1$
+					
+					if(field[0].equals(calltype)){
+						
+						found = true;
+						iconPath = field[1];
+						
+					}
+					
+					i++;
+					
+				}
+				
+			}
+			
+		}catch(SQLException e){
+			
+			showError(e, xStrings.getString("PhoneCall.databaseSQLError")); //$NON-NLS-1$
+			
+		}finally {
+			
+			if (resultSet != null) {
+		        try {
+		        	resultSet.close();
+		        } catch (SQLException sqlEx) { } // ignore
+		        resultSet = null;
+		    }
+			
+			if (statement != null) {
+		        try {
+		        	statement.close();
+		        } catch (SQLException sqlEx) { } // ignore
+		        statement = null;
+		    }
+		    
+		}
+		
+		return iconPath;
+		
+	}
+	
 	
 	/**
 	 * Internal method to set this phone calls type
