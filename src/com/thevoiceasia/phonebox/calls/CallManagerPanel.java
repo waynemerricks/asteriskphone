@@ -980,7 +980,11 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	public void addAnswerListener(AnswerListener listener){
 		
 		LOGGER.info(xStrings.getString("CallManagerPanel.addAnswerListener")); //$NON-NLS-1$
-		answerListeners.add(listener);
+		
+		//Deadlock somewhere in here and notify listeners
+		synchronized(answerListeners){
+			answerListeners.add(listener);
+		}
 		
 		//If we have a stored panel notify
 		if(storedAnsweredPanel != null)
