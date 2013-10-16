@@ -223,6 +223,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		
 	}
 	
+	
 	/**
 	 * Helper method to return who this panel is connectedTo
 	 * @return
@@ -974,11 +975,16 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 					else if(p.getShortAlertLevel() == 'F')
 						setAlertLevel(p.alert, ALERT_FAVOURITE, false);
 					
+					if(phoneCallRecord.getCallType() != null)
+						setBadgeIcon(phoneCallRecord.getCallType(), 
+								phoneCallRecord.getCallTypeIconPath(), false);
+						
 					//TODO old conversation as tooltip?
 					if(p.currentConversation != null && p.currentConversation.length() > 0)
 						conversationLabel.setText(p.currentConversation);
 					
 				}
+
 			});
 			
 		}
