@@ -88,8 +88,8 @@ public class RecordUpdater implements Runnable {
 				
 				statement = writeConnection.prepareStatement(SQL);
 				statement.setString(1, value);
-				statement.setString(2, getPersonID(channelID));
-				statement.setString(3, channelID);
+				statement.setString(2, channelID);
+				statement.setString(3, getPersonID(channelID));
 				
 				statement.executeUpdate();
 				
