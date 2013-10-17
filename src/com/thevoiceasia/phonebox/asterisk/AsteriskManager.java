@@ -517,7 +517,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 				
 				//React to commands thread all of this if performance is a problem
 				LOGGER.info(xStrings.getString("AsteriskManager.receivedMessage") + //$NON-NLS-1$
-						message.getBody()); 
+						message.getBody());
 				
 				String[] command = message.getBody().split("/"); //$NON-NLS-1$
 				
