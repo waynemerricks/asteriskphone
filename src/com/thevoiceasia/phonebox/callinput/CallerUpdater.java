@@ -12,7 +12,7 @@ import org.jivesoftware.smackx.muc.MultiUserChat;
 public class CallerUpdater implements Runnable{
 
 	/** STATIC VARS **/
-	private static final long UPDATE_PERIOD = 2000, SLEEP_PERIOD = 100;
+	private static final long UPDATE_PERIOD = 1000, SLEEP_PERIOD = 100;
 	private static final Logger LOGGER = Logger.getLogger(CallerUpdater.class.getName());//Logger
 	
 	/* CLASS VARS */
