@@ -40,9 +40,6 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									LastActionTimer, ChatManagerListener, MessageListener,
 									ManualHangupListener, DialListener {
 
-	/* TODO When on a call, you can't answer another one unless that first one gets queued
-	 * first? 
-	 */
 	/** STATICS */
 	private static final long serialVersionUID = 1L;
 	private static final Logger LOGGER = Logger.getLogger(CallManagerPanel.class.getName());//Logger
