@@ -5,6 +5,7 @@ import java.beans.PropertyChangeListener;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -25,7 +26,6 @@ import org.asteriskjava.live.ManagerCommunicationException;
 import org.asteriskjava.live.MeetMeUser;
 import org.asteriskjava.live.OriginateCallback;
 import org.asteriskjava.live.internal.AsteriskAgentImpl;
-
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.PacketListener;
@@ -299,6 +299,12 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	 */
 	public void redirectCall(String channelID, String to, String from){
 	
+		/* Need to check to see if we're already on a call
+		 * If we are then park the original calls before transferring this one
+		 */
+		parkActiveCalls(to, from);
+		
+		// Get the channel and if its not locked, transfer it to this phone
 		AsteriskChannel channel = activeChannels.get(channelID);
 		
 		boolean locked = isLocked(channel);
@@ -320,6 +326,38 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		
 	}
 	
+	/**
+	 * Checks for any active calls to the given extension
+	 * If we have an active call, it will be put in the on air queue (or should we hang up?)
+	 * @param extension extension to check active calls against
+	 * @param from name of person who instigated this transfer
+	 */
+	private void parkActiveCalls(String extension, String from) {
+		
+		Iterator<String> channels = activeChannels.keySet().iterator();
+		
+		while(channels.hasNext()){
+			
+			AsteriskChannel linked = activeChannels.get(channels.next()).getLinkedChannel();
+			
+			if(linked != null){
+				
+				/* For some reason, even though I got the linked channel; the linked
+				 * channel of this new channel is what I'm actually looking for.
+				 * Answers on a post card :\ 
+				 */
+				AsteriskChannel daisyLinked = linked.getLinkedChannel();
+				
+				if(daisyLinked != null && 
+						daisyLinked.getCallerId().getNumber().equals(extension))
+					redirectCallToQueue(linked.getId(), from);
+				
+			}	
+			
+		}
+		
+	}
+
 	/**
 	 * Checks to see whether the given channel is locked and should not be transferred
 	 * This is a preventative measure to make sure 3 requests to answer the call
