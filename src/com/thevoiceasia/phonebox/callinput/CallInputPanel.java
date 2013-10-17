@@ -471,9 +471,12 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 			if(components.get(i).getMapping() != null 
 					&& components.get(i).getMapping().equals(fieldName)){
 				
-				if(components.get(i).isCombo())
-					components.get(i).setSelected(value);
-				else if(components.get(i).isTextArea() || components.get(i).isTextField())
+				if(components.get(i).isCombo()){
+					if(value == null || value.trim().length() < 1)
+						components.get(i).setSelected(0);
+					else
+						components.get(i).setSelected(value);
+				}else if(components.get(i).isTextArea() || components.get(i).isTextField())
 					components.get(i).setText(value);
 				
 				set = true;

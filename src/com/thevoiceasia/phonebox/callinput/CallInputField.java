@@ -198,6 +198,26 @@ public class CallInputField {
 	}
 	
 	/**
+	 * If component is a combobox will attempt to set the combobox to the given indexed
+	 * element
+	 * @param i index to set to
+	 */
+	@SuppressWarnings("unchecked")
+	public void setSelected(int i) {
+		
+		if(type.equals(TYPE_COMBO)){
+			//Set first item so that we get the defaults
+			//As if we don't find the item it will not change from old info
+			JComboBox<String> combo = (JComboBox<String>)component;
+			
+			if(combo.getItemCount() > i)
+				combo.setSelectedIndex(i);
+			
+		}
+		
+	}
+	
+	/**
 	 * Gets the value of this component
 	 * @return
 	 */
