@@ -11,13 +11,14 @@ public class TabPanel extends JPanel {
 	
 	/* CLASS VARS */
 	public int id;
-	public String name;
+	public String name, mapping;
 	
-	public TabPanel(int id, String name, LayoutManager layout) {
+	public TabPanel(int id, String name, LayoutManager layout, String mapping) {
 		super(layout);
 		
 		this.id = id;
 		this.name = name;
+		this.mapping = mapping;
 		
 	}
 
