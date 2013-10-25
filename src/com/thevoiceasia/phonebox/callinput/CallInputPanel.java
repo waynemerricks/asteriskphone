@@ -34,6 +34,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 	private I18NStrings xStrings;
 	private boolean hasErrors = false;
 	private CallInfoPanel currentPanel = null;
+	private CallerHistoryPanel historyPanel = null;
 	
 	/** STATICS **/
 	private static final long serialVersionUID = 1L;
@@ -86,7 +87,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 			if(components.get(i).isTab()){
 				
 				TabPanel tab = new TabPanel(components.get(i).id, components.get(i).name, 
-						new MigLayout("fillx")); //$NON-NLS-1$
+						new MigLayout("fillx"), components.get(i).mapping); //$NON-NLS-1$
 				tab.setPreferredSize(new Dimension(400, 350));
 				tab.setMinimumSize(new Dimension(200, 350));
 				tab.setMaximumSize(new Dimension(400, 350));
@@ -369,6 +370,15 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 			
 			TabPanel tab = tabs.get(i);
 			
+			if(tab.mapping != null && tab.mapping.equals("history")){ //$NON-NLS-1$
+				
+				//Special case for the history tab so create caller history here
+				historyPanel = new CallerHistoryPanel(language, country);
+				tab.add(historyPanel.getTable().getTableHeader(), "growx, spanx, wrap"); //$NON-NLS-1$
+				tab.add(historyPanel.getTable(), "growx, spanx, wrap"); //$NON-NLS-1$
+				
+			}
+			
 			this.addTab(tab.name, new JScrollPane(tab, 
 					ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, 
 					ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED));	
@@ -519,6 +529,10 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 			setFieldValue("notes", call.getPhoneCallRecord().getActivePerson().notes); //$NON-NLS-1$
 			
 			//TODO Custom Fields
+			
+			//Set Conversation History
+			historyPanel.setConversationHistory(call.getPhoneCallRecord().getActivePerson()
+					.getConversationHistory());
 			
 			//Add to current panel so we can update things
 			currentPanel = call;
