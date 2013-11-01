@@ -50,7 +50,10 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	private static final String HANGUP_ANSWERED_ELSEWHERE = "Answered elsewhere"; //$NON-NLS-1$
 	private static final String SIP_PREFIX = "Local/"; //$NON-NLS-1$
 	private static final int DEFAULT_PRIORITY = 1;
-	
+	private static final long DEFAULT_TIMEOUT = 30000L; //Default time out if database record is null
+	private static final int DEFAULT_EXECUTOR_THREADS = 4; //Default threads if database is null
+	private static final long DEFAULT_CHANNEL_LOCK = 3000; //Default time for the channel lock to be enforced if db is null
+
 	//CLASS VARS
 	private AsteriskServer asteriskServer;
 	private HashMap<String, AsteriskChannel> activeChannels = new HashMap<String, AsteriskChannel>();
@@ -84,9 +87,22 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		this.defaultContext = settings.get("defaultContext"); //$NON-NLS-1$
 		this.contextMacroAuto = settings.get("contextMacroAuto"); //$NON-NLS-1$
 		this.queueNumber = settings.get("onAirQueueNumber"); //$NON-NLS-1$
-		this.defaultTimeOut = Long.parseLong(settings.get("defaultTimeOut")); //$NON-NLS-1$
-		this.maxExecutorThreads = Integer.parseInt(settings.get("threadPoolMax")); //$NON-NLS-1$
-		this.channelLockTimeOut = Long.parseLong(settings.get("channelLockTimeOut")); //$NON-NLS-1$
+		
+		if(settings.containsKey("defaultTimeOut")) //$NON-NLS-1$
+			this.defaultTimeOut = Long.parseLong(settings.get("defaultTimeOut")); //$NON-NLS-1$
+		else
+			this.defaultTimeOut = DEFAULT_TIMEOUT;
+		
+		if(settings.containsKey("threadPoolMax")) //$NON-NLS-1$
+			this.maxExecutorThreads = Integer.parseInt(settings.get("threadPoolMax")); //$NON-NLS-1$
+		else
+			this.maxExecutorThreads = DEFAULT_EXECUTOR_THREADS;
+		
+		if(settings.containsKey("channelLockTimeOut")) //$NON-NLS-1$
+			this.channelLockTimeOut = Long.parseLong(settings.get("channelLockTimeOut")); //$NON-NLS-1$
+		else
+			this.channelLockTimeOut = DEFAULT_CHANNEL_LOCK;
+		
 		this.controlRoom = controlRoom; //Control Room XMPP chat
 		this.controlRoom.addMessageListener(this);
 		
