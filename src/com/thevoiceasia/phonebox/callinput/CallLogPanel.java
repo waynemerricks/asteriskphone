@@ -1,12 +1,20 @@
 package com.thevoiceasia.phonebox.callinput;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Vector;
+import java.util.logging.Logger;
 
+import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
+import com.thevoiceasia.phonebox.records.CallLog;
 import com.thevoiceasia.phonebox.records.Conversation;
 
 /**
@@ -22,7 +30,10 @@ public class CallLogPanel {
 	private DefaultTableModel tableModel;
 	private JTable history;
 	
-	public CallLogPanel(String language, String country) {
+	//STATICS
+	private static final Logger LOGGER = Logger.getLogger(CallLogPanel.class.getName());//Logger
+		
+	public CallLogPanel(Connection readConnection, long recordAge, String language, String country) {
 		
 		xStrings = new I18NStrings(language, country);
 		
@@ -48,6 +59,73 @@ public class CallLogPanel {
 		history = new JTable(tableModel);
 		history.setRowSelectionAllowed(true);
 		history.setAutoCreateRowSorter(true);
+		
+		getCallLog(readConnection, recordAge);
+		
+	}
+
+	/**
+	 * Read the call log from the DB
+	 * @param readConnection read connection to use
+	 * @param recordAge max age of record to retrieve
+	 */
+	private void getCallLog(Connection readConnection, long recordAge){
+		
+		Date oldestRecord = new Date(new Date().getTime() - recordAge);
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss"); //$NON-NLS-1$
+		String date = sdf.format(oldestRecord);
+		
+		//Get the records from callhistory
+		String SQL = "SELECT callchannel FROM callhistory WHERE time > "  //$NON-NLS-1$
+						+ date + " AND (state = 'Q' OR state = 'A') GROUP BY callchannel " //$NON-NLS-1$
+						+ "ORDER BY time DESC"; //$NON-NLS-1$
+		
+		Statement statement = null;
+		ResultSet resultSet = null;
+		
+		Vector<CallLog> callLog = new Vector<CallLog>();
+		
+		LOGGER.info(xStrings.getString("CallLogPanel.gettingCallHistory")); //$NON-NLS-1$
+		
+		try{
+			statement = readConnection.createStatement();
+		    resultSet = statement.executeQuery(SQL);
+		    
+		    while(resultSet.next()){
+		    	
+		    	CallLog log = new CallLog(resultSet.getString("callchannel"),  //$NON-NLS-1$
+		    			readConnection);
+		    	
+		    	if(log.isComplete())
+		    		callLog.add(log);
+		    	
+		    }
+		    
+		}catch (SQLException e){
+			showError(e, xStrings.getString("CallLogPanel.getLogSQLError")); //$NON-NLS-1$
+		}finally {
+		    
+			if (resultSet != null) {
+		        try {
+		        	resultSet.close();
+		        } catch (SQLException sqlEx) { } // ignore
+		        resultSet = null;
+		    }
+			
+		    if (statement != null) {
+		        try {
+		        	statement.close();
+		        } catch (SQLException sqlEx) { } // ignore
+		        statement = null;
+		    }
+		    
+		}
+		
+	}
+	
+	public void addCallLog(CallLog log){
+		
+		//TODO
 		
 	}
 	
@@ -105,8 +183,22 @@ public class CallLogPanel {
 		
 		columnNames.add(xStrings.getString("CallerHistoryPanel.timeField")); //$NON-NLS-1$
 		columnNames.add(xStrings.getString("CallLogPanel.nameField")); //$NON-NLS-1$
-		columnNames.add(xStrings.getString("CallLogPanel.locaionField")); //$NON-NLS-1$
+		columnNames.add(xStrings.getString("CallLogPanel.locationField")); //$NON-NLS-1$
 		columnNames.add(xStrings.getString("CallLogPanel.conversationField")); //$NON-NLS-1$
+		
+	}
+	
+	/**
+	 * Logs an error message and displays friendly message to user
+	 * @param e
+	 * @param friendlyErrorMessage
+	 */
+	private void showError(Exception e, String friendlyErrorMessage){
+		
+		System.err.println(xStrings.getString("DatabaseManager.logErrorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
+		e.printStackTrace();
+		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("DatabaseManager.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
+		LOGGER.severe(friendlyErrorMessage);
 		
 	}
 
