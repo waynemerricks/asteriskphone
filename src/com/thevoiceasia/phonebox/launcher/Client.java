@@ -120,7 +120,8 @@ public class Client extends JFrame implements WindowListener{
 				callManagerPanel.sendUpdateRequest();
 				
 				CallInputPanel callInput = new CallInputPanel(
-						databaseManager.getReadConnection(), language, country);
+						databaseManager.getReadConnection(), 
+						userSettings.get("maxRecordAge"), language, country); //$NON-NLS-1$
 				callManagerPanel.addAnswerListener(callInput);
 				east.add(callInput, BorderLayout.SOUTH);
 				this.add(east, BorderLayout.EAST);
