@@ -1237,10 +1237,13 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 					settings.get("language"), settings.get("country"));  //$NON-NLS-1$//$NON-NLS-2$
 			dialler.addDialListener(this);
 			
-		}
-		
-		if(settings.get("myExtension") != null) //$NON-NLS-1$
 			dialler.setVisible(true);
+			
+		}else if(dialler != null){ //else if we're open, close the window
+			dialler.setVisible(false);
+			dialler.dispose();
+			dialler = null;
+		}
 		
 	}
 
