@@ -35,19 +35,34 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 	private boolean hasErrors = false;
 	private CallInfoPanel currentPanel = null;
 	private CallerHistoryPanel historyPanel = null;
+	private CallLogPanel callLogPanel = null;
+	private long maxRecordAge = 3600000L;
 	
 	/** STATICS **/
 	private static final long serialVersionUID = 1L;
 	private static final Logger LOGGER = Logger.getLogger(CallInputPanel.class.getName());//Logger
 	
-	public CallInputPanel(Connection readConnection, String language, String country) {
+	public CallInputPanel(Connection readConnection, String maxRecordAge, 
+			String language, String country) {
 		
 		super(JTabbedPane.BOTTOM);
 		
 		this.language = language;
 		this.country = country;
-		
 		xStrings = new I18NStrings(language, country);
+		
+		try{
+			
+			this.maxRecordAge = Long.parseLong(maxRecordAge);
+			
+		}catch(NumberFormatException e){
+
+			this.maxRecordAge = 360000L;
+			LOGGER.warning(xStrings.getString("CallInputPanel.maxRecordAgeInvalid")); //$NON-NLS-1$
+			
+		}
+		
+		
 		databaseReadConnection = readConnection;
 		
 		//Read components from DB
@@ -376,6 +391,15 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 				historyPanel = new CallerHistoryPanel(language, country);
 				tab.add(historyPanel.getTable().getTableHeader(), "growx, spanx, wrap"); //$NON-NLS-1$
 				tab.add(historyPanel.getTable(), "growx, spanx, wrap"); //$NON-NLS-1$
+				
+			}else if(tab.mapping != null && tab.mapping.equals("calllog")){ //$NON-NLS-1$
+				
+				LOGGER.info(xStrings.getString("CallInputPanel.creatingCallLogPanel")); //$NON-NLS-1$
+				//Special case for the call log tab
+				callLogPanel = new CallLogPanel(databaseReadConnection, 
+						this.maxRecordAge, language, country);
+				tab.add(callLogPanel.getTable().getTableHeader(), "growx, spanx, wrap"); //$NON-NLS-1$
+				tab.add(callLogPanel.getTable(), "growx, spanx, wrap"); //$NON-NLS-1$
 				
 			}
 			
