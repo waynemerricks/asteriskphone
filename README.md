@@ -1,4 +1,14 @@
-asteriskphone
+Asteriskphone
 =============
 
-Simple Phone Interface for use with Asterisk for radio use
+Simple Asterisk Phone Interface for radio use
+
+Requires:
+* Asterisk
+* Openfire (for XMPP Chat)
+* MySQL (caller id lookups, record storage)
+
+See install docs for more info
+
+![Interface Example](http://www.thevoiceasia.com/phone.png)
+
