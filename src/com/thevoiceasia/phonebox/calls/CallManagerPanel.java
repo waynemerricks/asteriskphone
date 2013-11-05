@@ -538,8 +538,8 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								
 								/* If 2nd argument is studio then internal call on air*/
 								if(isStudioExtension(command[2]))
-									callPanels.get(command[3]).setAnsweredElseWhere(
-											studioExtensions.get(command[2]), true);
+									callPanels.get(command[3]).setOnAir(
+											studioExtensions.get(command[2]));
 								else{
 									
 									/* Lookup the extension, if we have a reference
