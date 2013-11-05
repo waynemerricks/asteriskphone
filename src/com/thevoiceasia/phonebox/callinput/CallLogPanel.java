@@ -1,18 +1,23 @@
 package com.thevoiceasia.phonebox.callinput;
 
+import java.awt.Color;
+import java.awt.Component;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Vector;
 import java.util.logging.Logger;
 
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
 
 import com.thevoiceasia.phonebox.records.CallLog;
 import com.thevoiceasia.phonebox.records.Conversation;
@@ -29,13 +34,21 @@ public class CallLogPanel {
 	private Vector<String> columnNames = new Vector<String>();
 	private DefaultTableModel tableModel;
 	private JTable history;
+	private String language, country;
+	private HashMap<String, CallLog> records = new HashMap<String, CallLog>();
+	private long maxRecordAge = 3600000L;
 	
 	//STATICS
 	private static final Logger LOGGER = Logger.getLogger(CallLogPanel.class.getName());//Logger
 		
-	public CallLogPanel(Connection readConnection, long recordAge, String language, String country) {
-		
+	public CallLogPanel(Connection readConnection, long maxRecordAge, 
+			String language, String country) {
+	
+		this.language = language;
+		this.country = country;
 		xStrings = new I18NStrings(language, country);
+		
+		this.maxRecordAge = maxRecordAge;
 		
 		//Create the Table
 		buildTableColumns();
@@ -56,22 +69,51 @@ public class CallLogPanel {
 			
 		};
 		
-		history = new JTable(tableModel);
-		history.setRowSelectionAllowed(true);
+		history = new JTable(tableModel){
+			
+			private static final long serialVersionUID = 1L;
+
+			public Component prepareRenderer(TableCellRenderer renderer, 
+					int row, int column){
+				
+				Component c = super.prepareRenderer(renderer, row, column);
+				
+				if(c instanceof MultiLineCellRenderer){
+					
+					
+				}else{
+					
+					JLabel l = (JLabel)c;
+					l.setHorizontalAlignment(JLabel.CENTER);
+				
+				}
+				
+				if(row % 2 == 0)
+					c.setBackground(new Color(97, 220, 181));	
+				else
+					c.setBackground(Color.WHITE);
+				
+				return c;
+				
+			}
+			
+		};
+		
+		history.setRowSelectionAllowed(false);
 		history.setAutoCreateRowSorter(true);
 		
-		getCallLog(readConnection, recordAge);
+		getCallLog(readConnection);
 		
 	}
 
 	/**
-	 * Read the call log from the DB
+	 * Read the call log from the DB, uses LogMaxAge in settings db
+	 * to determine how far back to grab records 
 	 * @param readConnection read connection to use
-	 * @param recordAge max age of record to retrieve
 	 */
-	private void getCallLog(Connection readConnection, long recordAge){
+	private void getCallLog(Connection readConnection){
 		
-		Date oldestRecord = new Date(new Date().getTime() - recordAge);
+		Date oldestRecord = new Date(new Date().getTime() - maxRecordAge);
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss"); //$NON-NLS-1$
 		String date = sdf.format(oldestRecord);
 		
@@ -83,8 +125,6 @@ public class CallLogPanel {
 		Statement statement = null;
 		ResultSet resultSet = null;
 		
-		Vector<CallLog> callLog = new Vector<CallLog>();
-		
 		LOGGER.info(xStrings.getString("CallLogPanel.gettingCallHistory")); //$NON-NLS-1$
 		
 		try{
@@ -93,13 +133,16 @@ public class CallLogPanel {
 		    
 		    while(resultSet.next()){
 		    	
-		    	CallLog log = new CallLog(resultSet.getString("callchannel"),  //$NON-NLS-1$
+		    	CallLog log = new CallLog(language, country,
+		    			resultSet.getString("callchannel"),  //$NON-NLS-1$
 		    			readConnection);
 		    	
 		    	if(log.isComplete())
-		    		callLog.add(log);
-		    	
+		    		records.put(log.getChannel(), log);
+		    		
 		    }
+		    
+		    updateDataVector();
 		    
 		}catch (SQLException e){
 			showError(e, xStrings.getString("CallLogPanel.getLogSQLError")); //$NON-NLS-1$
@@ -123,12 +166,51 @@ public class CallLogPanel {
 		
 	}
 	
+	/**
+	 * Adds a CallLog to the table
+	 * @param log
+	 */
 	public void addCallLog(CallLog log){
 		
-		//TODO
+		//Add to record log
+		records.put(log.getChannel(), log);
+		
+		//Add to table model
+		tableModel.addRow(log.getTableFormattedData());
 		
 	}
 	
+	/**
+	 * Updates the call log table with new data
+	 * @param log
+	 */
+	public void amendCallLog(CallLog log){
+		
+		records.put(log.getChannel(), log);
+		
+		updateDataVector();
+		
+	}
+	
+	private void updateDataVector() {
+		
+		Iterator<String> keys = records.keySet().iterator();
+		Vector<Vector<String>> tableData = new Vector<Vector<String>>();
+		
+		while(keys.hasNext()){
+			
+			String key = keys.next();
+		
+			tableData.add(records.get(key).getTableFormattedData())	;
+			
+		}
+		
+		tableModel.setDataVector(tableData, columnNames);
+		
+		history.getColumnModel().getColumn(1).setCellRenderer(new MultiLineCellRenderer());
+		history.getColumnModel().getColumn(2).setPreferredWidth(90);
+	}
+
 	/**
 	 * Gets the table encapsulated in this class
 	 * @return
@@ -181,10 +263,10 @@ public class CallLogPanel {
 	
 	private void buildTableColumns(){
 		
-		columnNames.add(xStrings.getString("CallerHistoryPanel.timeField")); //$NON-NLS-1$
 		columnNames.add(xStrings.getString("CallLogPanel.nameField")); //$NON-NLS-1$
-		columnNames.add(xStrings.getString("CallLogPanel.locationField")); //$NON-NLS-1$
 		columnNames.add(xStrings.getString("CallLogPanel.conversationField")); //$NON-NLS-1$
+		columnNames.add(xStrings.getString("CallLogPanel.locationField")); //$NON-NLS-1$
+		columnNames.add(xStrings.getString("CallerHistoryPanel.timeField")); //$NON-NLS-1$
 		
 	}
 	
