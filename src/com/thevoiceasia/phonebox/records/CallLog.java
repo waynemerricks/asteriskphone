@@ -4,16 +4,29 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Vector;
+import java.util.logging.Logger;
 
 public class CallLog {
 
-	private String name, location, conversation, id;
+	/* CLASS VARS */
+	private I18NStrings xStrings;
+	private String name, location, conversation, id, time, channel;
 	
-	public CallLog(String channel, Connection readConnection) {
+	//STATICS
+	private static final Logger LOGGER = Logger.getLogger(CallLog.class.getName());//Logger
 		
-		//SELECT person_id, conversation FROM conversations WHERE channel = 1383575074.680
-		String SQL = "SELECT person_id, conversation FROM conversations WHERE channel = "  //$NON-NLS-1$
+	public CallLog(String language, String country, String channel, 
+			Connection readConnection) {
+		
+		this.channel = channel;
+		
+		xStrings = new I18NStrings(language, country);
+		
+		//Get the conversation part of the record
+		String SQL = "SELECT person_id, time, conversation FROM conversations WHERE channel = "  //$NON-NLS-1$
 				+ channel;
 
 		Statement statement = null;
@@ -22,12 +35,14 @@ public class CallLog {
 		try{
 			statement = readConnection.createStatement();
 		    resultSet = statement.executeQuery(SQL);
+		    SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss"); //$NON-NLS-1$
 		    
 		    while(resultSet.next()){
 		    	
-		    	//TODO
 		    	this.id = resultSet.getString("person_id"); //$NON-NLS-1$
 		    	this.conversation = resultSet.getString("conversation"); //$NON-NLS-1$
+		    	this.time = sdf.format(new Date(
+		    			resultSet.getTimestamp("time").getTime())); //$NON-NLS-1$
 		    	
 		    	lookupPerson(readConnection);
 		    	
@@ -35,8 +50,7 @@ public class CallLog {
 		    
 		}catch (SQLException e){
 			
-			//TODO
-			LOGGER.severe(xStrings.getString("CallLog.conversationSQLError")); //$NON-NLS-1$
+			LOGGER.severe(xStrings.getString("CallLog.conversationSQLError") + SQL); //$NON-NLS-1$
 			
 		}finally {
 		    
@@ -63,8 +77,8 @@ public class CallLog {
 	 * @param readConnection
 	 */
 	private void lookupPerson(Connection readConnection) {
-		// TODO Auto-generated method stub
-		//SELECT name, location FROM person WHERE person_id = 12
+		
+		//Get the persons details associated with this record
 		String SQL = "SELECT name,location FROM person WHERE person_id = " + id;  //$NON-NLS-1$
 
 		Statement statement = null;
@@ -76,7 +90,6 @@ public class CallLog {
 		    
 		    while(resultSet.next()){
 		    	
-		    	//TODO
 		    	this.name = resultSet.getString("name"); //$NON-NLS-1$
 		    	this.location = resultSet.getString("location"); //$NON-NLS-1$
 		    	
@@ -84,8 +97,7 @@ public class CallLog {
 		    
 		}catch (SQLException e){
 			
-			//TODO
-			LOGGER.severe(xStrings.getString("CallLog.LookupPersonSQLError")); //$NON-NLS-1$
+			LOGGER.severe(xStrings.getString("CallLog.LookupPersonSQLError") + SQL); //$NON-NLS-1$
 			
 		}finally {
 		    
@@ -107,12 +119,18 @@ public class CallLog {
 	}
 
 	/**
-	 * 
+	 * Returns true if this record has a person and conversation
 	 * @return
 	 */
 	public boolean isComplete(){
-		//TODO complete = has person and conversation
-		return true;
+		
+		boolean complete = false;
+		
+		if(name != null && name.length() > 0 
+				&& conversation != null && conversation.length() > 0)
+			complete = true;
+		
+		return complete;
 		
 	}
 	
@@ -121,8 +139,89 @@ public class CallLog {
 	 * @return
 	 */
 	public Vector<String> getTableFormattedData(){
-		//TODO time, name, conversation, location? WHERE callchannel has a conversation at least
-		return null;
+		
+		Vector<String> record = new Vector<String>();
+		record.add(getName());
+		record.add(getConversation());
+		record.add(getLocation());
+		record.add(getTime());
+		
+		return record;
+		
+	}
+	
+	/**
+	 * Returns the conversation or default value if null
+	 * @return
+	 */
+	public String getConversation(){
+		
+		String tmpConv = conversation;
+		
+		if(tmpConv == null)
+			tmpConv = xStrings.getString("CallLog.NoConversation"); //$NON-NLS-1$
+		
+		return tmpConv;
+		
+	}
+	
+	/**
+	 * Returns the location or default value if null
+	 * @return
+	 */
+	public String getLocation(){
+		
+		String tmpLoc = location;
+		
+		if(tmpLoc == null)
+			tmpLoc = xStrings.getString("CallLog.UnknownLocation"); //$NON-NLS-1$
+		
+		return tmpLoc;
+		
+	}
+	
+	/**
+	 * Returns the name or default value if null
+	 * @return
+	 */
+	public String getName(){
+		
+		String tmpName = name;
+		
+		if(tmpName == null)
+			tmpName = xStrings.getString("CallLog.UnknownName"); //$NON-NLS-1$
+		
+		return tmpName;
+		
+	}
+	
+	/**
+	 * Returns the time on the record or current time if its null
+	 * @return
+	 */
+	public String getTime(){
+		
+		String tmpTime = time;
+		
+		if(tmpTime == null){
+			
+			SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss"); //$NON-NLS-1$
+			tmpTime = sdf.format(new Date());
+					
+		}
+		
+		return tmpTime;
+		
+	}
+	
+	/**
+	 * Returns the channel associated with this log
+	 * @return
+	 */
+	public String getChannel(){
+		
+		return channel;
+		
 	}
 	
 }
