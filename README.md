@@ -9,3 +9,5 @@ Requires:
 * MySQL (caller id lookups, record storage)
 
 See install docs for more info
+
+![Interface Example](http://www.thevoiceasia.com/phone.png)
