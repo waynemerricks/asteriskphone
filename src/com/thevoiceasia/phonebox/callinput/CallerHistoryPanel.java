@@ -46,7 +46,7 @@ public class CallerHistoryPanel {
 		};
 		
 		history = new JTable(tableModel);
-		history.setRowSelectionAllowed(true);
+		history.setRowSelectionAllowed(false);
 		history.setAutoCreateRowSorter(true);
 		
 	}
