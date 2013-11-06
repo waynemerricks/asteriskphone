@@ -84,7 +84,7 @@ public class CallLogPanel {
 				Color backgroundColour = null;
 				
 				if(row % 2 == 0)//if we're an even row go green
-					backgroundColour = new Color(111, 212, 127);	
+					backgroundColour = new Color(189, 224, 194);	
 				else
 					backgroundColour = Color.WHITE;
 				
