@@ -1,11 +1,18 @@
 package com.thevoiceasia.phonebox.callinput;
 
+import java.awt.Color;
+import java.awt.Component;
 import java.text.SimpleDateFormat;
 import java.util.Iterator;
 import java.util.Vector;
 
+import javax.swing.BorderFactory;
+import javax.swing.JLabel;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
 
 import com.thevoiceasia.phonebox.records.Conversation;
 
@@ -45,7 +52,56 @@ public class CallerHistoryPanel {
 			
 		};
 		
-		history = new JTable(tableModel);
+		history = new JTable(tableModel){
+			
+			private static final long serialVersionUID = 1L;
+
+			public Component prepareRenderer(TableCellRenderer renderer, 
+					int row, int column){
+				
+				Component c = super.prepareRenderer(renderer, row, column);
+				
+				Color backgroundColour = null;
+				
+				if(row % 2 == 0)//if we're an even row go green
+					backgroundColour = new Color(189, 224, 194);	
+				else
+					backgroundColour = Color.WHITE;
+				
+				if(c instanceof MultiLineCellRenderer){
+					
+					//Setup an attribute Set with the wanted background colour
+					SimpleAttributeSet bgAttributes = new SimpleAttributeSet();
+					StyleConstants.setBackground(bgAttributes, backgroundColour);
+					
+					//Convert the component to a MultiLineCellRenderer so we can set the Document
+					MultiLineCellRenderer textPane = (MultiLineCellRenderer)c;
+					textPane.setContentType("text/html"); //$NON-NLS-1$
+					
+					//Set the document to our wanted attributes
+					textPane.getStyledDocument().setParagraphAttributes(0, 
+								textPane.getDocument().getLength(), bgAttributes, false);
+					
+					//Make sure the inner border is the same colour so it doesn't look weird
+					textPane.setBorder(BorderFactory.createEmptyBorder());
+					
+					//Set the Altered TextPane to return
+					c = textPane;
+					
+				}else{
+					
+					JLabel l = (JLabel)c;
+					l.setHorizontalAlignment(JLabel.CENTER);
+					
+					c.setBackground(backgroundColour);
+				
+				}
+				
+				return c;
+				
+			}
+			
+		};
 		history.setRowSelectionAllowed(false);
 		history.setAutoCreateRowSorter(true);
 		
