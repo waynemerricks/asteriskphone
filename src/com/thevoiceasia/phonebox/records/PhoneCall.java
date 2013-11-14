@@ -27,6 +27,7 @@ public class PhoneCall implements Runnable{
 	private Vector<Integer> numberIDs = new Vector<Integer>(); 
 	private char threadMode;
 	private String threadOperator, answeredBy, callerID, channelID, callLocation, calltype;
+	private boolean headless = false;
 	
 	/** STATICS **/
 	private static final Logger LOGGER = Logger.getLogger(PhoneCall.class.getName());//Logger
@@ -67,6 +68,7 @@ public class PhoneCall implements Runnable{
 		this.callerID = callerID;
 		this.channelID = channelID;
 		this.asteriskManager = asteriskManager;
+		headless = true;
 		threadMode = mode;
 		threadOperator = from;
 		
@@ -837,7 +839,10 @@ public class PhoneCall implements Runnable{
 		
 		System.err.println(xStrings.getString("PhoneCall.logErrorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
 		e.printStackTrace();
-		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("PhoneCall.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
+		
+		if(!headless)
+			JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("PhoneCall.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
+		
 		LOGGER.severe(friendlyErrorMessage);
 		
 	}
