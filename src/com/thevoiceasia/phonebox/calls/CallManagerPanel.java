@@ -204,11 +204,9 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 			location = xStrings.getString(
 					"CallManagerPanel.callLocationInternal"); //$NON-NLS-1$
 		else if(phoneNumber.length() < 8)
-			location = xStrings.getString(
-					"CallManagerPanel.callLocationLocal"); //$NON-NLS-1$
+			location = settings.get("callLocal"); //$NON-NLS-1$
 		else if(phoneNumber.length() < 12)
-			location = xStrings.getString(
-					"CallManagerPanel.callLocationNational"); //$NON-NLS-1$
+			location = settings.get("callNational"); //$NON-NLS-1$
 		else//Lookup by phone number
 			location = countries.getCountryNameByPhone(phoneNumber);
 		
