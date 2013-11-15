@@ -79,17 +79,25 @@ public class RecordUpdater implements Runnable {
 				/*
 				 * If already exists update else insert
 				 */
-				if(conversationExists(channelID))
+				if(conversationExists(channelID)){
 					SQL = "UPDATE conversations SET conversation = ?, person_id = ? "  //$NON-NLS-1$
 							+ "WHERE channel = ?"; //$NON-NLS-1$
-				else
+					
+					statement = writeConnection.prepareStatement(SQL);
+					statement.setString(1, value);
+					statement.setString(2, getPersonID(channelID));
+					statement.setString(3, channelID);
+					
+				}else{
 					SQL = "INSERT INTO conversations (conversation, channel, person_id) VALUES " //$NON-NLS-1$
 							+ "(?, ?, ?)"; //$NON-NLS-1$
-				
-				statement = writeConnection.prepareStatement(SQL);
-				statement.setString(1, value);
-				statement.setString(2, channelID);
-				statement.setString(3, getPersonID(channelID));
+					
+					statement = writeConnection.prepareStatement(SQL);
+					statement.setString(1, value);
+					statement.setString(2, channelID);
+					statement.setString(3, getPersonID(channelID));
+					
+				}
 				
 				statement.executeUpdate();
 				
