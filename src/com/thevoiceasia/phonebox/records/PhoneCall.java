@@ -317,7 +317,7 @@ public class PhoneCall implements Runnable{
 	 * @return person id
 	 */
 	private String getPersonFromNumber(String number) {
-		//TODO LOGGER
+		
 		//Get the most recently updated person id associated with this number
 		String id = null;
 		
@@ -329,6 +329,7 @@ public class PhoneCall implements Runnable{
 			String SQL = "SELECT person_id FROM phonenumbers WHERE phone_number = '"  //$NON-NLS-1$
 					+ number  + "' ORDER BY lastUpdate DESC LIMIT 1"; //$NON-NLS-1$
 			
+			LOGGER.info(xStrings.getString("PhoneCall.getPersonFromNumber") + SQL); //$NON-NLS-1$
 			statement = database.getConnection().createStatement();
 		    resultSet = statement.executeQuery(SQL);
 		    
@@ -745,8 +746,8 @@ public class PhoneCall implements Runnable{
 		
 		Statement statement = null;
 		
-		String SQL = "INSERT INTO phonenumbers(phone_number, person_id) VALUES("  //$NON-NLS-1$
-				+ callerID + ", " + personID + ")";  //$NON-NLS-1$ //$NON-NLS-2$
+		String SQL = "INSERT INTO phonenumbers(phone_number, person_id) VALUES('"  //$NON-NLS-1$
+				+ callerID + "', " + personID + ")";  //$NON-NLS-1$ //$NON-NLS-2$
 		
 		try{
 			
