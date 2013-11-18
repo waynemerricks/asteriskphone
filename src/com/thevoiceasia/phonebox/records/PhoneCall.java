@@ -71,7 +71,6 @@ public class PhoneCall implements Runnable{
 		headless = true;
 		threadMode = mode;
 		threadOperator = from;
-		
 		xStrings = new I18NStrings(database.getUserSettings().get("language"),  //$NON-NLS-1$
 				database.getUserSettings().get("country")); //$NON-NLS-1$
 		
@@ -87,6 +86,23 @@ public class PhoneCall implements Runnable{
 		this.callerID = queueEntry.getChannel().getCallerId().getNumber();
 		threadMode = 'Q';
 		threadOperator = "NA"; //$NON-NLS-1$
+		headless = true;
+		
+		xStrings = new I18NStrings(database.getUserSettings().get("language"),  //$NON-NLS-1$
+				database.getUserSettings().get("country")); //$NON-NLS-1$
+		
+	}
+	
+	public PhoneCall(String callerId, String channel, DatabaseManager database){
+		
+		/* Used by server to create skeleton for new calls (if necessary)
+		 * hits this when the calls are in the Ringing state 
+		 */
+		headless = true;
+		this.callerID = callerId;
+		this.channelID = channel;
+		this.database = database;
+		this.threadMode = 'R';
 		
 		xStrings = new I18NStrings(database.getUserSettings().get("language"),  //$NON-NLS-1$
 				database.getUserSettings().get("country")); //$NON-NLS-1$
@@ -256,6 +272,106 @@ public class PhoneCall implements Runnable{
             		statement.close();
             	}catch(Exception e){}
         }
+		
+	}
+	
+	/**
+	 * Used by Server to create a skeleton record if this is a first time caller
+	 */
+	public void createCallSkeleton(){
+		
+		// Lookup phone number if its already there get person id
+		Statement statement = null, writeStatement = null;
+		ResultSet resultSet = null, personResult = null, historyResult = null;
+		
+		String SQL = null;
+		
+		try{
+			
+			SQL = "SELECT person_id FROM phonenumbers WHERE phone_number = '" + callerID  //$NON-NLS-1$
+					+ "' ORDER BY lastUpdate DESC LIMIT 1"; //$NON-NLS-1$
+			
+			statement = database.getReadConnection().createStatement();
+		    resultSet = statement.executeQuery(SQL);
+		    
+		    int personID = -1;
+		    
+		    while(resultSet.next())
+		    	personID = resultSet.getInt("person_id"); //$NON-NLS-1$
+		    
+		    if(personID == -1){
+		    	
+		    	// If not there create blank new person record + phonenumber and get person id
+				writeStatement = database.getWriteConnection().createStatement();
+				SQL = "INSERT INTO person VALUES()"; //$NON-NLS-1$
+				
+				writeStatement.executeUpdate(SQL, Statement.RETURN_GENERATED_KEYS);
+				personResult = writeStatement.getGeneratedKeys();
+				
+				if(personResult.next())
+					personID = personResult.getInt(1);
+				
+				SQL = "INSERT INTO phonenumbers (phone_number, person_id) VALUES('"  //$NON-NLS-1$
+						+ callerID + "', '" + personID + "')"; //$NON-NLS-1$ //$NON-NLS-2$
+		    	
+				writeStatement.executeUpdate(SQL);
+				
+		    }
+		    
+		    if(personID != -1){ //Should never be -1 if got this far
+		    	
+			    // Use person id to add an R Log with channel to callhistory
+			    SQL = "INSERT INTO callhistory(phonenumber, state, callchannel, activePerson) " //$NON-NLS-1$
+			    		+ "VALUES ('" + callerID + "', 'R', '" + channelID + "', '" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$  
+			    		+ personID + "')"; //$NON-NLS-1$ 
+			    
+			    if(writeStatement == null)
+			    	writeStatement = database.getWriteConnection().createStatement();
+			    
+			    writeStatement.executeUpdate(SQL);
+
+		    }
+			
+		}catch (SQLException e){
+			showError(e, xStrings.getString("PhoneCall.databaseSQLError") + " " + SQL); //$NON-NLS-1$ //$NON-NLS-2$
+		}finally {
+			
+			if(historyResult != null){
+				try{
+					historyResult.close();
+				}catch(SQLException e){}
+				historyResult = null;
+			}
+			
+			if(personResult != null){
+				try{
+					personResult.close();
+				}catch(SQLException e){}
+				personResult = null;
+			}
+			
+			if (resultSet != null) {
+		        try {
+		        	resultSet.close();
+		        } catch (SQLException sqlEx) { } // ignore
+		        resultSet = null;
+		    }
+			
+			if(writeStatement != null){
+				try{
+					writeStatement.close();
+				}catch(SQLException e){}
+				writeStatement = null;
+			}
+			
+		    if (statement != null) {
+		        try {
+		        	statement.close();
+		        } catch (SQLException sqlEx) { } // ignore
+		        statement = null;
+		    }
+		    
+		}
 		
 	}
 	
@@ -855,6 +971,7 @@ public class PhoneCall implements Runnable{
 	public void run() {
 		
 		if(threadMode == 'Q'){
+			//Will be Q or R when it first comes in, we use R to setup call skeleton
 			trackQueue(threadOperator);
 			asteriskManager.sendNewQueueEntryMessage(queueEntry);
 		}else if(threadMode == 'H'){
@@ -862,7 +979,8 @@ public class PhoneCall implements Runnable{
 			trackHangup(threadOperator); 
 		}else if(threadMode == 'A'){
 			trackAnswered(threadOperator);
-		}
+		}else if(threadMode == 'R')
+			createCallSkeleton();
 		
 	}
 	

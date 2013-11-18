@@ -700,6 +700,14 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 								"/" + channel.getCallerId().getNumber() + "/" +  //$NON-NLS-1$ //$NON-NLS-2$
 								calling.getExtension() + "/" + channel.getId(); //$NON-NLS-1$
 						
+						/* Track Incoming
+						 * We need to get an active person if possible or create a skeleton
+						 * record if its someone new before the clients start processing
+						 * and things go crazy
+						 */
+						dbLookUpService.execute(new PhoneCall(channel.getCallerId().getNumber(), 
+								channel.getId(), databaseManager));
+					
 						LOGGER.info(message);
 						sendMessage(message);
 					
