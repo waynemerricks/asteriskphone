@@ -590,6 +590,7 @@ public class PhoneCall implements Runnable{
 		
 		Statement statement = null, personStatement = null;
 		ResultSet resultSet = null, personResultSet = null;
+		boolean retry = false;
 		
 		try{
 			//TODO Think about one number for multiple people
@@ -721,37 +722,14 @@ public class PhoneCall implements Runnable{
 		    	
 		    	if(people.size() < 1){
 		    		
-		    		/* No person exists so this is a new caller, need to create an entry in person
-		    		 * and update entry in phonenumbers
-		    		 */
-		    		Person newPerson = new Person(database.getUserSettings().get("language"),  //$NON-NLS-1$
-		    				database.getUserSettings().get("country")); //$NON-NLS-1$
-			    	
-			    	newPerson.createNewDBEntry(database.getWriteConnection());
-		    		newPerson = populatePersonWithDefaults(newPerson);
-		    		
-		    		//Attach this person to the given number records
-		    		for(int i = 0; i < numberIDs.size(); i++)
-		    			attachNumberToPerson(numberIDs.get(i), newPerson.id);
-		    		
-		    		//Add this person to the people Vector
-		    		people.add(newPerson);
+		    		/* No person exists yet so lets wait 1 second and try again? */
+		    		retry = true;
 		    		
 		    	}
 		    	
 		    }else{
 		    	
-		    	//Need to create new Person and PhoneNumber record as neither exist
-		    	Person newPerson = new Person(database.getUserSettings().get("language"),  //$NON-NLS-1$
-	    				database.getUserSettings().get("country")); //$NON-NLS-1$
-		    	
-		    	newPerson.createNewDBEntry(database.getWriteConnection());
-	    		newPerson = populatePersonWithDefaults(newPerson);
-	    		
-	    		createNumberRecord(callerID, newPerson.id);
-	    		
-	    		//Add this person to the people Vector
-	    		people.add(newPerson);
+		    	retry = true;
 	    		
 		    }
 		    
@@ -787,7 +765,18 @@ public class PhoneCall implements Runnable{
 		        statement = null;
 		    }
 		    
-		}	
+		}
+		
+		if(retry){
+			
+			try {
+				Thread.sleep(1000L);
+				populatePersonDetails();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			//TODO
+		}
 		
 	}
 	
@@ -849,104 +838,6 @@ public class PhoneCall implements Runnable{
 		
 	}
 
-	/**
-	 * Creates a new record in the phonenumbers table with the given number
-	 * and person id attached
-	 * @param callerId uses callerId.getNumber() to return phone number of caller
-	 * @param personID personID in the person table to attach to this record
-	 * @return
-	 */
-	private int createNumberRecord(String callerID, int personID) {
-		
-		int id = -1;
-		
-		Statement statement = null;
-		
-		String SQL = "INSERT INTO phonenumbers(phone_number, person_id) VALUES('"  //$NON-NLS-1$
-				+ callerID + "', " + personID + ")";  //$NON-NLS-1$ //$NON-NLS-2$
-		
-		try{
-			
-			statement = database.getWriteConnection().createStatement();
-			id = statement.executeUpdate(SQL, Statement.RETURN_GENERATED_KEYS);
-	        numberIDs.add(id);
-	        
-		}catch(SQLException e){
-        	
-        	showError(e, xStrings.getString("Person.errorCreatingNewPerson")); //$NON-NLS-1$
-        	
-        }finally{
-            if(statement != null)
-            	try{
-            		statement.close();
-            	}catch(Exception e){}
-        }
-		
-		return id;
-	}
-	
-	
-	/**
-	 * Puts the given personID into the number record for the given numberID 
-	 * @param numberID numbers_id in phonenumbers table
-	 * @param personID person_id in person table
-	 */
-	private void attachNumberToPerson(Integer numberID, int personID) {
-		//TODO Think about one number for multiple people
-		/*
-		 * May need to create multiples if number already has a person ID that isn't this one
-		 * Incorporate a TIMESTAMP to figure out latest called from person.
-		 */
-		String SQL = "UPDATE phonenumbers SET person_id = " + personID +  //$NON-NLS-1$
-				" WHERE numbers_id = " + numberID; //$NON-NLS-1$
-		
-		Statement query = null;
-		try{	
-			
-			query = database.getWriteConnection().createStatement();
-			query.executeUpdate(SQL);
-	        
-	    }catch(SQLException e){
-	    	
-	    	showError(e, xStrings.getString("PhoneCall.errorAttachingNumber" + numberID + ":" + personID)); //$NON-NLS-1$ //$NON-NLS-2$
-	    	
-	    }finally{
-	        if(query != null)
-	        	try{
-	        		query.close();
-	        	}catch(Exception e){}
-	    }
-		
-	}
-
-	
-	/**
-	 * Sets all the internal Person attributes to their defaults
-	 * Used when creating a new Person
-	 * @param person 
-	 * @return Person object with default values
-	 */
-	private Person populatePersonWithDefaults(Person person){
-		
-		person.alert = xStrings.getString("PhoneCall.alertNormal"); //$NON-NLS-1$
-		person.name = xStrings.getString("PhoneCall.unknownCaller"); //$NON-NLS-1$
-		person.gender = xStrings.getString("PhoneCall.genderUnknown"); //$NON-NLS-1$
-		
-		if(callLocation != null)
-			person.location = callLocation;
-		else
-			person.location = xStrings.getString("PhoneCall.locationUnknown"); //$NON-NLS-1$
-		
-		person.postalAddress = ""; //$NON-NLS-1$
-		person.postCode = ""; //$NON-NLS-1$
-		person.email = ""; //$NON-NLS-1$
-		person.language = ""; //$NON-NLS-1$
-		person.religion = ""; //$NON-NLS-1$
-		
-		return person;
-		
-	}
-	
 	/**
 	 * Logs an error message and displays friendly message to user
 	 * @param e
