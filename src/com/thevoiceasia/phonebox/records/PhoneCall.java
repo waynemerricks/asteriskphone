@@ -590,7 +590,7 @@ public class PhoneCall implements Runnable{
 		
 		Statement statement = null, personStatement = null;
 		ResultSet resultSet = null, personResultSet = null;
-		boolean retry = false;
+		int retry = -1;
 		
 		try{
 			//TODO Think about one number for multiple people
@@ -723,13 +723,13 @@ public class PhoneCall implements Runnable{
 		    	if(people.size() < 1){
 		    		
 		    		/* No person exists yet so lets wait 1 second and try again? */
-		    		retry = true;
+		    		retry++;
 		    		
 		    	}
 		    	
 		    }else{
 		    	
-		    	retry = true;
+		    	retry++;
 	    		
 		    }
 		    
@@ -767,7 +767,7 @@ public class PhoneCall implements Runnable{
 		    
 		}
 		
-		if(retry){
+		if(retry > -1 && retry < 5){
 			
 			try {
 				Thread.sleep(1000L);
@@ -775,8 +775,9 @@ public class PhoneCall implements Runnable{
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			//TODO
-		}
+			
+		}else if(retry > 4)
+			LOGGER.severe(xStrings.getString("PhoneCall.noRecordTimeOut")); //$NON-NLS-1$
 		
 	}
 	
