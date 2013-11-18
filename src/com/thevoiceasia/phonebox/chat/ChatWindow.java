@@ -58,7 +58,7 @@ public class ChatWindow extends JPanel implements MouseListener, LastActionTimer
 		ChatMessagePanel messages = new ChatMessagePanel(language, country, myNickName);
 		messages.setMaximumSize(new Dimension(300, 768));
 		messages.setPreferredSize(new Dimension(300, 768));
-		messages.setMinimumSize(new Dimension(200, 500));
+		messages.setMinimumSize(new Dimension(200, 300));
 		chatManager.connect();
 		
 		if(!chatManager.hasErrors()){

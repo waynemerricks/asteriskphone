@@ -86,9 +86,8 @@ public class Client extends JFrame implements WindowListener{
 			loadingSplash.setStatus(xStrings.getString("Client.loadingChatModule")); //$NON-NLS-1$
 			
 			//Chat Module
-			JPanel east = new JPanel(new BorderLayout());
-			east.add(new ChatWindow(chatManager, language, country, userSettings.get("nickName"), //$NON-NLS-1$
-					userSettings.get("isStudio")), BorderLayout.CENTER); //$NON-NLS-1$
+			ChatWindow chat = new ChatWindow(chatManager, language, country, userSettings.get("nickName"), //$NON-NLS-1$
+					userSettings.get("isStudio")); //$NON-NLS-1$
 			
 			if(chatManager.hasErrors())
 				hasErrors = true;
@@ -115,7 +114,7 @@ public class Client extends JFrame implements WindowListener{
 				callManagerPanel.addManualHangupListener(callShortcuts);
 				callModule.add(callShortcuts, BorderLayout.NORTH);
 				
-				this.add(callModule, BorderLayout.CENTER);
+				//this.add(callModule, BorderLayout.CENTER);
 				
 				callManagerPanel.sendUpdateRequest();
 				
@@ -123,8 +122,17 @@ public class Client extends JFrame implements WindowListener{
 						databaseManager.getReadConnection(), 
 						userSettings.get("maxRecordAge"), language, country); //$NON-NLS-1$
 				callManagerPanel.addAnswerListener(callInput);
-				east.add(callInput, BorderLayout.SOUTH);
-				this.add(east, BorderLayout.EAST);
+				
+				JSplitPane chatSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, chat, callInput);
+				chatSplit.setOneTouchExpandable(true);
+				chatSplit.setContinuousLayout(true);
+		        //this.add(east, BorderLayout.EAST);
+				
+				//callModule SplitPane east
+				JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, callModule, chatSplit);
+				split.setOneTouchExpandable(true);
+		        split.setContinuousLayout(true);
+				this.add(split, BorderLayout.CENTER);
 				loadingSplash.setStatus(xStrings.getString("Client.loadingComplete")); //$NON-NLS-1$
 				
 			}
