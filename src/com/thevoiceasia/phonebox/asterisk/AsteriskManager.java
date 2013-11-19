@@ -483,7 +483,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 			
 			AsteriskQueue queue = entry.getQueue();
 			String name = queue.getName();
-			String number = entry.getChannel().getCallerId().getNumber();
+			String number = checkNumberWithHeld(entry.getChannel().getCallerId());
 			String id = entry.getChannel().getId();
 			
 			String message = xStrings.getString("AsteriskManager.populatedQueueEntry") + "/" + //$NON-NLS-1$ //$NON-NLS-2$
@@ -493,6 +493,25 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 			sendMessage(message);
 			
 		}
+		
+	}
+	
+	/**
+	 * Helper method to replace with held number with a suitable string
+	 * @param id callerid to check
+	 * @return caller id number or suitable string if withheld/null
+	 */
+	private String checkNumberWithHeld(CallerId id){
+		
+		String callerid = null;
+		
+		if(id != null && id.getNumber() != null && id.getNumber().trim().length() > 0 &&
+				!id.getNumber().equalsIgnoreCase("null")) //$NON-NLS-1$
+			callerid = id.getNumber();
+		else
+			callerid = xStrings.getString("AsteriskManager.withHeldNumber"); //$NON-NLS-1$
+		
+		return callerid;
 		
 	}
 	
@@ -607,7 +626,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 					AsteriskChannel ringing = (AsteriskChannel)evt.getSource();
 					
 					String message = xStrings.getString("AsteriskManager.channelRinging") +  //$NON-NLS-1$
-							"/" + ringing.getCallerId().getNumber() + "/" + ringing.getId(); //$NON-NLS-1$ //$NON-NLS-2$
+							"/" + checkNumberWithHeld(ringing.getCallerId()) + "/" + ringing.getId(); //$NON-NLS-1$ //$NON-NLS-2$
 					LOGGER.info(message);
 					sendMessage(message);
 					
@@ -646,11 +665,11 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 					//Log this in the DB
 					if(logHangup)
 						dbLookUpService.execute(new PhoneCall(databaseManager, 
-								hangup.getCallerId().getNumber(), hangup.getId(), this, 
+								checkNumberWithHeld(hangup.getCallerId()), hangup.getId(), this, 
 								'H', "NA")); //$NON-NLS-1$
 					
 					//Send XMPP Message
-					String message = logCause + "/" + hangup.getCallerId().getNumber() + //$NON-NLS-1$
+					String message = logCause + "/" + checkNumberWithHeld(hangup.getCallerId()) + //$NON-NLS-1$
 							"/" + hangup.getId();  //$NON-NLS-1$
 					LOGGER.info(message);
 					sendMessage(message);
@@ -661,7 +680,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 					AsteriskChannel busy = (AsteriskChannel)evt.getSource();
 					
 					String message = xStrings.getString("AsteriskManager.channelBusy") + //$NON-NLS-1$
-							"/" + busy.getCallerId().getNumber() + "/" + busy.getId(); //$NON-NLS-1$ //$NON-NLS-2$
+							"/" + checkNumberWithHeld(busy.getCallerId()) + "/" + busy.getId(); //$NON-NLS-1$ //$NON-NLS-2$
 					
 					LOGGER.info(message);
 					sendMessage(message);
@@ -693,11 +712,12 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 					
 					AsteriskChannel channel = (AsteriskChannel)evt.getSource();
 					
-					if(channel.getCallerId().getNumber() != null && 
-							!channel.getCallerId().getNumber().equals("null")){ //$NON-NLS-1$
+					//TODO Check this can't remember what significance no id had
+					/*if(channel.getCallerId().getNumber() != null && 
+							!channel.getCallerId().getNumber().equals("null")){ //$NON-NLS-1$ */
 						
 						String message = xStrings.getString("AsteriskManager.callRingingFrom") +  //$NON-NLS-1$
-								"/" + channel.getCallerId().getNumber() + "/" +  //$NON-NLS-1$ //$NON-NLS-2$
+								"/" + checkNumberWithHeld(channel.getCallerId()) + "/" +  //$NON-NLS-1$ //$NON-NLS-2$
 								calling.getExtension() + "/" + channel.getId(); //$NON-NLS-1$
 						
 						/* Track Incoming
@@ -705,13 +725,13 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 						 * record if its someone new before the clients start processing
 						 * and things go crazy
 						 */
-						dbLookUpService.execute(new PhoneCall(channel.getCallerId().getNumber(), 
+						dbLookUpService.execute(new PhoneCall(checkNumberWithHeld(channel.getCallerId()), 
 								channel.getId(), databaseManager));
 					
 						LOGGER.info(message);
 						sendMessage(message);
 					
-					}
+					//} //TODO Check this
 					
 				}
 				
@@ -724,18 +744,18 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 			AsteriskChannel channel = (AsteriskChannel)evt.getSource();
 			
 			if(evt.getNewValue() != null){//null = unlinking, not null = linking
-				
+				//TODO unknown number here
 				String linkedTo = channel.getLinkedChannel().getCallerId().getNumber(); 
 				
 				if(!linkedTo.equals(channel.getCallerId().getNumber())){
 					
 					String message = xStrings.getString("AsteriskManager.callConnected") +  //$NON-NLS-1$
-							"/" + channel.getCallerId().getNumber() + "/" + //$NON-NLS-1$ //$NON-NLS-2$
+							"/" + checkNumberWithHeld(channel.getCallerId()) + "/" + //$NON-NLS-1$ //$NON-NLS-2$
 							linkedTo + "/" + channel.getId(); //$NON-NLS-1$
 					
 					if(systemExtensions.contains(linkedTo))//if we're linked to a system phone
 						dbLookUpService.execute(new PhoneCall(databaseManager, 
-								channel.getCallerId().getNumber(), channel.getId(), this, 'A', "NA")); //$NON-NLS-1$
+								checkNumberWithHeld(channel.getCallerId()), channel.getId(), this, 'A', "NA")); //$NON-NLS-1$
 					
 					LOGGER.info(message);
 					sendMessage(message);
