@@ -53,7 +53,7 @@ public class CountryCodes {
 		
 		//Remove 0s
 		while(phoneNumber.startsWith("0")) //$NON-NLS-1$
-			phoneNumber.substring(0, phoneNumber.length() - 1);
+			phoneNumber = phoneNumber.substring(1);
 		
 		phoneNumber = phoneNumber.substring(0, 4);
 		boolean found = false;
