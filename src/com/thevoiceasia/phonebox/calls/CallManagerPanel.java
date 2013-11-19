@@ -200,7 +200,9 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		String location = null;
 		LOGGER.info(xStrings.getString("CallManagerPanel.createSkeletonCallPanel") + //$NON-NLS-1$
 				phoneNumber + "/" + channelID + "/" + mode); //$NON-NLS-1$ //$NON-NLS-2$
-		if(phoneNumber.length() < 6)
+		if(phoneNumber.equals(xStrings.getString("CallManagerPanel.numberWithHeld"))) //$NON-NLS-1$
+			location = xStrings.getString("CallManagerPanel.locationUnknown"); //$NON-NLS-1$
+		else if(phoneNumber.length() < 6)
 			location = xStrings.getString(
 					"CallManagerPanel.callLocationInternal"); //$NON-NLS-1$
 		else if(phoneNumber.length() < 8)
