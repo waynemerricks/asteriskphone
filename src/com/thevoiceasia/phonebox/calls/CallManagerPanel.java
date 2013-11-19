@@ -1239,10 +1239,15 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 			
 			dialler.setVisible(true);
 			
-		}else if(dialler != null){ //else if we're open, close the window
-			dialler.setVisible(false);
-			dialler.dispose();
-			dialler = null;
+		}else if(dialler != null){//else if we're open, close the window
+			
+			if(dialler.isVisible()){
+				dialler.setVisible(false);
+				dialler.dispose();
+				dialler = null;
+			}else
+				dialler.setVisible(true);
+			
 		}
 		
 	}
@@ -1252,12 +1257,13 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	 */
 	public void dial(String number){
 	
-		try {
-			controlRoom.sendMessage(xStrings.getString("CallManagerPanel.commandDial") +  //$NON-NLS-1$
-					"/" + number + "/" + settings.get("myExtension")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		} catch (XMPPException e) {
-			LOGGER.severe(xStrings.getString("CallManagerPanel.errorSendingDialCommand")); //$NON-NLS-1$
-		}
+		if(number.length() > 0)
+			try {
+				controlRoom.sendMessage(xStrings.getString("CallManagerPanel.commandDial") +  //$NON-NLS-1$
+						"/" + number + "/" + settings.get("myExtension")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			} catch (XMPPException e) {
+				LOGGER.severe(xStrings.getString("CallManagerPanel.errorSendingDialCommand")); //$NON-NLS-1$
+			}
 		
 	}
 	
