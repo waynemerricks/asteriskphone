@@ -63,10 +63,10 @@ public class CallerHistoryPanel {
 				
 				Color backgroundColour = null;
 				
-				if(row % 2 == 0)//if we're an even row go green
-					backgroundColour = new Color(189, 224, 194);	
-				else
+				if(row % 2 == 0)//if we're an odd row go green
 					backgroundColour = Color.WHITE;
+				else
+					backgroundColour = new Color(189, 224, 194);
 				
 				if(c instanceof MultiLineCellRenderer){
 					
