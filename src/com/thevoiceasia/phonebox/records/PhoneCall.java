@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 
 import org.asteriskjava.live.AsteriskQueueEntry;
+import org.asteriskjava.live.CallerId;
 
 import com.thevoiceasia.phonebox.asterisk.AsteriskManager;
 import com.thevoiceasia.phonebox.database.DatabaseManager;
@@ -36,11 +37,13 @@ public class PhoneCall implements Runnable{
 	public PhoneCall(DatabaseManager database, String callerID, String channelID) {
 		
 		this.database = database;
-		this.callerID = callerID;
 		this.channelID = channelID;
 		
 		xStrings = new I18NStrings(database.getUserSettings().get("language"),  //$NON-NLS-1$
 				database.getUserSettings().get("country")); //$NON-NLS-1$
+		
+		/* BUG FIX CALLERID WITHHELD */
+		this.callerID =  checkNumberWithHeld(callerID);
 		
 		populatePersonDetails();
 		
@@ -51,11 +54,13 @@ public class PhoneCall implements Runnable{
 		
 		this.callLocation = callLocation;
 		this.database = database;
-		this.callerID = callerID;
 		this.channelID = channelID;
 		
 		xStrings = new I18NStrings(database.getUserSettings().get("language"),  //$NON-NLS-1$
 				database.getUserSettings().get("country")); //$NON-NLS-1$
+		
+		/* BUG FIX CALLERID WITHHELD */
+		this.callerID =  checkNumberWithHeld(callerID);
 		
 		populatePersonDetails();
 		lookupCallType(channelID);
@@ -66,7 +71,6 @@ public class PhoneCall implements Runnable{
 			AsteriskManager asteriskManager, char mode, String from){
 	
 		this.database = database;
-		this.callerID = callerID;
 		this.channelID = channelID;
 		this.asteriskManager = asteriskManager;
 		headless = true;
@@ -74,6 +78,9 @@ public class PhoneCall implements Runnable{
 		threadOperator = from;
 		xStrings = new I18NStrings(database.getUserSettings().get("language"),  //$NON-NLS-1$
 				database.getUserSettings().get("country")); //$NON-NLS-1$
+		
+		/* BUG FIX CALLERID WITHHELD */
+		this.callerID =  checkNumberWithHeld(callerID);
 		
 	}
 	
@@ -84,13 +91,15 @@ public class PhoneCall implements Runnable{
 		this.queueEntry = queueEntry;
 		this.asteriskManager = asteriskManager;
 		this.channelID = queueEntry.getChannel().getId();
-		this.callerID = queueEntry.getChannel().getCallerId().getNumber();
 		threadMode = 'Q';
 		threadOperator = "NA"; //$NON-NLS-1$
 		headless = true;
 		
 		xStrings = new I18NStrings(database.getUserSettings().get("language"),  //$NON-NLS-1$
 				database.getUserSettings().get("country")); //$NON-NLS-1$
+		
+		/* BUG FIX CALLERID WITHHELD */
+		this.callerID =  checkNumberWithHeld(queueEntry.getChannel().getCallerId());
 		
 	}
 	
@@ -100,7 +109,6 @@ public class PhoneCall implements Runnable{
 		 * hits this when the calls are in the Ringing state 
 		 */
 		headless = true;
-		this.callerID = callerId;
 		this.channelID = channel;
 		this.database = database;
 		this.threadMode = 'R';
@@ -108,8 +116,48 @@ public class PhoneCall implements Runnable{
 		xStrings = new I18NStrings(database.getUserSettings().get("language"),  //$NON-NLS-1$
 				database.getUserSettings().get("country")); //$NON-NLS-1$
 		
+		/* BUG FIX CALLERID WITHHELD */
+		this.callerID =  checkNumberWithHeld(callerId);
+	
 	}
 	
+	/**
+	 * Helper method to replace with held number with a suitable string
+	 * @param id callerid to check
+	 * @return caller id number or suitable string if withheld/null
+	 */
+	private String checkNumberWithHeld(CallerId id){
+		
+		String callerid = null;
+		
+		if(id != null && id.getNumber() != null && id.getNumber().trim().length() > 0 &&
+				!id.getNumber().equalsIgnoreCase("null")) //$NON-NLS-1$
+			callerid = id.getNumber();
+		else
+			callerid = xStrings.getString("PhoneCall.withHeldNumber"); //$NON-NLS-1$
+		
+		return callerid;
+		
+	}
+	
+	/**
+	 * Helper method to replace with held number with a suitable string
+	 * @param id callerid to check
+	 * @return caller id number or suitable string if withheld/null
+	 */
+	private String checkNumberWithHeld(String id){
+		
+		String callerid = null;
+		
+		if(id != null && id.trim().length() > 0 &&
+				!id.equalsIgnoreCase("null")) //$NON-NLS-1$
+			callerid = id;
+		else
+			callerid = xStrings.getString("PhoneCall.withHeldNumber"); //$NON-NLS-1$
+		
+		return callerid;
+		
+	}
 	/**
 	 * Checks to see if this channel already has an associated type and updates accordingly
 	 * @param channel channel to lookup
