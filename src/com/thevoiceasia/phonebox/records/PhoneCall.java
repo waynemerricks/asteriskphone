@@ -28,6 +28,7 @@ public class PhoneCall implements Runnable{
 	private char threadMode;
 	private String threadOperator, answeredBy, callerID, channelID, callLocation, calltype;
 	private boolean headless = false;
+	private int retryCount = -1;
 	
 	/** STATICS **/
 	private static final Logger LOGGER = Logger.getLogger(PhoneCall.class.getName());//Logger
@@ -407,11 +408,12 @@ public class PhoneCall implements Runnable{
 				updateStatement.executeUpdate(SQL);
 				
 			}
-	        
+			
 		}catch(SQLException e){
         	
         	showError(e, xStrings.getString("PhoneCall.errorTrackingRingState") //$NON-NLS-1$ 
         			+ callerID);
+        	retryCount++;
         	
         }finally{
             if(statement != null)
@@ -424,6 +426,18 @@ public class PhoneCall implements Runnable{
             		updateStatement.close();
             	}catch(Exception e){}
         }
+		
+		if(retryCount != -1 && retryCount < 2){
+			
+			try {
+				Thread.sleep(500L);
+				trackQueue(operator);
+				retryCount = -1;//Reset retry count as we successfully completed
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
+		}
 		
 	}
 	
@@ -590,7 +604,6 @@ public class PhoneCall implements Runnable{
 		
 		Statement statement = null, personStatement = null;
 		ResultSet resultSet = null, personResultSet = null;
-		int retry = -1;
 		
 		try{
 			//TODO Think about one number for multiple people
@@ -723,13 +736,13 @@ public class PhoneCall implements Runnable{
 		    	if(people.size() < 1){
 		    		
 		    		/* No person exists yet so lets wait 1 second and try again? */
-		    		retry++;
+		    		retryCount++;
 		    		
 		    	}
 		    	
 		    }else{
 		    	
-		    	retry++;
+		    	retryCount++;
 	    		
 		    }
 		    
@@ -767,16 +780,17 @@ public class PhoneCall implements Runnable{
 		    
 		}
 		
-		if(retry > -1 && retry < 5){
+		if(retryCount > -1 && retryCount < 5){
 			
 			try {
 				Thread.sleep(1000L);
 				populatePersonDetails();
+				retryCount = -1;
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 			
-		}else if(retry > 4)
+		}else if(retryCount > 4)
 			LOGGER.severe(xStrings.getString("PhoneCall.noRecordTimeOut")); //$NON-NLS-1$
 		
 	}
