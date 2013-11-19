@@ -144,9 +144,17 @@ public class DialPanel extends JDialog implements ActionListener, KeyListener{
 		
 		if(evt.getActionCommand().equals("dial")){ //$NON-NLS-1$
 			dial();
-		}else if(evt.getActionCommand().equals("clear")) //$NON-NLS-1$
-			number.setText(""); //$NON-NLS-1$
-		else
+		}else if(evt.getActionCommand().equals("clear")){ //$NON-NLS-1$
+			
+			if(number.getText().length() > 0)
+				number.setText(""); //$NON-NLS-1$
+			else{
+				
+				this.setVisible(false);
+				
+			}
+			
+		}else
 			number.setText(number.getText() + evt.getActionCommand());
 		
 		number.requestFocus();
