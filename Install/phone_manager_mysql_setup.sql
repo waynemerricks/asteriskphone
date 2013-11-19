@@ -198,7 +198,7 @@ DROP TABLE IF EXISTS `phonenumbers`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `phonenumbers` (
   `numbers_id` int(11) NOT NULL AUTO_INCREMENT,
-  `phone_number` varchar(16) NOT NULL,
+  `phone_number` varchar(20) NOT NULL,
   `person_id` int(11) NOT NULL,
   `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`numbers_id`),
