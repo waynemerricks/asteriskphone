@@ -457,6 +457,8 @@ public class PhoneCall implements Runnable{
 				
 			}
 			
+			retryCount = -1;
+			
 		}catch(SQLException e){
         	
         	showError(e, xStrings.getString("PhoneCall.errorTrackingRingState") //$NON-NLS-1$ 
@@ -778,6 +780,8 @@ public class PhoneCall implements Runnable{
 		    		
 		    		//Add to Vector
 		    		people.add(person);
+		    		
+		    		retryCount = -1;
 		    		
 		    	}
 		    	
