@@ -22,6 +22,10 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 
+import org.jivesoftware.smack.PacketListener;
+import org.jivesoftware.smack.packet.Packet;
+
+import com.thevoiceasia.phonebox.chat.ChatManager;
 import com.thevoiceasia.phonebox.records.CallLog;
 import com.thevoiceasia.phonebox.records.Conversation;
 
@@ -30,7 +34,7 @@ import com.thevoiceasia.phonebox.records.Conversation;
  * @author waynemerricks
  *
  */
-public class CallLogPanel {
+public class CallLogPanel implements PacketListener {
 
 	/* CLASS VARS */
 	private I18NStrings xStrings;
@@ -45,7 +49,7 @@ public class CallLogPanel {
 	private static final Logger LOGGER = Logger.getLogger(CallLogPanel.class.getName());//Logger
 		
 	public CallLogPanel(Connection readConnection, long maxRecordAge, 
-			String language, String country) {
+			String language, String country, ChatManager manager) {
 	
 		this.language = language;
 		this.country = country;
@@ -127,6 +131,9 @@ public class CallLogPanel {
 		history.setAutoCreateRowSorter(true);
 		
 		getCallLog(readConnection);
+		
+		//Add a listener to the chat room to listen for new calls and field updates
+		manager.getControlChatRoom().addMessageListener(this);
 		
 	}
 
@@ -305,6 +312,12 @@ public class CallLogPanel {
 		e.printStackTrace();
 		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("DatabaseManager.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
 		LOGGER.severe(friendlyErrorMessage);
+		
+	}
+
+	@Override
+	public void processPacket(Packet msg) {
+		// TODO Auto-generated method stub
 		
 	}
 

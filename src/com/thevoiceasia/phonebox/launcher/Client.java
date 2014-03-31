@@ -120,7 +120,7 @@ public class Client extends JFrame implements WindowListener{
 				
 				CallInputPanel callInput = new CallInputPanel(
 						databaseManager.getReadConnection(), 
-						userSettings.get("maxRecordAge"), language, country); //$NON-NLS-1$
+						userSettings.get("maxRecordAge"), language, country, chatManager); //$NON-NLS-1$
 				callManagerPanel.addAnswerListener(callInput);
 				
 				JSplitPane chatSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, chat, callInput);

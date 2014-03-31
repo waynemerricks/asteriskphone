@@ -22,6 +22,7 @@ import javax.swing.ScrollPaneConstants;
 
 import com.thevoiceasia.phonebox.calls.AnswerListener;
 import com.thevoiceasia.phonebox.calls.CallInfoPanel;
+import com.thevoiceasia.phonebox.chat.ChatManager;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -43,7 +44,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 	private static final Logger LOGGER = Logger.getLogger(CallInputPanel.class.getName());//Logger
 	
 	public CallInputPanel(Connection readConnection, String maxRecordAge, 
-			String language, String country) {
+			String language, String country, ChatManager manager) {
 		
 		super(JTabbedPane.BOTTOM);
 		
@@ -68,7 +69,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 		//Read components from DB
 		if(getComponentDetails())
 			//Create the JTabbedPane
-			createTabbedPane();
+			createTabbedPane(manager);
 		else
 			hasErrors = true;
 		
@@ -90,8 +91,9 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 	
 	/**
 	 * Creates the actual GUI
+	 * @param manager 
 	 */
-	private void createTabbedPane(){
+	private void createTabbedPane(ChatManager manager){
 		
 		Vector<TabPanel> tabs = new Vector<TabPanel>();
 		HashMap<Integer, TabPanel> tabHash = new HashMap<Integer, TabPanel>();
@@ -397,7 +399,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 				LOGGER.info(xStrings.getString("CallInputPanel.creatingCallLogPanel")); //$NON-NLS-1$
 				//Special case for the call log tab
 				callLogPanel = new CallLogPanel(databaseReadConnection, 
-						this.maxRecordAge, language, country);
+						this.maxRecordAge, language, country, manager);
 				tab.add(callLogPanel.getTable().getTableHeader(), "growx, spanx, wrap"); //$NON-NLS-1$
 				tab.add(callLogPanel.getTable(), "growx, spanx, wrap"); //$NON-NLS-1$
 				
