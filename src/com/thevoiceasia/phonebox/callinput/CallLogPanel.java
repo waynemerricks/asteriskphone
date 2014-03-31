@@ -23,6 +23,7 @@ import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 
 import org.jivesoftware.smack.PacketListener;
+import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 
 import com.thevoiceasia.phonebox.chat.ChatManager;
@@ -316,9 +317,52 @@ public class CallLogPanel implements PacketListener {
 	}
 
 	@Override
-	public void processPacket(Packet msg) {
-		// TODO Auto-generated method stub
+	public void processPacket(Packet XMPPPacket) {
 		
+		if(XMPPPacket instanceof Message){
+			
+			Message message = (Message)XMPPPacket;
+			
+			//React to commands thread all of this if performance is a problem
+			LOGGER.info(xStrings.getString("CallLogPanel.receivedMessage") + //$NON-NLS-1$
+						message.getBody());
+				
+			String[] command = message.getBody().split("/"); //$NON-NLS-1$
+			
+			//UPDATEFIELD
+			if(command.length == 4 && command[0].equals(
+					xStrings.getString("CallLogPanel.commandUpdateField"))){ //$NON-NLS-1$
+				
+				/* Only care about name, conversation, location
+				 * TODO Change this to read fields wanted from DB
+				 */
+				if(command[1].equals(xStrings.getString("CallLogPanel.name"))){ //$NON-NLS-1$
+					
+					//TODO
+					LOGGER.info(xStrings.getString("CallLogPanel.logNameUpdate")); //$NON-NLS-1$
+					
+				}else if(command[1].equals(xStrings.getString("CallLogPanel.conversation"))){ //$NON-NLS-1$
+					
+					//TODO
+					LOGGER.info(xStrings.getString("CallLogPanel.logConversationUpdate")); //$NON-NLS-1$
+					
+				}else if(command[1].equals(xStrings.getString("CallLogPanel.location"))){ //$NON-NLS-1$
+					
+					//TODO
+					LOGGER.info(xStrings.getString("CallLogPanel.logLocationUpdate")); //$NON-NLS-1$
+					
+				}
+			
+			}else if(command.length == 4 && command[0].equals(
+					xStrings.getString("CallLogPanel.commandCall"))){//CALL //$NON-NLS-1$ 
+				
+				//TODO
+				LOGGER.info(xStrings.getString("CallLogPanel.logCALL")); //$NON-NLS-1$
+				
+			}
+			
+		}	
+
 	}
 
 }
