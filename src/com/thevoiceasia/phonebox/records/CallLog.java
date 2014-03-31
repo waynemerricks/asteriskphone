@@ -17,7 +17,79 @@ public class CallLog {
 	
 	//STATICS
 	private static final Logger LOGGER = Logger.getLogger(CallLog.class.getName());//Logger
+	
+	/**
+	 * Creates a CallLog for the given channel by looking up info in the callhistory
+	 * table
+	 * @param language I18N Language e.g. en
+	 * @param country I18N country e.g. GB
+	 * @param channel Channel to lookup
+	 * @param readConnection Connection to use for database reads
+	 * @param history set to whatever, only necessary to distinguish from other constructor
+	 */
+	public CallLog(String language, String country, String channel, 
+			Connection readConnection, boolean history) {
 		
+		this.channel = channel;
+		
+		xStrings = new I18NStrings(language, country);
+		
+		//Get the skeleton of the record, number -> person
+		String SQL = "SELECT callhistory.time, person.name, person.location FROM " //$NON-NLS-1$
+				+ "callhistory INNER JOIN phonenumbers ON callhistory.phonenumber = "  //$NON-NLS-1$
+				+ "phonenumbers.phone_number INNER JOIN person ON phonenumbers.person_id = " //$NON-NLS-1$
+				+ "person.person_id WHERE callhistory.callchannel = " + channel  //$NON-NLS-1$
+				+ " AND callhistory.state = 'R'"; //$NON-NLS-1$
+		
+		Statement statement = null;
+		ResultSet resultSet = null;
+		
+		try{
+			statement = readConnection.createStatement();
+		    resultSet = statement.executeQuery(SQL);
+		    SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss"); //$NON-NLS-1$
+		    
+		    while(resultSet.next()){
+		    	
+		    	this.time = sdf.format(new Date(
+		    			resultSet.getTimestamp("time").getTime())); //$NON-NLS-1$
+		    	this.location = resultSet.getString("location"); //$NON-NLS-1$
+		    	this.name = resultSet.getString("name"); //$NON-NLS-1$
+		    	this.conversation = null;
+		    	
+		    }
+		    
+		}catch (SQLException e){
+			
+			LOGGER.severe(xStrings.getString("CallLog.callhistorySQLError") + SQL); //$NON-NLS-1$
+			
+		}finally {
+		    
+			if (resultSet != null) {
+		        try {
+		        	resultSet.close();
+		        } catch (SQLException sqlEx) { } // ignore
+		        resultSet = null;
+		    }
+			
+		    if (statement != null) {
+		        try {
+		        	statement.close();
+		        } catch (SQLException sqlEx) { } // ignore
+		        statement = null;
+		    }
+		    
+		}
+		
+	}
+	
+	/**
+	 * Creates a CallLog entry based on the given channel in the conversations table
+	 * @param language for I18N strings e.g. en
+	 * @param country for I18N strings e.g. GB
+	 * @param channel Channel to lookup in conversation table
+	 * @param readConnection A MySQL Read connection
+	 */
 	public CallLog(String language, String country, String channel, 
 			Connection readConnection) {
 		
