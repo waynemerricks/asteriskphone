@@ -45,6 +45,7 @@ public class CallLogPanel implements PacketListener {
 	private String language, country;
 	private HashMap<String, CallLog> records = new HashMap<String, CallLog>();
 	private long maxRecordAge = 3600000L;
+	private Connection readConnection = null;
 	
 	//STATICS
 	private static final Logger LOGGER = Logger.getLogger(CallLogPanel.class.getName());//Logger
@@ -55,7 +56,7 @@ public class CallLogPanel implements PacketListener {
 		this.language = language;
 		this.country = country;
 		xStrings = new I18NStrings(language, country);
-		
+		this.readConnection = readConnection;
 		this.maxRecordAge = maxRecordAge;
 		
 		//Create the Table
@@ -171,6 +172,14 @@ public class CallLogPanel implements PacketListener {
 		    	
 		    	if(log.isComplete())
 		    		records.put(log.getChannel(), log);
+		    	else{
+		    		
+		    		log = new CallLog(language, country, 
+		    				resultSet.getString("callchannel"),  //$NON-NLS-1$
+		    				readConnection, true);
+		    		records.put(log.getChannel(), log);
+		    		
+		    	}
 		    		
 		    }
 		    
@@ -220,7 +229,7 @@ public class CallLogPanel implements PacketListener {
 		
 		records.put(log.getChannel(), log);
 		
-		updateDataVector();
+		tableModel.addRow(log.getTableFormattedData());
 		
 	}
 	
@@ -241,6 +250,7 @@ public class CallLogPanel implements PacketListener {
 		
 		history.getColumnModel().getColumn(1).setCellRenderer(new MultiLineCellRenderer());
 		history.getColumnModel().getColumn(2).setPreferredWidth(90);
+		
 	}
 
 	/**
@@ -354,12 +364,19 @@ public class CallLogPanel implements PacketListener {
 				}
 			
 			}else if(command.length == 4 && command[0].equals(
-					xStrings.getString("CallLogPanel.commandCall"))){//CALL //$NON-NLS-1$ 
+					xStrings.getString("CallLogPanel.commandQueue"))){//CALL //$NON-NLS-1$ 
 				
-				//TODO
-				LOGGER.info(xStrings.getString("CallLogPanel.logCALL")); //$NON-NLS-1$
+				//Add to call log table
+				LOGGER.info(xStrings.getString("CallLogPanel.logQUEUE")); //$NON-NLS-1$
 				
-			}
+				CallLog log = new CallLog(language, country,
+		    			command[3],
+		    			readConnection, true);
+		    	
+		    	records.put(log.getChannel(), log);
+		    	amendCallLog(log);
+		    		
+		    }
 			
 		}	
 
