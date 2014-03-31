@@ -45,9 +45,9 @@ public class Client extends JFrame implements WindowListener{
 	private static final Logger RECORDS_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.records"); //$NON-NLS-1$
 	private static final Level RECORDS_LOG_LEVEL = Level.WARNING;
 	private static final Logger CALL_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.calls"); //$NON-NLS-1$
-	private static final Level CALL_LOG_LEVEL = Level.INFO;
+	private static final Level CALL_LOG_LEVEL = Level.WARNING;
 	private static final Logger CALL_INPUT_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.callinput"); //$NON-NLS-1$
-	private static final Level CALL_INPUT_LEVEL = Level.WARNING;
+	private static final Level CALL_INPUT_LEVEL = Level.INFO;
 	
 	private static I18NStrings xStrings;
 	
