@@ -17,7 +17,6 @@ import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
-import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
@@ -28,7 +27,6 @@ import org.jivesoftware.smack.packet.Packet;
 
 import com.thevoiceasia.phonebox.chat.ChatManager;
 import com.thevoiceasia.phonebox.records.CallLog;
-import com.thevoiceasia.phonebox.records.Conversation;
 
 /**
  * Show a table with the call log for the last time period (undecided)
@@ -39,8 +37,8 @@ public class CallLogPanel implements PacketListener {
 
 	/* CLASS VARS */
 	private I18NStrings xStrings;
-	private Vector<String> columnNames = new Vector<String>();
-	private DefaultTableModel tableModel;
+	private String[] columnNames = null;
+	private CallLogModel tableModel;
 	private JTable history;
 	private String language, country;
 	private HashMap<String, CallLog> records = new HashMap<String, CallLog>();
@@ -62,21 +60,19 @@ public class CallLogPanel implements PacketListener {
 		//Create the Table
 		buildTableColumns();
 		
-		tableModel = new DefaultTableModel(){
+		getCallLog(readConnection);
+		
+		Iterator<String> keys = records.keySet().iterator();
+		Vector<CallLog> tableData = new Vector<CallLog>();
+		
+		while(keys.hasNext()){
 			
-			private static final long serialVersionUID = 1L;
-
-			public boolean isCellEditable(int row, int col){
-				return false;
-			}
+			String key = keys.next();
+			tableData.add(records.get(key));
 			
-			public Class<String> getColumnClass(int column){
-				
-				return String.class;
-				
-			}
-			
-		};
+		}
+		
+		tableModel = new CallLogModel(tableData, columnNames);
 		
 		history = new JTable(tableModel){
 			
@@ -132,7 +128,9 @@ public class CallLogPanel implements PacketListener {
 		history.setRowSelectionAllowed(false);
 		history.setAutoCreateRowSorter(true);
 		
-		getCallLog(readConnection);
+		//Set to Date DESC by default
+		history.getRowSorter().toggleSortOrder(3);
+		history.getRowSorter().toggleSortOrder(3);
 		
 		//Add a listener to the chat room to listen for new calls and field updates
 		manager.getControlChatRoom().addMessageListener(this);
@@ -183,8 +181,6 @@ public class CallLogPanel implements PacketListener {
 		    		
 		    }
 		    
-		    updateDataVector();
-		    
 		}catch (SQLException e){
 			showError(e, xStrings.getString("CallLogPanel.getLogSQLError")); //$NON-NLS-1$
 		}finally {
@@ -217,7 +213,7 @@ public class CallLogPanel implements PacketListener {
 		records.put(log.getChannel(), log);
 		
 		//Add to table model
-		tableModel.addRow(log.getTableFormattedData());
+		tableModel.addRow(log);
 		
 	}
 	
@@ -229,30 +225,10 @@ public class CallLogPanel implements PacketListener {
 		
 		records.put(log.getChannel(), log);
 		
-		tableModel.addRow(log.getTableFormattedData());
+		tableModel.addRow(log);
 		
 	}
 	
-	private void updateDataVector() {
-		
-		Iterator<String> keys = records.keySet().iterator();
-		Vector<Vector<String>> tableData = new Vector<Vector<String>>();
-		
-		while(keys.hasNext()){
-			
-			String key = keys.next();
-		
-			tableData.add(records.get(key).getTableFormattedData())	;
-			
-		}
-		
-		tableModel.setDataVector(tableData, columnNames);
-		
-		history.getColumnModel().getColumn(1).setCellRenderer(new MultiLineCellRenderer());
-		history.getColumnModel().getColumn(2).setPreferredWidth(90);
-		
-	}
-
 	/**
 	 * Gets the table encapsulated in this class
 	 * @return
@@ -261,55 +237,16 @@ public class CallLogPanel implements PacketListener {
 		return history;
 	}
 	
-	/**
-	 * Method to set the data of the history tab
-	 * @param conversations
-	 */
-	public void setConversationHistory(Vector<Conversation> conversations){
-		
-		tableModel.setDataVector(getTableData(conversations), columnNames);
-		
-		history.getColumnModel().getColumn(0).setPreferredWidth(10);
-		history.getColumnModel().getColumn(1).setCellRenderer(new MultiLineCellRenderer());
-		
-	}
-	
-	/**
-	 * Converts Vector<Conversation> into Vector<Vector<String>> suitable for use
-	 * with table model
-	 * @param conversations
-	 * @return
-	 */
-	private Vector<Vector<String>> getTableData(Vector<Conversation> conversations){
-		
-		Vector<Vector<String>> data = new Vector<Vector<String>>();
-		
-		Iterator<Conversation> iterator = conversations.iterator();
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy MMM dd HH:mm:ss"); //$NON-NLS-1$
-		
-		while(iterator.hasNext()){
-			
-			Conversation c = iterator.next();
-			
-			Vector<String> row = new Vector<String>();
-			row.add(sdf.format(c.getTime()));
-			row.add(c.getConversation());
-			
-			data.add(row);
-			
-		}
-		
-		return data;
-		
-	}
-	
 	private void buildTableColumns(){
 		
-		columnNames.add(xStrings.getString("CallLogPanel.nameField")); //$NON-NLS-1$
-		columnNames.add(xStrings.getString("CallLogPanel.conversationField")); //$NON-NLS-1$
-		columnNames.add(xStrings.getString("CallLogPanel.locationField")); //$NON-NLS-1$
-		columnNames.add(xStrings.getString("CallerHistoryPanel.timeField")); //$NON-NLS-1$
 		//TODO read this from db instead of hard coding
+		columnNames = new String[4];
+		
+		columnNames[0] = xStrings.getString("CallLogPanel.nameField"); //$NON-NLS-1$
+		columnNames[1] = xStrings.getString("CallLogPanel.conversationField"); //$NON-NLS-1$
+		columnNames[2] = xStrings.getString("CallLogPanel.locationField"); //$NON-NLS-1$
+		columnNames[3] = xStrings.getString("CallerHistoryPanel.timeField"); //$NON-NLS-1$
+		
 	}
 	
 	/**
