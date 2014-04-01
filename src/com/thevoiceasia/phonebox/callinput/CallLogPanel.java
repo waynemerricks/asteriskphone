@@ -44,18 +44,20 @@ public class CallLogPanel implements PacketListener {
 	private HashMap<String, CallLog> records = new HashMap<String, CallLog>();
 	private long maxRecordAge = 3600000L;
 	private Connection readConnection = null;
+	private String incomingQueue = null;
 	
 	//STATICS
 	private static final Logger LOGGER = Logger.getLogger(CallLogPanel.class.getName());//Logger
 		
 	public CallLogPanel(Connection readConnection, long maxRecordAge, 
-			String language, String country, ChatManager manager) {
+			String language, String country, ChatManager manager, String incomingQueue) {
 	
 		this.language = language;
 		this.country = country;
 		xStrings = new I18NStrings(language, country);
 		this.readConnection = readConnection;
 		this.maxRecordAge = maxRecordAge;
+		this.incomingQueue = incomingQueue;
 		
 		//Create the Table
 		buildTableColumns();
@@ -221,7 +223,7 @@ public class CallLogPanel implements PacketListener {
 	 * Updates the call log table with new data
 	 * @param log
 	 */
-	public void amendCallLog(CallLog log){
+	public void appendCallLog(CallLog log){
 		
 		records.put(log.getChannel(), log);
 		
@@ -285,23 +287,39 @@ public class CallLogPanel implements PacketListener {
 				 */
 				if(command[1].equals(xStrings.getString("CallLogPanel.name"))){ //$NON-NLS-1$
 					
-					//TODO
 					LOGGER.info(xStrings.getString("CallLogPanel.logNameUpdate")); //$NON-NLS-1$
+					
+					//Set Internal Record
+					records.get(command[2]).setName(command[3]);
+					
+					//Set table row value
+					changeCallLog(command[2], "name", command[3]); //$NON-NLS-1$
 					
 				}else if(command[1].equals(xStrings.getString("CallLogPanel.conversation"))){ //$NON-NLS-1$
 					
-					//TODO
 					LOGGER.info(xStrings.getString("CallLogPanel.logConversationUpdate")); //$NON-NLS-1$
+					
+					//Set Internal Record
+					records.get(command[2]).setConversation(command[3]);
+					
+					//Set table row value
+					changeCallLog(command[2], "conversation", command[3]); //$NON-NLS-1$
 					
 				}else if(command[1].equals(xStrings.getString("CallLogPanel.location"))){ //$NON-NLS-1$
 					
-					//TODO
 					LOGGER.info(xStrings.getString("CallLogPanel.logLocationUpdate")); //$NON-NLS-1$
+					
+					//Set Internal Record
+					records.get(command[2]).setLocation(command[3]);
+					
+					//Set table row value
+					changeCallLog(command[2], "location", command[3]); //$NON-NLS-1$
 					
 				}
 			
 			}else if(command.length == 4 && command[0].equals(
-					xStrings.getString("CallLogPanel.commandQueue"))){//CALL //$NON-NLS-1$ 
+					xStrings.getString("CallLogPanel.commandQueue")) && //$NON-NLS-1$
+					command[1].equals(incomingQueue)){//CALL 
 				
 				//Add to call log table
 				LOGGER.info(xStrings.getString("CallLogPanel.logQUEUE")); //$NON-NLS-1$
@@ -311,12 +329,24 @@ public class CallLogPanel implements PacketListener {
 		    			readConnection, true);
 		    	
 		    	records.put(log.getChannel(), log);
-		    	amendCallLog(log);
+		    	appendCallLog(log);
 		    		
 		    }
 			
 		}	
 
+	}
+
+	/**
+	 * Changes the given field in the call log
+	 * @param channel Channel to change
+	 * @param field field to change
+	 * @param value value to set it to
+	 */
+	private void changeCallLog(String channel, String field, String value) {
+		
+		tableModel.changeRow(channel, field, value);
+		
 	}
 
 }
