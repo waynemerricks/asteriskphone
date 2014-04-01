@@ -98,4 +98,40 @@ public class CallLogModel extends AbstractTableModel {
 		
 	}
 
+	/**
+	 * Changes the value of the given channel
+	 * @param channel Channel ID
+	 * @param field Field name
+	 * @param value Value to change to
+	 */
+	public void changeRow(String channel, String field, String value) {
+		
+		boolean done = false;
+		int i = 0;
+		
+		while(!done && i < data.size()){
+			
+			if(data.get(i).getChannel().equals(channel)){
+				
+				//We found the record so lets change the value
+				done = true;
+				
+				if(field.equals("name")) //$NON-NLS-1$
+					data.get(i).setName(value);
+				else if(field.equals("location")) //$NON-NLS-1$
+					data.get(i).setLocation(value);
+				else if(field.equals("conversation")) //$NON-NLS-1$
+					data.get(i).setConversation(value);
+				
+				//fire data changed on row
+				this.fireTableRowsUpdated(i, i);
+				
+			}
+			
+			i++;
+			
+		}
+		
+	}
+
 }
