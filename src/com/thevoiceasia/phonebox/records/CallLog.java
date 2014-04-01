@@ -237,6 +237,13 @@ public class CallLog {
 		
 	}
 	
+	public void setConversation(String conversation) {
+		
+		if(conversation != null)
+			this.conversation = conversation;
+		
+	}
+	
 	/**
 	 * Returns the location or default value if null
 	 * @return
@@ -250,6 +257,20 @@ public class CallLog {
 		
 		return tmpLoc;
 		
+	}
+	
+	public void setLocation(String location) {
+		
+		if(location != null)
+			this.location = location;
+		
+	}
+	
+	public void setName(String name){
+		
+		if(name != null)
+			this.name = name;
+			
 	}
 	
 	/**
