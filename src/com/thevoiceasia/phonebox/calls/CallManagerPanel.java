@@ -673,7 +673,9 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								//Caller is me and the receiver isn't
 							}else if(isMyPhone(command[1]) && !isMyPhone(command[2])){
 								
-								//Not interested would have been dealt with elsewhere
+								/* If we get here by normal control messages then this should 
+								 * be ignored
+								 */
 								
 							}
 							
@@ -1322,7 +1324,45 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		//Can pass this on to the processPacket method as part of normal message handling
 		LOGGER.info(xStrings.getString("CallManagerPanel.receivedPrivateMessage") //$NON-NLS-1$
 				+ message.getBody()); 
-		processPacket(message);
+		
+		/* We need to deal with connected here only when:
+		 * Caller = Us, Receiver = Someone else
+		 * Command = CONNECTED
+		 * This is not strictly true as at this stage there is no way of knowing
+		 * whether we phoned out or they phoned us!
+		 * 
+		 * Judgement Call: 95% of the time they will have phoned us so we'll set
+		 * it to that.
+		 * 
+		 * BUG? Most of the time the asterisk server will show the call originator
+		 * as the first channel e.g.:
+		 * 
+		 * CONNECTED/CALL ORIGINATOR/CALL ANSWERER/CHANNEL ORIGINATOR/CREATION TIME
+		 * 
+		 * However sometimes this gets flipped around and causes havoc so we need to
+		 * deal with that here:
+		 * 
+		 * CONNECTED/CALL ANSWERER/CALL ORIGINATOR/CHANNEL ??/CREATION TIME
+		 */
+		String[] command = message.getBody().split("/"); //$NON-NLS-1$
+		
+		if(command.length == 5 && command[0].equals(
+				xStrings.getString("CallManagerPanel.callConnected")) //$NON-NLS-1$
+				&& callPanels.get(command[3]) != null
+				&& isMyPhone(command[1]) && !isMyPhone(command[2])){ 
+			
+			long creationTime = getCreationTime(command[4]);
+			
+			createSkeletonCallInfoPanel(command[2], command[3],
+					CallInfoPanel.MODE_ANSWERED, null, creationTime);
+		
+			notifyListeners(callPanels.get(command[3]));
+			
+		}else
+			processPacket(message);
+		
+		
+		
 		
 	}
 	
