@@ -151,7 +151,7 @@ public class CallLog {
 	private void lookupPerson(Connection readConnection) {
 		
 		//Get the persons details associated with this record
-		String SQL = "SELECT name,location FROM person WHERE person_id = " + id;  //$NON-NLS-1$
+		String SQL = "SELECT name, location FROM person WHERE person_id = " + id;  //$NON-NLS-1$
 
 		Statement statement = null;
 		ResultSet resultSet = null;
@@ -300,6 +300,7 @@ public class CallLog {
 			
 			SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss"); //$NON-NLS-1$
 			tmpTime = sdf.format(new Date());
+			//System.out.println(channel);
 					
 		}
 		
@@ -314,6 +315,17 @@ public class CallLog {
 	public String getChannel(){
 		
 		return channel;
+		
+	}
+
+	public boolean isValid() {
+		
+		boolean valid = false;
+		
+		if(time != null)
+			valid = true;
+		
+		return valid;
 		
 	}
 	
