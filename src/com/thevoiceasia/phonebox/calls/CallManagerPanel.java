@@ -200,6 +200,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		String location = null;
 		LOGGER.info(xStrings.getString("CallManagerPanel.createSkeletonCallPanel") + //$NON-NLS-1$
 				phoneNumber + "/" + channelID + "/" + mode); //$NON-NLS-1$ //$NON-NLS-2$
+		
 		if(phoneNumber.equals(xStrings.getString("CallManagerPanel.numberWithHeld"))) //$NON-NLS-1$
 			location = xStrings.getString("CallManagerPanel.locationUnknown"); //$NON-NLS-1$
 		else if(phoneNumber.length() < 6)
@@ -411,15 +412,36 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 							}else if(systemExtensions.contains(command[1]) && 
 									!systemExtensions.contains(command[2])){
 								
+								/* CALL/5102/9907886031657/1396477192.139
+								 * BUG FIX: Originally this caused the person you were dialling to have their details
+								 * removed once it was put on hold as originally you were changing details for the person
+								 * who made the call, not the person who was receiving the call.
+								 * 
+								 * In these two cases we need to set the panel with the info of the person we're calling
+								 * quickest way to do this is to swap the dialler number (command[1]) with the person
+								 * we're calling (command[2]).
+								 * 
+								 * Needs Testing!
+								 * 
+								 * TODO Remove leading 9s (or whatever you use for outside numbers based on DB)
+							     */
 								//Internal call to outside from me
 								if(isMyPhone(command[1])){
-									createSkeletonCallInfoPanel(command[1], command[3], 
+									
+									
+									/*createSkeletonCallInfoPanel(command[1], command[3], 
 											CallInfoPanel.MODE_RINGING_ME, command[2], 
+											creationTime, true);*/
+									createSkeletonCallInfoPanel(command[2], command[3], 
+											CallInfoPanel.MODE_RINGING_ME, command[1], 
 											creationTime);
 									callPanels.get(command[3]).setOriginator(command[1]);
 								}else{//Internal call to outside not from me
-									createSkeletonCallInfoPanel(command[1], command[3], 
+									/*createSkeletonCallInfoPanel(command[1], command[3], 
 											CallInfoPanel.MODE_ANSWERED_ELSEWHERE, command[2], 
+											creationTime, true);*/
+									createSkeletonCallInfoPanel(command[2], command[3], 
+											CallInfoPanel.MODE_ANSWERED_ELSEWHERE, command[1], 
 											creationTime);
 									callPanels.get(command[3]).setOriginator(command[1]);
 								}
