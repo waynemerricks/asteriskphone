@@ -448,7 +448,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									if(settings.get("queue_" + command[2] + "_icon") != null) //$NON-NLS-1$ //$NON-NLS-2$
 										callPanels.get(command[3]).getIconPanel().setBadgeIcon(settings.get("queue_" + command[2] + "_icon"));  //$NON-NLS-1$//$NON-NLS-2$
 									
-								}else{
+								}else if(!command[1].equals(xStrings.getString("CallManagerPanel.callSystemUnknown"))){ //$NON-NLS-1$
 									
 									//Outside call coming direct to a phone
 									createSkeletonCallInfoPanel(command[1], command[3], 
