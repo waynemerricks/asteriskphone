@@ -668,6 +668,12 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 								checkNumberWithHeld(hangup.getCallerId()), hangup.getId(), this, 
 								'H', "NA")); //$NON-NLS-1$
 					
+					/* BUG FIX: Hangup Cause sometimes has a slash in it which messes with our / command separator
+					 * HANGUP Circuit/channel congestion as one example there may be others so lets deal with it
+					 */
+					hangupCause = hangupCause.replaceAll("/", "-"); //$NON-NLS-1$ //$NON-NLS-2$
+					//END OF BUG FIX
+					
 					//Send XMPP Message
 					String message = logCause + "/" + checkNumberWithHeld(hangup.getCallerId()) + //$NON-NLS-1$
 							"/" + hangup.getId();  //$NON-NLS-1$
