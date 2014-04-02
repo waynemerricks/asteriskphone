@@ -62,9 +62,6 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 		this.maxRecordAge = maxRecordAge;
 		this.incomingQueue = incomingQueue;
 		
-		//Add Private Chat Listener
-		manager.getConnection().getChatManager().addChatListener(this);
-		
 		//Create the Table
 		buildTableColumns();
 		
@@ -146,6 +143,10 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 		
 		//Add a listener to the chat room to listen for new calls and field updates
 		manager.getControlChatRoom().addMessageListener(this);
+		
+		//Add Private Chat Listener
+		manager.getConnection().getChatManager().addChatListener(this);
+		
 		
 	}
 
