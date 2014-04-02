@@ -21,6 +21,9 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 
+import org.jivesoftware.smack.Chat;
+import org.jivesoftware.smack.ChatManagerListener;
+import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
@@ -33,7 +36,7 @@ import com.thevoiceasia.phonebox.records.CallLog;
  * @author waynemerricks
  *
  */
-public class CallLogPanel implements PacketListener {
+public class CallLogPanel implements PacketListener, ChatManagerListener, MessageListener {
 
 	/* CLASS VARS */
 	private I18NStrings xStrings;
@@ -58,6 +61,9 @@ public class CallLogPanel implements PacketListener {
 		this.readConnection = readConnection;
 		this.maxRecordAge = maxRecordAge;
 		this.incomingQueue = incomingQueue;
+		
+		//Add Private Chat Listener
+		manager.getConnection().getChatManager().addChatListener(this);
 		
 		//Create the Table
 		buildTableColumns();
@@ -134,6 +140,10 @@ public class CallLogPanel implements PacketListener {
 		history.getRowSorter().toggleSortOrder(3);
 		history.getRowSorter().toggleSortOrder(3);
 		
+		//Set the conversation tab as multiline
+		history.getColumnModel().getColumn(1).setCellRenderer(new MultiLineCellRenderer());
+		history.getColumnModel().getColumn(3).setPreferredWidth(5);
+		
 		//Add a listener to the chat room to listen for new calls and field updates
 		manager.getControlChatRoom().addMessageListener(this);
 		
@@ -177,7 +187,23 @@ public class CallLogPanel implements PacketListener {
 		    		log = new CallLog(language, country, 
 		    				resultSet.getString("callchannel"),  //$NON-NLS-1$
 		    				readConnection, true);
-		    		records.put(log.getChannel(), log);
+		    		
+		    		/* BUG FIX: Can get into a situation where a person does not exist
+		    		 * in any records, this is usually when its an internal phone
+		    		 * calling somewhere and its originator channel ends up in the
+		    		 * call history.
+		    		 * 
+		    		 * These internal phones may never have been dealt with in the phone
+		    		 * system so won't have a person/location attached.
+		    		 * 
+		    		 * To check this, see if we have a valid log time otherwise discard
+		    		 * 
+		    		 * If the time is null as part of error checking we gen from
+		    		 * the current time which means you end up with phantom records
+		    		 * in the top of the log.  So we need to discard invalid times!
+		    		 */
+		    		if(log.isValid())
+		    			records.put(log.getChannel(), log);
 		    		
 		    	}
 		    		
@@ -346,6 +372,44 @@ public class CallLogPanel implements PacketListener {
 	private void changeCallLog(String channel, String field, String value) {
 		
 		tableModel.changeRow(channel, field, value);
+		
+	}
+
+	@Override
+	public void chatCreated(Chat chat, boolean createdLocally) {
+		
+		//New chat initiated so add a message listener to it
+		chat.addMessageListener(this);
+		LOGGER.info(xStrings.getString("CallManagerPanel.receivedPrivateChatRequest")); //$NON-NLS-1$
+				
+	}
+
+	/* MESSAGE LISTENER */
+	@Override
+	public void processMessage(Chat chat, Message message) {
+		
+		//Can pass this on to the processPacket method as part of normal message handling
+		LOGGER.info(xStrings.getString("CallLogPanel.receivedPrivateMessage") //$NON-NLS-1$
+				+ message.getBody()); 
+		
+		String[] command = message.getBody().split("/"); //$NON-NLS-1$
+		
+		if(command.length == 5 && command[0].equals(
+				xStrings.getString("CallLogPanel.commandCall")) && //$NON-NLS-1$
+				command[2].equals(incomingQueue)){ 
+		
+			//This will be a call still ringing so add it to our call history for later
+			
+			//Calls that aren't in the incoming queue will already be in the conversation
+			//list (in theory but needs testing)
+			CallLog log = new CallLog(language, country,
+	    			command[3],
+	    			readConnection, true);
+	    	
+	    	records.put(log.getChannel(), log);
+	    	appendCallLog(log);
+			
+		}	
 		
 	}
 
