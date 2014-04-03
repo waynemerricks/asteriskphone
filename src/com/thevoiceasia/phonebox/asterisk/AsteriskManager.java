@@ -592,6 +592,16 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 						xStrings.getString("AsteriskManager.commandTransferEndPoint"))){ //$NON-NLS-1$
 					
 					//We're transfering the other side of the call here
+					/* When we transfer, a new channel is created for the receiver of this call
+					 * This makes all the call information get dropped
+					 * To work around this we have to do it client side so all clients stay in sync
+					 * New Command ENDPOINT: Sends what the channel was and what the endpoint is so that
+					 * clients can store endpoint extension and then when the queue message comes in
+					 * update the channel properly (in theory)
+					 */
+					sendMessage(xStrings.getString("AsteriskManager.commandEndPoint") + "/" + command[1] + "/"  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
+					 + activeChannels.get(command[1]).getLinkedChannel().getId());
+					
 					redirectCallToQueue(activeChannels.get(command[1]).getLinkedChannel()
 							.getId(), from);
 					
