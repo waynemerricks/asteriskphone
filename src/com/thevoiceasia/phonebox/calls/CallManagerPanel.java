@@ -216,6 +216,8 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		if(location == null)
 			location = xStrings.getString("CallManagerPanel.locationUnknown"); //$NON-NLS-1$
 		
+		//timeZoneOffset, required if the timezone is a part hour +/- from UTC so that 
+		//for example, the call panel timer starts at 00:30 rather than 00:00
 		int timezoneOffset = 0;
 		if(settings.get("timezoneHourOffset") != null) //$NON-NLS-1$
 			try{
