@@ -61,7 +61,9 @@ public class PhoneCall implements Runnable{
 		
 		/* BUG FIX CALLERID WITHHELD */
 		this.callerID =  checkNumberWithHeld(callerID);
-		
+		//TODO When a call is queued without a conversation it might have been from
+		//a call we initiated, the conversation goes because of a channel switch
+		//from originator to receiver once the call is put on hold :|
 		populatePersonDetails();
 		lookupCallType(channelID);
 		
