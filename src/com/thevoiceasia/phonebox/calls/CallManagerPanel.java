@@ -423,7 +423,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								 * 
 								 * Needs Testing!
 								 * 
-								 * TODO Remove leading 9s (or whatever you use for outside numbers based on DB)
+								 * Remove leading 9s (or whatever you use for outside numbers based on DB)
 							     */
 								//Internal call to outside from me
 								if(isMyPhone(command[1])){
@@ -542,6 +542,12 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								else
 									callPanels.get(command[3]).setAnsweredMe(command[2], 
 											true);
+								
+								/* BUG FIX: Forgot to notify listeners that we'd answered something
+								 * This only occurs when we dial out
+								 */
+								notifyListeners(callPanels.get(command[3]));
+								
 							/* if 2nd argument = myphone its a call I've answered */
 							}else if(isMyPhone(command[2])){
 								
@@ -622,6 +628,11 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								if(isMyPhone(callPanels.get(command[3]).getOriginator())){ 
 									//ANSWERED_ME
 									callPanels.get(command[3]).setAnsweredMe(command[2], true);
+									
+									/* BUG FIX: Forgot to notify listeners that we'd answered something
+									 * This only occurs when we dial out
+									 */
+									notifyListeners(callPanels.get(command[3]));
 									
 								}else{
 									//ANSWERED_ELSEWHERE
