@@ -32,12 +32,22 @@ public class DialPanel extends JDialog implements ActionListener, KeyListener{
 	private I18NStrings xStrings;
 	private String dialledNumber;
 	private Vector<DialListener> listeners = new Vector<DialListener>();
+	private String prefix = null;
 	
+	/**
+	 * Creates a small phone keypad dialler dialog
+	 * @param owner - Frame that owns this dialog
+	 * @param title - Title of the frame
+	 * @param language - Language for I18N e.g. en
+	 * @param country - Country for I18N e.g. GB
+	 * @param dialPrefix - Number to prefix to outside calls e.g. 9 to dial outside
+	 */
 	public DialPanel(Frame owner, String title, String language, 
-			String country) {
+			String country, String dialPrefix) {
 		
 		super(owner, title, false);
 		xStrings = new I18NStrings(language, country);
+		this.prefix = dialPrefix;
 		
 		this.setLayout(new BorderLayout());
 		this.setSize(280, 480);
@@ -134,6 +144,12 @@ public class DialPanel extends JDialog implements ActionListener, KeyListener{
 	private void dial(){
 		
 		dialledNumber = number.getText();
+		
+		//Add in prefix if necessary, numbers under 6 digits = internal call by 
+		//UK standards
+		if(dialledNumber.length() > 5 && prefix != null && prefix.length() > 0)
+			dialledNumber = prefix + dialledNumber;
+		
 		this.setVisible(false);
 		notifyListeners();
 		

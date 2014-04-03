@@ -431,18 +431,18 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									
 									/*createSkeletonCallInfoPanel(command[1], command[3], 
 											CallInfoPanel.MODE_RINGING_ME, command[2], 
-											creationTime, true);*/
+											creationTime);*/
 									createSkeletonCallInfoPanel(command[2], command[3], 
 											CallInfoPanel.MODE_RINGING_ME, command[1], 
-											creationTime);
+											creationTime);//Number Swap
 									callPanels.get(command[3]).setOriginator(command[1]);
 								}else{//Internal call to outside not from me
 									/*createSkeletonCallInfoPanel(command[1], command[3], 
 											CallInfoPanel.MODE_ANSWERED_ELSEWHERE, command[2], 
-											creationTime, true);*/
+											creationTime);*/
 									createSkeletonCallInfoPanel(command[2], command[3], 
 											CallInfoPanel.MODE_ANSWERED_ELSEWHERE, command[1], 
-											creationTime);
+											creationTime);//Number Swap
 									callPanels.get(command[3]).setOriginator(command[1]);
 								}
 							}else if(!systemExtensions.contains(command[1]) && 
@@ -1258,7 +1258,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 				owner = (Client)parent;
 			
 			dialler = new DialPanel(owner, xStrings.getString("DialPanel.title"), //$NON-NLS-1$
-					settings.get("language"), settings.get("country"));  //$NON-NLS-1$//$NON-NLS-2$
+					settings.get("language"), settings.get("country"), settings.get("outsideCallPrefix"));  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
 			dialler.addDialListener(this);
 			
 			dialler.setVisible(true);
