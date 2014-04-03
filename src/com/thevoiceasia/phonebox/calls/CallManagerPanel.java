@@ -806,6 +806,12 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 						
 					}//If it doesn't exist then ignore it, the call probably ended
 					
+				}else if(command.length == 3 &&
+						command[0].equals(xStrings.getString("CallManagerPanel.endPoint"))){ //$NON-NLS-1$
+					
+					//TODO Store endpoint and extension here then act on it in subsequent queue message
+					
+					
 				}
 				
 			}
