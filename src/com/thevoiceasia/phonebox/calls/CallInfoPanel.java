@@ -60,7 +60,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	private static final Color RINGING_COLOUR = new Color(99, 169, 219);//Blue
 	private static final Color RINGING_ME_COLOUR = new Color(29, 110, 167);//Dark Blue
 	private static final Color ANSWERED_COLOUR = new Color(237, 171, 122);//Orange
-	private static final Color ANSWERED_ME_COLOUR= new Color(183, 93, 27);//Dark Orange
+	//private static final Color ANSWERED_ME_COLOUR= new Color(183, 93, 27);//Dark Orange
 	private static final Color ANSWERED_ELSEWHERE_COLOUR = new Color(164, 164, 164);//Grey
 	private static final Color QUEUED_COLOUR = new Color(111, 212, 127);//Green
 	private static final Color QUEUED_ME_COLOUR = new Color(40, 130, 55);//Dark Green
@@ -507,7 +507,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 			
 			public void run(){
 				
-				setBackground(ANSWERED_ME_COLOUR);
+				setBackground(ANSWERED_COLOUR);
 				
 				if(answered != null)
 					connectedToLabel.setText(answered);
