@@ -65,6 +65,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	private DatabaseManager databaseManager;
 	private HashSet<String> systemExtensions = new HashSet<String>();
 	private HashMap<String, String> settings;
+	private HashMap<String, String> calls = new HashMap<String, String>(); //HashMap to store dialled calls in progress
 	
 	/* We need to spawn threads for event response with db lookups, in order to guard against
 	 * craziness, we'll use the ExecutorService to have X threads available to use (set via
@@ -300,6 +301,9 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	 * @param fromName
 	 */
 	public void createCall(String to, String fromNumber, String fromName){
+		
+		//BUG FIX Store the call creation stuff here so we can look it up later
+		calls.put(fromNumber, to);
 		
 		HashMap<String, String> vars = new HashMap<String, String>();
 		asteriskServer.originateToExtensionAsync(SIP_PREFIX + fromNumber + "@" +  //$NON-NLS-1$
@@ -612,6 +616,8 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
 		
+		System.out.println(evt);
+		
 		if(evt.getPropertyName().equals("state") && //$NON-NLS-1$
 				evt.getSource() instanceof AsteriskChannel){ 
 			
@@ -633,6 +639,27 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 				}else if(state.getStatus() == ChannelState.HUNGUP.getStatus()){
 					
 					AsteriskChannel hangup = (AsteriskChannel)evt.getSource();
+					
+					/* Remove any old dialled calls in progress */
+					if(calls.size() > 0){
+						
+						Iterator<String> keys = calls.keySet().iterator();
+						boolean done = false;
+						
+						while(keys.hasNext() && !done){
+							
+							String key = keys.next();
+							String to = calls.get(key);
+							
+							if(to.contains(hangup.getId())){
+								calls.remove(key);
+								done = true;
+							}
+							
+						}
+						
+					}
+					
 					/* Hangup Cause
 					 * Normal Clearing = normal hangup
 					 * Subscriber absent = number offline / doesn't exist?
@@ -731,7 +758,25 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 						 * record if its someone new before the clients start processing
 						 * and things go crazy
 						 */
-						dbLookUpService.execute(new PhoneCall(checkNumberWithHeld(channel.getCallerId()), 
+						/* At this point it could be a call from this channel that we're making to 
+						 * someone else.  Ideally we'd like to have the panel show up with the right
+						 * person attached to it but in order to do that we need to swap this channels
+						 * caller id with the id of the channel we're trying to call
+						 * 
+						 * FIXME On Dial store the channel stuff so we can substitute here?
+						 */
+						
+						CallerId callerToCheck = channel.getCallerId();
+						
+						if(calls.containsKey(channel.getCallerId().getNumber())){
+							
+							String to = calls.get(channel.getCallerId().getNumber());
+							callerToCheck = new CallerId(to, to);
+							calls.put(channel.getCallerId().getNumber(), to + "/" + channel.getId()); //$NON-NLS-1$
+							
+						}
+						
+						dbLookUpService.execute(new PhoneCall(checkNumberWithHeld(callerToCheck), 
 								channel.getId(), databaseManager));
 					
 						LOGGER.info(message);
