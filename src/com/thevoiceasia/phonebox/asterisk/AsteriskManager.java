@@ -600,7 +600,8 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 					 * update the channel properly (in theory)
 					 */
 					sendMessage(xStrings.getString("AsteriskManager.commandEndPoint") + "/" + command[1] + "/"  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
-					 + activeChannels.get(command[1]).getLinkedChannel().getId());
+					 + activeChannels.get(command[1]).getLinkedChannel().getId() + "/"  //$NON-NLS-1$
+					 + activeChannels.get(command[1]).getLinkedChannel().getCallerId().getNumber());
 					
 					redirectCallToQueue(activeChannels.get(command[1]).getLinkedChannel()
 							.getId(), from);
@@ -625,8 +626,6 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	/** PropertyChangeListener **/
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
-		
-		System.out.println(evt);
 		
 		if(evt.getPropertyName().equals("state") && //$NON-NLS-1$
 				evt.getSource() instanceof AsteriskChannel){ 
@@ -773,7 +772,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 						 * person attached to it but in order to do that we need to swap this channels
 						 * caller id with the id of the channel we're trying to call
 						 * 
-						 * FIXME On Dial store the channel stuff so we can substitute here?
+						 * On Dial store the channel stuff so we can substitute here?
 						 */
 						
 						CallerId callerToCheck = channel.getCallerId();
