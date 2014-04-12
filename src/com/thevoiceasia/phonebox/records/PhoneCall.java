@@ -34,6 +34,12 @@ public class PhoneCall implements Runnable{
 	/** STATICS **/
 	private static final Logger LOGGER = Logger.getLogger(PhoneCall.class.getName());//Logger
 	
+	/**
+	 * Used by Clients to create a call record based on given details
+	 * @param database
+	 * @param callerID
+	 * @param channelID
+	 */
 	public PhoneCall(DatabaseManager database, String callerID, String channelID) {
 		
 		this.database = database;
@@ -49,6 +55,13 @@ public class PhoneCall implements Runnable{
 		
 	}
 	
+	/**
+	 * Used by Clients to create a call record with specified details
+	 * @param database
+	 * @param callerID
+	 * @param channelID
+	 * @param callLocation
+	 */
 	public PhoneCall(DatabaseManager database, String callerID, String channelID, 
 			String callLocation){
 		
@@ -69,6 +82,15 @@ public class PhoneCall implements Runnable{
 		
 	}
 
+	/**
+	 * Used by the Server to create a call record
+	 * @param database
+	 * @param callerID
+	 * @param channelID
+	 * @param asteriskManager
+	 * @param mode
+	 * @param from
+	 */
 	public PhoneCall(DatabaseManager database, String callerID, String channelID, 
 			AsteriskManager asteriskManager, char mode, String from){
 	
@@ -86,6 +108,12 @@ public class PhoneCall implements Runnable{
 		
 	}
 	
+	/**
+	 * Used by Server to create a call when the Queued message is received
+	 * @param database
+	 * @param queueEntry
+	 * @param asteriskManager
+	 */
 	public PhoneCall(DatabaseManager database, AsteriskQueueEntry queueEntry, 
 			AsteriskManager asteriskManager) {
 		
