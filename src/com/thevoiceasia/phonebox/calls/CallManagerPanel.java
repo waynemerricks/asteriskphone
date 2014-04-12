@@ -56,6 +56,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	private I18NStrings xStrings;
 	private CountryCodes countries;
 	private HashMap<String, CallInfoPanel> callPanels = new HashMap<String, CallInfoPanel>();
+	private HashMap<String, EndPointRecord> endPoints = new HashMap<String, EndPointRecord>();
 	private DatabaseManager database;
 	private HashMap<String, String> settings;
 	private HashMap<String, String> studioExtensions = new HashMap<String, String>();
@@ -195,8 +196,8 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	 * @param connectedTo Name or extension this panel is connected to
 	 */
 	private void createSkeletonCallInfoPanel(String phoneNumber, String channelID, int mode,
-			String connectedTo, long creationTime){
-		
+			String connectedTo, long creationTime, String originalChannelID){
+		//TODO
 		String location = null;
 		LOGGER.info(xStrings.getString("CallManagerPanel.createSkeletonCallPanel") + //$NON-NLS-1$
 				phoneNumber + "/" + channelID + "/" + mode); //$NON-NLS-1$ //$NON-NLS-2$
@@ -396,7 +397,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 										mode = CallInfoPanel.MODE_QUEUED_ME;
 									
 									createSkeletonCallInfoPanel(command[1], command[3], 
-											mode, command[2], creationTime);
+											mode, command[2], creationTime, null);
 									
 									callPanels.get(command[3]).setOriginator(command[1]);
 								}else{
@@ -406,7 +407,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 										mode = CallInfoPanel.MODE_QUEUED;
 									
 									createSkeletonCallInfoPanel(command[1], command[3], 
-											mode, command[2], creationTime);
+											mode, command[2], creationTime, null);
 									
 									callPanels.get(command[3]).setOriginator(command[1]);
 								}
@@ -436,7 +437,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 											creationTime);*/
 									createSkeletonCallInfoPanel(command[2], command[3], 
 											CallInfoPanel.MODE_RINGING_ME, command[1], 
-											creationTime);//Number Swap
+											creationTime, null);//Number Swap
 									callPanels.get(command[3]).setOriginator(command[1]);
 								}else{//Internal call to outside not from me
 									/*createSkeletonCallInfoPanel(command[1], command[3], 
@@ -444,7 +445,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 											creationTime);*/
 									createSkeletonCallInfoPanel(command[2], command[3], 
 											CallInfoPanel.MODE_ANSWERED_ELSEWHERE, command[1], 
-											creationTime);//Number Swap
+											creationTime, null);//Number Swap
 									callPanels.get(command[3]).setOriginator(command[1]);
 								}
 							}else if(!systemExtensions.contains(command[1]) && 
@@ -455,7 +456,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									
 									//Outside call coming into a queue as normal
 									createSkeletonCallInfoPanel(command[1], command[3], 
-											CallInfoPanel.MODE_RINGING, null, creationTime);
+											CallInfoPanel.MODE_RINGING, null, creationTime, null);
 									callPanels.get(command[3]).setOriginator(command[1]);
 									
 									if(settings.get("queue_" + command[2] + "_icon") != null) //$NON-NLS-1$ //$NON-NLS-2$
@@ -465,7 +466,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									
 									//Outside call coming into a queue as normal
 									createSkeletonCallInfoPanel(command[1], command[3], 
-											CallInfoPanel.MODE_QUEUED, null, creationTime);
+											CallInfoPanel.MODE_QUEUED, null, creationTime, null);
 									
 									callPanels.get(command[3]).setOriginator(command[1]);
 									
@@ -476,7 +477,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									
 									//Outside call coming direct to a phone
 									createSkeletonCallInfoPanel(command[1], command[3], 
-											CallInfoPanel.MODE_RINGING, command[2], creationTime);
+											CallInfoPanel.MODE_RINGING, command[2], creationTime, null);
 									callPanels.get(command[3]).setOriginator(command[1]);
 								}
 								
@@ -514,14 +515,38 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								
 							}else{
 								
-								//Not in our list so create skeleton and spawn update thread
-								//queue, name, number, channel
-								if(isMyPhone(command[2]))
-									createSkeletonCallInfoPanel(command[2], command[3], 
-											CallInfoPanel.MODE_QUEUED_ME, null, -1);
-								else
-									createSkeletonCallInfoPanel(command[2], command[3], 
-											CallInfoPanel.MODE_QUEUED, null, -1);
+								/* After placing a call and transferring the endpoint, a new channel
+								 * is created and all the record information is lost as the channel
+								 * is different.
+								 * 
+								 * We need to check the endpoint records to see if we're expecting
+								 * a channel change and then point the record to the original call
+								 * channel								 * 
+								 */
+								if(endPoints.containsKey(command[2])){
+								
+									EndPointRecord updateMe = endPoints.get(command[2]);
+									endPoints.remove(command[2]);
+									
+									if(isMyPhone(command[2]))
+										createSkeletonCallInfoPanel(command[2], command[3], 
+												CallInfoPanel.MODE_QUEUED_ME, null, -1, updateMe.callerChannel);
+									else
+										createSkeletonCallInfoPanel(command[2], command[3], 
+												CallInfoPanel.MODE_QUEUED, null, -1, updateMe.callerChannel);
+									
+								}else{
+								
+									//Not in our list so create skeleton and spawn update thread
+									//queue, name, number, channel
+									if(isMyPhone(command[2]))
+										createSkeletonCallInfoPanel(command[2], command[3], 
+												CallInfoPanel.MODE_QUEUED_ME, null, -1, null);
+									else
+										createSkeletonCallInfoPanel(command[2], command[3], 
+												CallInfoPanel.MODE_QUEUED, null, -1, null);
+									
+								}
 								
 							}
 							
@@ -657,13 +682,13 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									if(!isStudioExtension(command[2]))
 										createSkeletonCallInfoPanel(command[1], command[3], 
 												CallInfoPanel.MODE_ANSWERED_ELSEWHERE, command[2], 
-												creationTime);
+												creationTime, null);
 									else{
 										
 										createSkeletonCallInfoPanel(command[1], command[3], 
 												CallInfoPanel.MODE_ON_AIR, 
 												studioExtensions.get(command[2]), 
-												creationTime);
+												creationTime, null);
 										
 									}
 									
@@ -684,7 +709,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									 * internal or external phone
 									 */
 									createSkeletonCallInfoPanel(command[1], command[3],
-											CallInfoPanel.MODE_ANSWERED, null, creationTime);
+											CallInfoPanel.MODE_ANSWERED, null, creationTime, null);
 								
 									notifyListeners(callPanels.get(command[3]));
 									
@@ -806,11 +831,13 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 						
 					}//If it doesn't exist then ignore it, the call probably ended
 					
-				}else if(command.length == 3 &&
+				}else if(command.length == 4 &&
 						command[0].equals(xStrings.getString("CallManagerPanel.endPoint"))){ //$NON-NLS-1$
 					
-					//TODO Store endpoint and extension here then act on it in subsequent queue message
-					
+					//Store endpoint and extension here then act on it in subsequent queue message
+					//ENDPOINT/1397214684.388/1397214684.391/9901234567890
+					//ENDPOINT/dialler ch    /receiver ch   /receiver clid
+					endPoints.put(command[3], new EndPointRecord(command[1], command[2], command[3]));
 					
 				}
 				
@@ -1395,7 +1422,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 			long creationTime = getCreationTime(command[4]);
 			
 			createSkeletonCallInfoPanel(command[2], command[3],
-					CallInfoPanel.MODE_ANSWERED, null, creationTime);
+					CallInfoPanel.MODE_ANSWERED, null, creationTime, null);
 		
 			notifyListeners(callPanels.get(command[3]));
 			
