@@ -196,8 +196,9 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	 * @param connectedTo Name or extension this panel is connected to
 	 */
 	private void createSkeletonCallInfoPanel(String phoneNumber, String channelID, int mode,
-			String connectedTo, long creationTime, String originalChannelID){
+			String connectedTo, long creationTime, EndPointRecord updateMe){
 		//TODO
+		
 		String location = null;
 		LOGGER.info(xStrings.getString("CallManagerPanel.createSkeletonCallPanel") + //$NON-NLS-1$
 				phoneNumber + "/" + channelID + "/" + mode); //$NON-NLS-1$ //$NON-NLS-2$
@@ -294,8 +295,14 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 			
 		});
 		
-		//Spawn thread to populate details
-		dbLookUpService.execute(
+		//Spawn thread to populate details, if updateme not null then we need to transfer
+		//info from the original call channel
+		if(updateMe != null)
+			dbLookUpService.execute(
+					new InfoPanelPopulator(database, call, phoneNumber, 
+							updateMe.callerChannel, location));
+		else
+			dbLookUpService.execute(
 				new InfoPanelPopulator(database, call, phoneNumber, channelID, location));
 		
 	}
@@ -465,13 +472,43 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								}else if(isOnAirQueue(command[2])){
 									
 									//Outside call coming into a queue as normal
-									createSkeletonCallInfoPanel(command[1], command[3], 
-											CallInfoPanel.MODE_QUEUED, null, creationTime, null);
 									
+									/* After placing a call and transferring the endpoint, a new channel
+									 * is created and all the record information is lost as the channel
+									 * is different.
+									 * 
+									 * We need to check the endpoint records to see if we're expecting
+									 * a channel change and then point the record to the original call
+									 * channel
+									 */
+									//TODO
+									if(endPoints.containsKey(command[1])){
+										
+										EndPointRecord updateMe = endPoints.get(command[1]);
+										endPoints.remove(command[2]);
+										
+										if(isMyPhone(command[2]))
+											createSkeletonCallInfoPanel(command[1], command[3], 
+													CallInfoPanel.MODE_QUEUED_ME, null, creationTime, updateMe);
+										else
+											createSkeletonCallInfoPanel(command[1], command[3], 
+													CallInfoPanel.MODE_QUEUED, null, creationTime, updateMe);
+										//TODO Creation time taken from original channel at point of transferendpoint?
+										
+									}else{
+										
+										//TODO Should we check for MODE_QUEUED_ME here?
+										createSkeletonCallInfoPanel(command[1], command[3], 
+												CallInfoPanel.MODE_QUEUED, null, creationTime, null);
+										
+									}
+									
+									//Set Number and Queue Badge
 									callPanels.get(command[3]).setOriginator(command[1]);
 									
 									if(settings.get("queue_" + command[2] + "_icon") != null) //$NON-NLS-1$ //$NON-NLS-2$
 										callPanels.get(command[3]).getIconPanel().setBadgeIcon(settings.get("queue_" + command[2] + "_icon"));  //$NON-NLS-1$//$NON-NLS-2$
+									
 									
 								}else if(!command[1].equals(xStrings.getString("CallManagerPanel.callSystemUnknown"))){ //$NON-NLS-1$
 									
@@ -482,7 +519,6 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								}
 								
 							}
-							
 							
 						}
 						
@@ -501,6 +537,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 						}else if(command[1].equals(settings.get("onAirQueueNumber"))){ //$NON-NLS-1$
 							
 							LOGGER.info(xStrings.getString("CallManagerPanel.CallOnAirQueue")); //$NON-NLS-1$
+							
 							//On Air Queue
 							if(callPanels.get(command[3]) != null){
 								
@@ -515,39 +552,15 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								
 							}else{
 								
-								/* After placing a call and transferring the endpoint, a new channel
-								 * is created and all the record information is lost as the channel
-								 * is different.
-								 * 
-								 * We need to check the endpoint records to see if we're expecting
-								 * a channel change and then point the record to the original call
-								 * channel								 * 
-								 */
-								if(endPoints.containsKey(command[2])){
-								
-									EndPointRecord updateMe = endPoints.get(command[2]);
-									endPoints.remove(command[2]);
+								//Not in our list so create skeleton and spawn update thread
+								//queue, name, number, channel
+								if(isMyPhone(command[2]))
+									createSkeletonCallInfoPanel(command[2], command[3], 
+											CallInfoPanel.MODE_QUEUED_ME, null, -1, null);
+								else
+									createSkeletonCallInfoPanel(command[2], command[3], 
+											CallInfoPanel.MODE_QUEUED, null, -1, null);
 									
-									if(isMyPhone(command[2]))
-										createSkeletonCallInfoPanel(command[2], command[3], 
-												CallInfoPanel.MODE_QUEUED_ME, null, -1, updateMe.callerChannel);
-									else
-										createSkeletonCallInfoPanel(command[2], command[3], 
-												CallInfoPanel.MODE_QUEUED, null, -1, updateMe.callerChannel);
-									
-								}else{
-								
-									//Not in our list so create skeleton and spawn update thread
-									//queue, name, number, channel
-									if(isMyPhone(command[2]))
-										createSkeletonCallInfoPanel(command[2], command[3], 
-												CallInfoPanel.MODE_QUEUED_ME, null, -1, null);
-									else
-										createSkeletonCallInfoPanel(command[2], command[3], 
-												CallInfoPanel.MODE_QUEUED, null, -1, null);
-									
-								}
-								
 							}
 							
 						}
@@ -797,6 +810,14 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 							
 						}
 						
+					}else if(command.length == 4 &&
+							command[0].equals(xStrings.getString("CallManagerPanel.endPoint"))){ //$NON-NLS-1$
+						
+						//Store endpoint and extension here then act on it in subsequent queue message
+						//ENDPOINT/1397214684.388/1397214684.391/9901234567890
+						//ENDPOINT/dialler ch    /receiver ch   /receiver clid
+						endPoints.put(command[3], new EndPointRecord(command[1], command[2], command[3]));
+						
 					}
 					
 				}else if(command.length == 3 && 
@@ -830,14 +851,6 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 						new Thread(new LockedWaitThread(callPanels.get(command[1]))).start();
 						
 					}//If it doesn't exist then ignore it, the call probably ended
-					
-				}else if(command.length == 4 &&
-						command[0].equals(xStrings.getString("CallManagerPanel.endPoint"))){ //$NON-NLS-1$
-					
-					//Store endpoint and extension here then act on it in subsequent queue message
-					//ENDPOINT/1397214684.388/1397214684.391/9901234567890
-					//ENDPOINT/dialler ch    /receiver ch   /receiver clid
-					endPoints.put(command[3], new EndPointRecord(command[1], command[2], command[3]));
 					
 				}
 				
