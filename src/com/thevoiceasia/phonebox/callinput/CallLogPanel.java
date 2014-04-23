@@ -47,20 +47,23 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 	private HashMap<String, CallLog> records = new HashMap<String, CallLog>();
 	private long maxRecordAge = 3600000L;
 	private Connection readConnection = null;
-	private String incomingQueue = null;
+	private String incomingQueue = null, onairQueue = null;
+	private HashMap<String, String> channelSwapList = new HashMap<String, String>();
 	
 	//STATICS
 	private static final Logger LOGGER = Logger.getLogger(CallLogPanel.class.getName());//Logger
 		
 	public CallLogPanel(Connection readConnection, long maxRecordAge, 
-			String language, String country, ChatManager manager, String incomingQueue) {
-	
+			String language, String country, ChatManager manager, String incomingQueue, 
+			String onairQueue) {
+
 		this.language = language;
 		this.country = country;
 		xStrings = new I18NStrings(language, country);
 		this.readConnection = readConnection;
 		this.maxRecordAge = maxRecordAge;
 		this.incomingQueue = incomingQueue;
+		this.onairQueue = onairQueue;
 		
 		//Create the Table
 		buildTableColumns();
@@ -312,6 +315,23 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 				/* Only care about name, conversation, location
 				 * TODO Change this to read fields wanted from DB
 				 */
+				//Make sure channel exists in list before updating
+				if(!records.containsKey(command[2])){
+					
+					//Create a new one based on this
+					//TODO fix dial channel swap
+					//Add to call log table
+					LOGGER.info(xStrings.getString("CallLogPanel.logNewUpdate") + " " + command[2]); //$NON-NLS-1$ //$NON-NLS-2$
+					
+					CallLog log = new CallLog(language, country,
+			    			command[2],
+			    			readConnection, true);
+			    	
+			    	records.put(log.getChannel(), log);
+			    	appendCallLog(log);
+					
+				}
+				
 				if(command[1].equals(xStrings.getString("CallLogPanel.name"))){ //$NON-NLS-1$
 					
 					LOGGER.info(xStrings.getString("CallLogPanel.logNameUpdate")); //$NON-NLS-1$
@@ -346,7 +366,7 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 			
 			}else if(command.length == 4 && command[0].equals(
 					xStrings.getString("CallLogPanel.commandQueue")) && //$NON-NLS-1$
-					command[1].equals(incomingQueue)){//CALL 
+					command[1].equals(incomingQueue)){//QUEUE INCOMING
 				
 				//Add to call log table
 				LOGGER.info(xStrings.getString("CallLogPanel.logQUEUE")); //$NON-NLS-1$
@@ -358,10 +378,57 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 		    	records.put(log.getChannel(), log);
 		    	appendCallLog(log);
 		    		
+		    }else if(command.length == 4 && command[0].equals(
+		    		xStrings.getString("CallLogPanel.commandEndPoint"))){ //$NON-NLS-1$
+		    	
+		    	//Store as we'll expect a channel swap on this
+		    	LOGGER.info(xStrings.getString("CallLogPanel.logEndPoint") + " " +  //$NON-NLS-1$ //$NON-NLS-2$
+		    			"Number: " + command[3] + " Channel: " + command[1]);   //$NON-NLS-1$//$NON-NLS-2$
+		    	channelSwapList.put(command[3], command[1]);//key = number, value = channel
+		    	
+		    }else if(command.length == 4 && command[0].equals(
+		    		xStrings.getString("CallLogPanel.commandQueue")) && //$NON-NLS-1$
+		    		command[1].equals(onairQueue)){ //QUEUE ON AIR
+		    	
+		    	//TODO
+		    	//Check for channel swap
+		    	if(channelSwapList.size() > 0){
+		    		
+		    		
+		    		if(channelSwapList.containsKey(command[2])){
+		    			
+		    			LOGGER.info(xStrings.getString("CallLogPanel.receivedSwapOnAirQueue")); //$NON-NLS-1$
+			    		swapChannel(channelSwapList.get(command[2]), command[3]);
+		    			channelSwapList.remove(command[2]);
+		    			
+		    		}
+		    		
+		    	}
+		    	
 		    }
 			
 		}	
 
+	}
+
+	/**
+	 * Swaps the channel of an entry in the call log to this new channel
+	 * @param fromChannel Original channel to swap
+	 * @param toChannel new value to swap it to
+	 */
+	private void swapChannel(String fromChannel, String toChannel) {
+		
+		LOGGER.info(xStrings.getString("CallLogPanel.logChannelUpdate")); //$NON-NLS-1$
+		
+		//Set Internal Record
+		CallLog log = records.get(fromChannel);
+		log.setChannel(toChannel);
+		records.remove(fromChannel);
+		records.put(toChannel, log);
+		
+		//Set table row value
+		changeCallLog(fromChannel, "channel", toChannel); //$NON-NLS-1$
+		
 	}
 
 	/**
