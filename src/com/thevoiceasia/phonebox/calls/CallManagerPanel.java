@@ -229,11 +229,16 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 						settings.get("timezoneHourOffset")); //$NON-NLS-1$
 			}
 		
+		boolean canTake = false;
+		
+		if(settings.containsKey("canTakeCall") && settings.get("canTakeCall").equals("true"))  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
+			canTake = true;
+		
 		CallInfoPanel call = new CallInfoPanel(settings.get("language"),  //$NON-NLS-1$
 				settings.get("country"),  //$NON-NLS-1$
 				xStrings.getString("CallManagerPanel.callerUnknown"), //$NON-NLS-1$
 				location, "", CallInfoPanel.ALERT_OK, channelID,  //$NON-NLS-1$
-				dropMode, true, controlRoom, settings.get("myExtension"),//$NON-NLS-1$
+				dropMode, canTake, controlRoom, settings.get("myExtension"),//$NON-NLS-1$
 				settings.get("nickName"), timezoneOffset, null);//$NON-NLS-1$
 		
 		//Set the creation time as required
