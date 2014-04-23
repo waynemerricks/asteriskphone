@@ -38,20 +38,22 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 	private CallerHistoryPanel historyPanel = null;
 	private CallLogPanel callLogPanel = null;
 	private long maxRecordAge = 3600000L;
-	private String incomingQueue = null;
+	private String incomingQueue = null, onairQueue = null;
 	
 	/** STATICS **/
 	private static final long serialVersionUID = 1L;
 	private static final Logger LOGGER = Logger.getLogger(CallInputPanel.class.getName());//Logger
 	
 	public CallInputPanel(Connection readConnection, String maxRecordAge, 
-			String language, String country, ChatManager manager, String incomingQueue) {
+			String language, String country, ChatManager manager, String incomingQueue,
+			String onairQueue) {
 		
 		super(JTabbedPane.BOTTOM);
 		
 		this.language = language;
 		this.country = country;
 		this.incomingQueue = incomingQueue;
+		this.onairQueue = onairQueue;
 		
 		xStrings = new I18NStrings(language, country);
 		
@@ -402,7 +404,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 				LOGGER.info(xStrings.getString("CallInputPanel.creatingCallLogPanel")); //$NON-NLS-1$
 				//Special case for the call log tab
 				callLogPanel = new CallLogPanel(databaseReadConnection, 
-						this.maxRecordAge, language, country, manager, incomingQueue);
+						this.maxRecordAge, language, country, manager, incomingQueue, onairQueue);
 				tab.add(callLogPanel.getTable().getTableHeader(), "growx, spanx, wrap"); //$NON-NLS-1$
 				tab.add(callLogPanel.getTable(), "growx, spanx, wrap"); //$NON-NLS-1$
 				
