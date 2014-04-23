@@ -477,7 +477,12 @@ public class ChatManager implements UserStatusListener, PacketListener {
 		Presence presence = new Presence(Presence.Type.available, 
 				xStrings.getString("ChatManager.available"), 1, //$NON-NLS-1$
 				Presence.Mode.available); 
-		presence.setTo(XMPPRoomName + "/" + XMPPUserName.split("@")[0]);  //$NON-NLS-1$//$NON-NLS-2$
+		//BUG FIX Nickname is ignored and this presence sets name back to the login name
+		if(XMPPNickName != null && XMPPNickName.length() > 0)
+			presence.setTo(XMPPRoomName + "/" + XMPPNickName); //$NON-NLS-1$
+		else
+			presence.setTo(XMPPRoomName + "/" + XMPPUserName.split("@")[0]);  //$NON-NLS-1$//$NON-NLS-2$
+		
 		LOGGER.info(xStrings.getString("ChatManager.logSendingPresence") +  //$NON-NLS-1$
 				presence.getFrom() + ": " + presence.getMode()); //$NON-NLS-1$
 		XMPPServerConnection.sendPacket(presence);
@@ -504,7 +509,13 @@ public class ChatManager implements UserStatusListener, PacketListener {
 		Presence presence = new Presence(Presence.Type.available, 
 				xStrings.getString("ChatManager.away"), 0, //$NON-NLS-1$
 						Presence.Mode.away); 
-		presence.setTo(XMPPRoomName + "/" + XMPPUserName.split("@")[0]);  //$NON-NLS-1$//$NON-NLS-2$
+		
+		//BUG FIX Nickname is ignored and this presence sets name back to the login name
+		if(XMPPNickName != null && XMPPNickName.length() > 0)
+			presence.setTo(XMPPRoomName + "/" + XMPPNickName); //$NON-NLS-1$
+		else
+			presence.setTo(XMPPRoomName + "/" + XMPPUserName.split("@")[0]);  //$NON-NLS-1$//$NON-NLS-2$
+		
 		LOGGER.info(xStrings.getString("ChatManager.logSendingPresence") +  //$NON-NLS-1$
 				presence.getFrom() + ": " + presence.getMode()); //$NON-NLS-1$
 		XMPPServerConnection.sendPacket(presence);
