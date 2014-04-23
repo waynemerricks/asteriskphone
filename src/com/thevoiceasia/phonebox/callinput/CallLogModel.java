@@ -122,6 +122,8 @@ public class CallLogModel extends AbstractTableModel {
 					data.get(i).setLocation(value);
 				else if(field.equals("conversation")) //$NON-NLS-1$
 					data.get(i).setConversation(value);
+				else if(field.equals("channel")) //$NON-NLS-1$
+					data.get(i).setChannel(value);
 				
 				//fire data changed on row
 				this.fireTableRowsUpdated(i, i);
