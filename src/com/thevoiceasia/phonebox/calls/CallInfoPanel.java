@@ -113,7 +113,11 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 			int hourOffset,	String badgeIconPath){
 	
 		xStrings = new I18NStrings(language, country);
-		this.addMouseListener(this);
+		
+		//Don't add a mouse listener if we have no extension, saves on some cpu time
+		if(myExtension != null && !myExtension.equals("null") && myExtension.length() > 0) //$NON-NLS-1$
+			this.addMouseListener(this);
+		
 		defaultColour = this.getBackground();
 		ringingTimer = new Timer("ringingTimer:" + channelID); //$NON-NLS-1$
 		this.channelID = channelID;
