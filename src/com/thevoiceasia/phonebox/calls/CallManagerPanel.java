@@ -197,7 +197,6 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	 */
 	private void createSkeletonCallInfoPanel(String phoneNumber, String channelID, int mode,
 			String connectedTo, long creationTime, EndPointRecord updateMe){
-		//TODO
 		
 		String location = null;
 		LOGGER.info(xStrings.getString("CallManagerPanel.createSkeletonCallPanel") + //$NON-NLS-1$
