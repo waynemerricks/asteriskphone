@@ -328,5 +328,15 @@ public class CallLog {
 		return valid;
 		
 	}
+
+	/**
+	 * Need to be able to set the channel due to channel Swaps
+	 * @param toChannel
+	 */
+	public void setChannel(String toChannel) {
+		
+		channel = toChannel;
+		
+	}
 	
 }
