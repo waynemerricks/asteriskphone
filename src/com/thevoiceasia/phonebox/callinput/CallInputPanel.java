@@ -1,5 +1,6 @@
 package com.thevoiceasia.phonebox.callinput;
 
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -26,14 +27,15 @@ import javax.swing.ScrollPaneConstants;
 import com.thevoiceasia.phonebox.calls.AnswerListener;
 import com.thevoiceasia.phonebox.calls.CallInfoPanel;
 import com.thevoiceasia.phonebox.chat.ChatManager;
+import com.thevoiceasia.phonebox.records.Person;
 
 import net.miginfocom.swing.MigLayout;
 
-public class CallInputPanel extends JTabbedPane implements AnswerListener{
+public class CallInputPanel extends JTabbedPane implements AnswerListener, PersonChangedListener{
 
 	/* CLASS VARS */
 	private String language, country;
-	private Connection databaseReadConnection;
+	private Connection databaseReadConnection, databaseWriteConnection;
 	private Vector<CallInputField> components = new Vector<CallInputField>();
 	private I18NStrings xStrings;
 	private boolean hasErrors = false;
@@ -42,14 +44,15 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 	private CallLogPanel callLogPanel = null;
 	private long maxRecordAge = 3600000L;
 	private String incomingQueue = null, onairQueue = null;
+	private SearchPanel searchPanel = null;
 	
 	/** STATICS **/
 	private static final long serialVersionUID = 1L;
 	private static final Logger LOGGER = Logger.getLogger(CallInputPanel.class.getName());//Logger
 	
-	public CallInputPanel(Connection readConnection, String maxRecordAge, 
-			String language, String country, ChatManager manager, String incomingQueue,
-			String onairQueue) {
+	public CallInputPanel(Connection readConnection, Connection writeConnection, 
+			String maxRecordAge, String language, String country, ChatManager manager, 
+			String incomingQueue, String onairQueue) {
 		
 		super(JTabbedPane.BOTTOM);
 		
@@ -315,14 +318,28 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 						//one number in use by more than one person
 						JButton changePerson = new JButton(
 								xStrings.getString("CallInputPanel.changePerson")); //$NON-NLS-1$
+						
+						final Component owner = this.getParent();
+						final CallInputPanel cip = this;
+						
 						changePerson.addActionListener(new ActionListener(){
 							
 							public void actionPerformed(ActionEvent evt){
 								
-								//TODO Person switch
-								
+								if(searchPanel == null){
+									
+									searchPanel = new SearchPanel(owner, 
+											xStrings.getString("SearchPanel.title"),  //$NON-NLS-1$
+											language, country, 
+											databaseReadConnection, databaseWriteConnection);
+									searchPanel.getSelectedPerson();
+									searchPanel.addPersonChangedListener(cip);
+									searchPanel.setVisible(true);
+									
+								}
 								
 							}
+							
 						});
 						
 						tabHash.get(components.get(i).parent).add(changePerson, "wrap");  //$NON-NLS-1$
@@ -593,6 +610,12 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 			currentPanel = call;
 			
 		}
+		
+	}
+
+	@Override
+	public void personChanged(Person changedTo) {
+		// TODO Auto-generated method stub
 		
 	}
 
