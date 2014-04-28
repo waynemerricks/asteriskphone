@@ -677,6 +677,17 @@ public class PhoneCall implements Runnable{
 		
 	}
 	
+	/** 
+	 * Adds the given person to the record and sets it as the active person
+	 * @param id id of person to set as new active
+	 */
+	public void addActivePerson(Person newActive){
+		
+		people.add(newActive);
+		setActivePerson(newActive.id);
+		
+	}
+	
 	/**
 	 * Gets the details for the person associated with this call
 	 */
