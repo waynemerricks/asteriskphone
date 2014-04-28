@@ -1,6 +1,8 @@
 package com.thevoiceasia.phonebox.callinput;
 
 import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
@@ -13,6 +15,7 @@ import java.util.HashMap;
 import java.util.Vector;
 import java.util.logging.Logger;
 
+import javax.swing.JButton;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
@@ -296,12 +299,33 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener{
 					if(components.get(i).getLabel() != null)
 						tabHash.get(components.get(i).parent).add(components.get(i).getLabel());
 					
-					tabHash.get(components.get(i).parent).add(components.get(i).getComponent(),
+					if(components.get(i).mapping != null && !components.get(i).mapping.equals("name")) //$NON-NLS-1$
+						tabHash.get(components.get(i).parent).add(components.get(i).getComponent(),
 							"growx, spanx, wrap"); //$NON-NLS-1$
 					
 					//Name Field
 					if(components.get(i).mapping != null && 
 							components.get(i).mapping.equals("name")){ //$NON-NLS-1$
+						
+						//Add the text field without the wrap and then add a button
+						tabHash.get(components.get(i).parent).add(components.get(i).getComponent(), 
+								"spanx, growx, split 2"); //$NON-NLS-1$
+						
+						//Button to change the person on the call usually for withheld numbers or
+						//one number in use by more than one person
+						JButton changePerson = new JButton(
+								xStrings.getString("CallInputPanel.changePerson")); //$NON-NLS-1$
+						changePerson.addActionListener(new ActionListener(){
+							
+							public void actionPerformed(ActionEvent evt){
+								
+								//TODO Person switch
+								
+								
+							}
+						});
+						
+						tabHash.get(components.get(i).parent).add(changePerson, "wrap");  //$NON-NLS-1$
 						
 						components.get(i).addKeyListener(new KeyListener(){
 
