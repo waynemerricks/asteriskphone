@@ -390,10 +390,8 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 		    		xStrings.getString("CallLogPanel.commandQueue")) && //$NON-NLS-1$
 		    		command[1].equals(onairQueue)){ //QUEUE ON AIR
 		    	
-		    	//TODO
 		    	//Check for channel swap
 		    	if(channelSwapList.size() > 0){
-		    		
 		    		
 		    		if(channelSwapList.containsKey(command[2])){
 		    			
