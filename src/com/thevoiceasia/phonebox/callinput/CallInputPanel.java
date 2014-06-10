@@ -331,7 +331,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 									searchPanel = new SearchPanel(owner, 
 											xStrings.getString("SearchPanel.title"),  //$NON-NLS-1$
 											language, country, 
-											databaseReadConnection, databaseWriteConnection);
+											databaseReadConnection, databaseWriteConnection, null);//TODO Get number we're using to search with
 									searchPanel.getSelectedPerson();
 									searchPanel.addPersonChangedListener(cip);
 									searchPanel.setVisible(true);
