@@ -2,7 +2,7 @@ package com.thevoiceasia.phonebox.callinput;
 
 import javax.swing.table.AbstractTableModel;
 
-import com.thevoiceasia.phonebox.records.CallLog;
+import com.thevoiceasia.phonebox.records.Person;
 
 import java.util.Vector;
 
@@ -11,19 +11,19 @@ public class ChangePersonModel extends AbstractTableModel {
 	private static final long serialVersionUID = 1L;
 	private static final int COLUMN_COUNT = 4;
 	
-	private Vector<CallLog> data = null;
+	private Vector<Person> data = null;
     private String[] columnNames = null;
     
-	public ChangePersonModel(Vector<CallLog> data, String[] columnNames) {
+	public ChangePersonModel(Vector<Person> data, String[] columnNames) {
 		
 		this.data = data;
 		this.columnNames = columnNames;
 		
 	}
 	
-	public void addRow(CallLog log){
+	public void addRow(Person person){
 		
-		data.add(log);
+		data.add(person);
 		//Fire Event to show that rows were added after the end of the table
 		this.fireTableRowsInserted(data.size() - 1, data.size() - 1);
 		
@@ -50,12 +50,6 @@ public class ChangePersonModel extends AbstractTableModel {
 		
 	}
 
-	public String getChannel(int rowIndex){
-		
-		return data.get(rowIndex).getChannel();
-		
-	}
-	
 	@Override
 	public int getRowCount() {
 	
@@ -75,21 +69,18 @@ public class ChangePersonModel extends AbstractTableModel {
 		
 		String value = null;
 		
-		CallLog row = data.get(rowIndex);
+		Person person = data.get(rowIndex);
 		
 		switch(columnIndex){
 		
 			case 0:
-				value = row.getName();
+				value = person.name;
 				break;
 			case 1:
-				value = row.getConversation();
+				value = person.location;
 				break;
 			case 2:
-				value = row.getLocation();
-				break;
-			case 3:
-				value = row.getTime();
+				value = person.number;
 				break;
 		
 		}
@@ -100,30 +91,28 @@ public class ChangePersonModel extends AbstractTableModel {
 
 	/**
 	 * Changes the value of the given channel
-	 * @param channel Channel ID
+	 * @param id person record ID
 	 * @param field Field name
 	 * @param value Value to change to
 	 */
-	public void changeRow(String channel, String field, String value) {
+	public void changeRow(int id, String field, String value) {
 		
 		boolean done = false;
 		int i = 0;
 		
 		while(!done && i < data.size()){
 			
-			if(data.get(i).getChannel().equals(channel)){
+			if(data.get(i).id == id){
 				
 				//We found the record so lets change the value
 				done = true;
 				
 				if(field.equals("name")) //$NON-NLS-1$
-					data.get(i).setName(value);
+					data.get(i).name = value;
 				else if(field.equals("location")) //$NON-NLS-1$
-					data.get(i).setLocation(value);
-				else if(field.equals("conversation")) //$NON-NLS-1$
-					data.get(i).setConversation(value);
-				else if(field.equals("channel")) //$NON-NLS-1$
-					data.get(i).setChannel(value);
+					data.get(i).location = value;
+				else if(field.equals("number")) //$NON-NLS-1$
+					data.get(i).number = value;
 				
 				//fire data changed on row
 				this.fireTableRowsUpdated(i, i);
