@@ -288,9 +288,9 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 	 */
 	private void showError(Exception e, String friendlyErrorMessage){
 		
-		System.err.println(xStrings.getString("DatabaseManager.logErrorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
+		System.err.println(xStrings.getString("CallLogPanel.logErrorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
 		e.printStackTrace();
-		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("DatabaseManager.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
+		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("CallLogPanel.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
 		LOGGER.severe(friendlyErrorMessage);
 		
 	}
