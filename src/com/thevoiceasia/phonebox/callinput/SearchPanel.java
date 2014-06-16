@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.logging.Logger;
@@ -16,6 +17,7 @@ import java.util.logging.Logger;
 import javax.swing.BorderFactory;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.TableCellRenderer;
@@ -36,7 +38,7 @@ public class SearchPanel extends JDialog {
 	private JTextField name, number;
 	private ChangePersonModel tableModel;
 	private JTable people;
-	private HashMap<String, Person> records = new HashMap<String, Person>();
+	private ArrayList<Person> records = new ArrayList<Person>();
 	private String country, language;
 	private String[] columnNames = null;
 	
@@ -51,6 +53,8 @@ public class SearchPanel extends JDialog {
 		this.setSize(400, 200);
 		this.setTitle(title);
 		
+		LOGGER.info(xStrings.getString("SearchPanel.gettingPeopleFromNumber") + " " + numberToSearch); //$NON-NLS-1$ //$NON-NLS-2$
+		getPeopleFromNumber(numberToSearch, readConnection);
 		
 		LOGGER.info(xStrings.getString("SearchPanel.creatingSearchPanel")); //$NON-NLS-1$
 		this.setLayout(new MigLayout("fillx")); //$NON-NLS-1$
@@ -166,41 +170,26 @@ public class SearchPanel extends JDialog {
 		    
 		    while(resultSet.next()){
 		    	
-		    	CallLog log = new CallLog(language, country,
-		    			resultSet.getString("callchannel"),  //$NON-NLS-1$
-		    			readConnection);
+		    	Person person = new Person(resultSet.getInt("person_id"), language, country); //$NON-NLS-1$
+		    	person.alert = resultSet.getString("alert"); //$NON-NLS-1$
+		    	person.name = resultSet.getString("name"); //$NON-NLS-1$
+		    	person.gender = resultSet.getString("gender"); //$NON-NLS-1$
+		    	person.location = resultSet.getString("location"); //$NON-NLS-1$
+		    	person.postalAddress = resultSet.getString("address"); //$NON-NLS-1$
+		    	person.postCode = resultSet.getString("postcode"); //$NON-NLS-1$
+		    	person.email = resultSet.getString("email"); //$NON-NLS-1$
+		    	person.language = resultSet.getString("language"); //$NON-NLS-1$
+		    	person.religion = resultSet.getString("religion"); //$NON-NLS-1$
+		    	person.journey = resultSet.getString("journey"); //$NON-NLS-1$
+		    	person.notes = resultSet.getString("notes"); //$NON-NLS-1$
+		    	person.number = resultSet.getString("phone_number"); //$NON-NLS-1$
 		    	
-		    	if(log.isComplete())
-		    		records.put(log.getChannel(), log);
-		    	else{
-		    		
-		    		log = new CallLog(language, country, 
-		    				resultSet.getString("callchannel"),  //$NON-NLS-1$
-		    				readConnection, true);
-		    		
-		    		/* BUG FIX: Can get into a situation where a person does not exist
-		    		 * in any records, this is usually when its an internal phone
-		    		 * calling somewhere and its originator channel ends up in the
-		    		 * call history.
-		    		 * 
-		    		 * These internal phones may never have been dealt with in the phone
-		    		 * system so won't have a person/location attached.
-		    		 * 
-		    		 * To check this, see if we have a valid log time otherwise discard
-		    		 * 
-		    		 * If the time is null as part of error checking we gen from
-		    		 * the current time which means you end up with phantom records
-		    		 * in the top of the log.  So we need to discard invalid times!
-		    		 */
-		    		if(log.isValid())
-		    			records.put(log.getChannel(), log);
-		    		
-		    	}
+		    	records.add(person);
 		    		
 		    }
 		    
 		}catch (SQLException e){
-			showError(e, xStrings.getString("CallLogPanel.getLogSQLError")); //$NON-NLS-1$
+			showError(e, xStrings.getString("SearchPanel.getLogSQLError")); //$NON-NLS-1$
 		}finally {
 		    
 			if (resultSet != null) {
@@ -218,6 +207,20 @@ public class SearchPanel extends JDialog {
 		    }
 		    
 		}
+		
+	}
+	
+	/**
+	 * Logs an error message and displays friendly message to user
+	 * @param e
+	 * @param friendlyErrorMessage
+	 */
+	private void showError(Exception e, String friendlyErrorMessage){
+		
+		System.err.println(xStrings.getString("DatabaseManager.logErrorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
+		e.printStackTrace();
+		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("DatabaseManager.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
+		LOGGER.severe(friendlyErrorMessage);
 		
 	}
 	
