@@ -8,25 +8,18 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
+import java.util.Vector;
 import java.util.logging.Logger;
 
-import javax.swing.BorderFactory;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.TableCellRenderer;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
 
 import net.miginfocom.swing.MigLayout;
 
-import com.thevoiceasia.phonebox.records.CallLog;
 import com.thevoiceasia.phonebox.records.Person;
 
 public class SearchPanel extends JDialog {
@@ -38,7 +31,8 @@ public class SearchPanel extends JDialog {
 	private JTextField name, number;
 	private ChangePersonModel tableModel;
 	private JTable people;
-	private ArrayList<Person> records = new ArrayList<Person>();
+	//ArrayList is better but table uses Vectors so pointless having two identical sets of data
+	private Vector<Person> records = new Vector<Person>();
 	private String country, language;
 	private String[] columnNames = null;
 	
@@ -74,7 +68,7 @@ public class SearchPanel extends JDialog {
 			@Override
 			public void keyReleased(KeyEvent e) {
 				
-				//TODO
+				//TODO create a thread to search by name
 				System.out.println("released: " + e.getKeyCode());
 				System.out.println("released text: " + ((JTextField)e.getSource()).getText());
 				
@@ -103,7 +97,7 @@ public class SearchPanel extends JDialog {
 			@Override
 			public void keyReleased(KeyEvent e) {
 				
-				// TODO Auto-generated method stub
+				// TODO Create a thread to search by number
 				System.out.println("released: " + e.getKeyCode());
 				System.out.println("released text: " + ((JTextField)e.getSource()).getText());
 				
@@ -119,8 +113,7 @@ public class SearchPanel extends JDialog {
 		
 		//Create the Table
 		buildTableColumns();
-				
-		tableModel = new ChangePersonModel(tableData, columnNames);
+		tableModel = new ChangePersonModel(records, columnNames);
 		
 		people = new JTable(tableModel){
 			
@@ -251,7 +244,7 @@ public class SearchPanel extends JDialog {
 	public static void main(String[] args){
 		//Component owner, String title, String language, String country, 
 		//Connection readConnection, Connection writeConnection
-		new SearchPanel(null, "title", "en", "GB", null, null).setVisible(true);
+		new SearchPanel(null, "title", "en", "GB", null, null, "").setVisible(true);
 	}
 
 }
