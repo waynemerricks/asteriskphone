@@ -39,6 +39,16 @@ public class SearchPanel extends JDialog {
 	/** STATICS **/
 	private static final Logger LOGGER = Logger.getLogger(SearchPanel.class.getName());//Logger
 	
+	/**
+	 * Creates a dialog that allows you to search for people and return the selected person
+	 * @param owner Component that owns this dialog
+	 * @param title Title of this dialog
+	 * @param language I18N language e.g. en
+	 * @param country I18N country e.g. GB
+	 * @param readConnection Read Connection to the database
+	 * @param writeConnection Write Connection to the database
+	 * @param numberToSearch Number this panel will search for on creation
+	 */
 	public SearchPanel(Component owner, String title, String language, String country, 
 			Connection readConnection, Connection writeConnection, String numberToSearch){
 		
@@ -142,8 +152,19 @@ public class SearchPanel extends JDialog {
 			
 		};
 		
+		people.setRowSelectionAllowed(true);
+		people.setAutoCreateRowSorter(true);
+		
+		this.add(people, "grow, pushy, wrap"); //$NON-NLS-1$
+		
+		
 	}
 	
+	/**
+	 * Gets Person records from a DB read connection matching the number given
+	 * @param number Number to search
+	 * @param readConnection Read connection to database (write not required)
+	 */
 	private void getPeopleFromNumber(String number, Connection readConnection){
 		
 		//TODO
