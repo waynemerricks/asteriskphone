@@ -2,27 +2,35 @@ package com.thevoiceasia.phonebox.callinput;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Vector;
 import java.util.logging.Logger;
 
+import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.UIManager;
+import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.table.TableCellRenderer;
 
 import net.miginfocom.swing.MigLayout;
 
 import com.thevoiceasia.phonebox.records.Person;
 
-public class SearchPanel extends JDialog {
+public class SearchPanel extends JDialog implements ActionListener, KeyListener {
 
 	private static final long serialVersionUID = 1L;
 	
@@ -35,6 +43,7 @@ public class SearchPanel extends JDialog {
 	private Vector<Person> records = new Vector<Person>();
 	private String country, language;
 	private String[] columnNames = null;
+	private Connection readConnection, writeConnection;
 	
 	/** STATICS **/
 	private static final Logger LOGGER = Logger.getLogger(SearchPanel.class.getName());//Logger
@@ -53,21 +62,25 @@ public class SearchPanel extends JDialog {
 			Connection readConnection, Connection writeConnection, String numberToSearch){
 		
 		xStrings = new I18NStrings(language, country);
+		this.language = language;
+		this.country = country;
+		this.readConnection = readConnection;
+		this.writeConnection = writeConnection;
 		
 		this.setSize(400, 200);
 		this.setTitle(title);
 		
 		LOGGER.info(xStrings.getString("SearchPanel.gettingPeopleFromNumber") + " " + numberToSearch); //$NON-NLS-1$ //$NON-NLS-2$
-		getPeopleFromNumber(numberToSearch, readConnection);
+		getPeopleFromNumber(numberToSearch, false);
 		
 		LOGGER.info(xStrings.getString("SearchPanel.creatingSearchPanel")); //$NON-NLS-1$
-		this.setLayout(new MigLayout("fillx")); //$NON-NLS-1$
+		this.setLayout(new MigLayout("fillx, insets 0 5 0 5")); //$NON-NLS-1$
 		
 		//** NAME FIELD **//
 		name = new JTextField(""); //$NON-NLS-1$
 		name.setToolTipText(xStrings.getString("SearchPanel.searchByName")); //$NON-NLS-1$
 		
-		name.addKeyListener(new KeyListener(){
+		name.addKeyListener(this);/*new KeyListener(){
 
 			@Override
 			public void keyTyped(KeyEvent e) {}
@@ -84,7 +97,7 @@ public class SearchPanel extends JDialog {
 				
 			}
 			
-		});
+		});*/
 		
 		JLabel lbl = new JLabel(xStrings.getString("SearchPanel.nameField")); //$NON-NLS-1$
 		lbl.setLabelFor(name);
@@ -96,7 +109,7 @@ public class SearchPanel extends JDialog {
 		number = new JTextField(""); //$NON-NLS-1$
 		number.setToolTipText(xStrings.getString("SearchPanel.searchByNumber")); //$NON-NLS-1$
 
-		number.addKeyListener(new KeyListener(){
+		number.addKeyListener(this);/*new KeyListener(){
 
 			@Override
 			public void keyTyped(KeyEvent e) {}
@@ -113,7 +126,7 @@ public class SearchPanel extends JDialog {
 				
 			}
 			
-		});
+		});*/
 		
 		lbl = new JLabel(xStrings.getString("SearchPanel.numberField")); //$NON-NLS-1$
 		lbl.setLabelFor(number);
@@ -136,10 +149,17 @@ public class SearchPanel extends JDialog {
 				
 				Color backgroundColour = null;
 				
-				if(row % 2 == 0)//if we're an odd row go green
-					backgroundColour = Color.WHITE;	
-				else
-					backgroundColour = new Color(189, 224, 194);
+				if(row % 2 == 0){//if we're an odd row go green
+					if(people.isRowSelected(row))
+						backgroundColour = Color.BLUE;
+					else
+						backgroundColour = Color.WHITE;	
+				}else{
+					if(people.isRowSelected(row))
+						backgroundColour = Color.BLUE;
+					else
+						backgroundColour = new Color(189, 224, 194);
+				}
 				
 				JLabel l = (JLabel)c;
 				l.setHorizontalAlignment(JLabel.CENTER);
@@ -155,23 +175,50 @@ public class SearchPanel extends JDialog {
 		people.setRowSelectionAllowed(true);
 		people.setAutoCreateRowSorter(true);
 		
-		this.add(people, "grow, pushy, wrap"); //$NON-NLS-1$
+		this.add(people.getTableHeader(), "growx, span, wrap"); //$NON-NLS-1$
+		this.add(people, "grow, pushy, span, wrap"); //$NON-NLS-1$
 		
+		//Buttons
+		JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+		
+		JButton button = new JButton(xStrings.getString("SearchPanel.cancelButton")); //$NON-NLS-1$
+		button.setMnemonic(xStrings.getString("SearchPanel.cancelButton").charAt(0)); //$NON-NLS-1$
+		button.setToolTipText(xStrings.getString("SearchPanel.cancelToolTip")); //$NON-NLS-1$
+		button.setActionCommand("cancel"); //$NON-NLS-1$
+		button.addActionListener(this);
+		
+		buttons.add(button);
+		
+		button = new JButton(xStrings.getString("SearchPanel.okButton")); //$NON-NLS-1$
+		button.setMnemonic(xStrings.getString("SearchPanel.okButton").charAt(0)); //$NON-NLS-1$
+		button.setToolTipText(xStrings.getString("SearchPanel.okToolTip")); //$NON-NLS-1$
+		button.setActionCommand("ok"); //$NON-NLS-1$
+		button.addActionListener(this);
+		
+		buttons.add(button);
+		
+		this.add(buttons, "dock south"); //$NON-NLS-1$
 		
 	}
 	
 	/**
 	 * Gets Person records from a DB read connection matching the number given
 	 * @param number Number to search
-	 * @param readConnection Read connection to database (write not required)
 	 */
-	private void getPeopleFromNumber(String number, Connection readConnection){
+	private void getPeopleFromNumber(String number, boolean partialMatch){
 		
 		//TODO
 		//Get the records cross referenced from person and phonenumbers
 		String SQL = "SELECT phone_number, person.* FROM phonenumbers INNER JOIN person ON " + //$NON-NLS-1$
 				"phonenumbers.person_id = person.person_id " + //$NON-NLS-1$
-				"WHERE phone_number = '" + number + "' ORDER BY person.name ASC"; //$NON-NLS-1$ //$NON-NLS-2$
+				"WHERE phone_number "; //$NON-NLS-1$
+		
+		if(partialMatch)
+			SQL += "LIKE '" + number + "%' ";  //$NON-NLS-1$//$NON-NLS-2$
+		else
+			SQL += "= '" + number + "' ";  //$NON-NLS-1$//$NON-NLS-2$
+		
+		SQL += "ORDER BY person.name ASC"; //$NON-NLS-1$
 		
 		Statement statement = null;
 		ResultSet resultSet = null;
@@ -199,7 +246,7 @@ public class SearchPanel extends JDialog {
 		    	person.number = resultSet.getString("phone_number"); //$NON-NLS-1$
 		    	
 		    	records.add(person);
-		    		
+
 		    }
 		    
 		}catch (SQLException e){
@@ -262,10 +309,82 @@ public class SearchPanel extends JDialog {
 		
 	}
 	
+	/**
+	 * Testing only creates a dialog with full functionality
+	 * @param args
+	 */
 	public static void main(String[] args){
 		//Component owner, String title, String language, String country, 
 		//Connection readConnection, Connection writeConnection
-		new SearchPanel(null, "title", "en", "GB", null, null, "").setVisible(true);
+		Connection conn = null;
+		
+		try{
+			//Connect to separate write DB too
+			conn = DriverManager.getConnection("jdbc:mysql://aServer/aDatabase?user=changeMe&password=changeMe");
+			
+		}catch(SQLException e){
+			
+			e.printStackTrace();
+			
+			
+		}catch(Exception e){
+			
+			e.printStackTrace();
+			
+		}
+		
+		// Set preferred L&F
+				try {
+				    for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+				        if ("Nimbus".equals(info.getName())) { //$NON-NLS-1$
+				            UIManager.setLookAndFeel(info.getClassName());
+				            break;
+				        }
+				    }
+				} catch (Exception e) {
+				    // Will use default L&F at this point, don't really care which it is
+				}
+		
+		new SearchPanel(null, "title", "en", "GB", conn, conn, "5003").setVisible(true);
+		
 	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e) {
+		// TODO Auto-generated method stub
+		
+		String search = "";
+		boolean isNumber = false;
+		
+		if(e.getSource() instanceof JTextField)
+			if(e.getSource() == number){
+				
+				search = number.getText();
+				isNumber = true;
+				
+			}else if(e.getSource() == name)
+				search = name.getText();
+				
+		//TODO Create a thread to search by name/number
+		if(isNumber){
+			records.removeAllElements();
+			getPeopleFromNumber(search, true);
+			tableModel.fireTableDataChanged();
+		}
+		
+	}
+
+	/* KeyListener Events that we don't need to monitor */
+	@Override
+	public void keyTyped(KeyEvent e) {}
+
+	@Override
+	public void keyPressed(KeyEvent e) {}
 
 }
