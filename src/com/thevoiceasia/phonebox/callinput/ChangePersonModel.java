@@ -9,7 +9,7 @@ import java.util.Vector;
 public class ChangePersonModel extends AbstractTableModel {
 
 	private static final long serialVersionUID = 1L;
-	private static final int COLUMN_COUNT = 4;
+	private static final int COLUMN_COUNT = 3;
 	
 	private Vector<Person> data = null;
     private String[] columnNames = null;
