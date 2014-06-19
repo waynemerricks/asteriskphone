@@ -79,25 +79,7 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 		//** NAME FIELD **//
 		name = new JTextField(""); //$NON-NLS-1$
 		name.setToolTipText(xStrings.getString("SearchPanel.searchByName")); //$NON-NLS-1$
-		
-		name.addKeyListener(this);/*new KeyListener(){
-
-			@Override
-			public void keyTyped(KeyEvent e) {}
-
-			@Override
-			public void keyPressed(KeyEvent e) {}
-
-			@Override
-			public void keyReleased(KeyEvent e) {
-				
-				//TODO create a thread to search by name
-				System.out.println("released: " + e.getKeyCode());
-				System.out.println("released text: " + ((JTextField)e.getSource()).getText());
-				
-			}
-			
-		});*/
+		name.addKeyListener(this);
 		
 		JLabel lbl = new JLabel(xStrings.getString("SearchPanel.nameField")); //$NON-NLS-1$
 		lbl.setLabelFor(name);
@@ -108,25 +90,7 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 		
 		number = new JTextField(""); //$NON-NLS-1$
 		number.setToolTipText(xStrings.getString("SearchPanel.searchByNumber")); //$NON-NLS-1$
-
-		number.addKeyListener(this);/*new KeyListener(){
-
-			@Override
-			public void keyTyped(KeyEvent e) {}
-
-			@Override
-			public void keyPressed(KeyEvent e) {}
-			
-			@Override
-			public void keyReleased(KeyEvent e) {
-				
-				// TODO Create a thread to search by number
-				System.out.println("released: " + e.getKeyCode());
-				System.out.println("released text: " + ((JTextField)e.getSource()).getText());
-				
-			}
-			
-		});*/
+		number.addKeyListener(this);
 		
 		lbl = new JLabel(xStrings.getString("SearchPanel.numberField")); //$NON-NLS-1$
 		lbl.setLabelFor(number);
@@ -204,6 +168,7 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 	/**
 	 * Gets Person records from a DB read connection matching the number given
 	 * @param number Number to search
+	 * @param partialMatch if true will do an SQL query as LIKE blah% instead of exact match
 	 */
 	private void getPeopleFromNumber(String number, boolean partialMatch){
 		
