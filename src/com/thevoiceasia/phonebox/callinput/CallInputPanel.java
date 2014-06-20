@@ -331,7 +331,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 									searchPanel = new SearchPanel(owner, 
 											xStrings.getString("SearchPanel.title"),  //$NON-NLS-1$
 											language, country, 
-											databaseReadConnection, databaseWriteConnection, null);//TODO Get number we're using to search with
+											databaseReadConnection, databaseWriteConnection, getPhoneNumber(currentPanel.getChannelID()));//TODO Get number we're using to search with
 									searchPanel.getSelectedPerson();
 									searchPanel.addPersonChangedListener(cip);
 									searchPanel.setVisible(true);
@@ -339,7 +339,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 								}
 								
 							}
-							
+
 						});
 						
 						tabHash.get(components.get(i).parent).add(changePerson, "wrap");  //$NON-NLS-1$
@@ -459,6 +459,52 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 		
 		
 	}
+	
+	/**
+	 * Gets the phone number from the given channel id
+	 * @param channelID
+	 * @return
+	 */
+	private String getPhoneNumber(String channelID) {
+		// TODO Auto-generated method stub
+		
+		String number = null;
+		Statement statement = null;
+		ResultSet resultSet = null;
+		
+		try{
+			
+			String SQL = "SELECT phonenumber FROM callhistory WHERE callchannel = '" + channelID + "' LIMIT 1"; //$NON-NLS-1$ //$NON-NLS-2$
+			statement = databaseReadConnection.createStatement();
+			resultSet = statement.executeQuery(SQL);
+			
+			while(resultSet.next())
+				number = resultSet.getString("phonenumber"); //$NON-NLS-1$
+			
+		}catch(SQLException e){
+			showError(e, xStrings.getString("CallInputPanel.getNumberSQLError")); //$NON-NLS-1$
+		}finally {
+		    
+			if (resultSet != null) {
+		        try {
+		        	resultSet.close();
+		        } catch (SQLException sqlEx) { } // ignore
+		        resultSet = null;
+		    }
+			
+		    if (statement != null) {
+		        try {
+		        	statement.close();
+		        } catch (SQLException sqlEx) { } // ignore
+		        statement = null;
+		    }
+		    
+		}
+		
+		return number;
+		
+	}
+	
 	
 	/**
 	 * Reads the component info from the DB
