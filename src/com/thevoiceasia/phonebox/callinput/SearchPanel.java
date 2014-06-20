@@ -243,6 +243,77 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 	}
 	
 	/**
+	 * Gets Person records from a DB read connection matching the name given
+	 * @param number Number to search
+	 * @param partialMatch if true will do an SQL query as LIKE blah% instead of exact match
+	 */
+	private void getPeopleFromName(String name, boolean partialMatch){
+		
+		//TODO Rework for custom fields (one day)
+		//Get the records cross referenced from person and phonenumbers
+		String SQL = "SELECT person.*, phonenumbers.phone_number FROM person INNER JOIN phonenumbers ON " + //$NON-NLS-1$
+				"person.person_id = phonenumbers.person_id " + //$NON-NLS-1$
+				"WHERE person.name "; //$NON-NLS-1$
+		
+		if(partialMatch)
+			SQL += "LIKE '" + name + "%' ";  //$NON-NLS-1$//$NON-NLS-2$
+		else
+			SQL += "= '" + name + "' ";  //$NON-NLS-1$//$NON-NLS-2$
+		
+		SQL += "ORDER BY person.name ASC LIMIT 10"; //$NON-NLS-1$
+		
+		Statement statement = null;
+		ResultSet resultSet = null;
+		
+		LOGGER.info(xStrings.getString("SearchPanel.lookingUpName")); //$NON-NLS-1$
+		
+		try{
+			statement = readConnection.createStatement();
+		    resultSet = statement.executeQuery(SQL);
+		    
+		    while(resultSet.next()){
+		    	
+		    	Person person = new Person(resultSet.getInt("person_id"), language, country); //$NON-NLS-1$
+		    	person.alert = resultSet.getString("alert"); //$NON-NLS-1$
+		    	person.name = resultSet.getString("name"); //$NON-NLS-1$
+		    	person.gender = resultSet.getString("gender"); //$NON-NLS-1$
+		    	person.location = resultSet.getString("location"); //$NON-NLS-1$
+		    	person.postalAddress = resultSet.getString("address"); //$NON-NLS-1$
+		    	person.postCode = resultSet.getString("postcode"); //$NON-NLS-1$
+		    	person.email = resultSet.getString("email"); //$NON-NLS-1$
+		    	person.language = resultSet.getString("language"); //$NON-NLS-1$
+		    	person.religion = resultSet.getString("religion"); //$NON-NLS-1$
+		    	person.journey = resultSet.getString("journey"); //$NON-NLS-1$
+		    	person.notes = resultSet.getString("notes"); //$NON-NLS-1$
+		    	person.number = resultSet.getString("phone_number"); //$NON-NLS-1$
+		    	
+		    	records.add(person);
+
+		    }
+		    
+		}catch (SQLException e){
+			showError(e, xStrings.getString("SearchPanel.getLogSQLError")); //$NON-NLS-1$
+		}finally {
+		    
+			if (resultSet != null) {
+		        try {
+		        	resultSet.close();
+		        } catch (SQLException sqlEx) { } // ignore
+		        resultSet = null;
+		    }
+			
+		    if (statement != null) {
+		        try {
+		        	statement.close();
+		        } catch (SQLException sqlEx) { } // ignore
+		        statement = null;
+		    }
+		    
+		}
+		
+	}
+	
+	/**
 	 * Logs an error message and displays friendly message to user
 	 * @param e
 	 * @param friendlyErrorMessage
@@ -269,11 +340,16 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 	
 	public void addPersonChangedListener(PersonChangedListener pcl){
 		
-		//TODO
-		
+		//TODO This should notify the object that the person has changed as it will
+		//usually be a call info panel so needs to update data accordingly and send
+		//a PERSONCHANGED message via chat
 		
 	}
 	
+	/**
+	 * Returns the person that was selected prior to this dialog closing
+	 * @return
+	 */
 	public Person getSelectedPerson(){
 		
 		return selectedPerson;
@@ -353,11 +429,8 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 		
 		if(numberMode)
 			getPeopleFromNumber(search, true);
-		else{
-			
-			//TODO name mode
-			
-		}
+		else
+			getPeopleFromName(search, true);
 		
 		tableModel.fireTableDataChanged();
 		
