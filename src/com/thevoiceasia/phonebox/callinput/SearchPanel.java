@@ -43,7 +43,9 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 	private Vector<Person> records = new Vector<Person>();
 	private String country, language;
 	private String[] columnNames = null;
-	private Connection readConnection, writeConnection;
+	private Connection readConnection, writeConnection;//write needed if we create a new person
+	private SearchPersonThread searchPersonThread = null;
+	private SearchTerm searchTerm = null;
 	
 	/** STATICS **/
 	private static final Logger LOGGER = Logger.getLogger(SearchPanel.class.getName());//Logger
@@ -163,6 +165,10 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 		
 		this.add(buttons, "dock south"); //$NON-NLS-1$
 		
+		//Spawn search thread
+		searchPersonThread = new SearchPersonThread(this);
+		searchPersonThread.start();
+		
 	}
 	
 	/**
@@ -172,7 +178,7 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 	 */
 	private void getPeopleFromNumber(String number, boolean partialMatch){
 		
-		//TODO
+		//TODO Rework for custom fields (one day)
 		//Get the records cross referenced from person and phonenumbers
 		String SQL = "SELECT phone_number, person.* FROM phonenumbers INNER JOIN person ON " + //$NON-NLS-1$
 				"phonenumbers.person_id = person.person_id " + //$NON-NLS-1$
@@ -285,7 +291,7 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 		
 		try{
 			//Connect to separate write DB too
-			conn = DriverManager.getConnection("jdbc:mysql://aServer/aDatabase?user=changeMe&password=changeMe");
+			conn = DriverManager.getConnection("jdbc:mysql://aServer/aDatabase?user=changeMe&password=changeMe"); //$NON-NLS-1$
 			
 		}catch(SQLException e){
 			
@@ -299,18 +305,61 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 		}
 		
 		// Set preferred L&F
-				try {
-				    for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-				        if ("Nimbus".equals(info.getName())) { //$NON-NLS-1$
-				            UIManager.setLookAndFeel(info.getClassName());
-				            break;
-				        }
-				    }
-				} catch (Exception e) {
-				    // Will use default L&F at this point, don't really care which it is
-				}
+		try {
+		    for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+		        if ("Nimbus".equals(info.getName())) { //$NON-NLS-1$
+		            UIManager.setLookAndFeel(info.getClassName());
+		            break;
+		        }
+		    }
+		} catch (Exception e) {
+		    // Will use default L&F at this point, don't really care which it is
+		}
 		
-		new SearchPanel(null, "title", "en", "GB", conn, conn, "5003").setVisible(true);
+		new SearchPanel(null, "title", "en", "GB", conn, conn, "5003").setVisible(true);  //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$ //$NON-NLS-4$
+		
+	}
+	
+	/**
+	 * Looks at the state of the SearchTerm object and updates accordingly
+	 */
+	public void checkDataNeedsUpdating(){
+		
+		//Query DB if there is a search term to use
+		if(searchTerm != null && searchTerm.getSearchTerm() != null){
+			
+			LOGGER.info(xStrings.getString("SearchPanel.dataUpdating")); //$NON-NLS-1$
+			searchTerm.setLocked(true);
+			
+			updateData(searchTerm.isNumber(), searchTerm.getSearchTerm());
+			searchTerm.clear();
+			
+			searchTerm.setLocked(false);
+			LOGGER.info(xStrings.getString("SearchPanel.dataUpdated")); //$NON-NLS-1$
+			
+		}
+		
+	}
+	
+	/**
+	 * Updates the data given the mode and search term
+	 * @param numberMode true = search by number, false = by name
+	 * @param search term to search for
+	 */
+	private void updateData(boolean numberMode, String search){
+		
+		//Create a thread to search by name/number
+		records.removeAllElements();
+		
+		if(numberMode)
+			getPeopleFromNumber(search, true);
+		else{
+			
+			//TODO name mode
+			
+		}
+		
+		tableModel.fireTableDataChanged();
 		
 	}
 
@@ -322,9 +371,9 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 
 	@Override
 	public void keyReleased(KeyEvent e) {
-		// TODO Auto-generated method stub
 		
-		String search = "";
+		//Get the term and flag whether this is a number or name search
+		String search = ""; //$NON-NLS-1$
 		boolean isNumber = false;
 		
 		if(e.getSource() instanceof JTextField)
@@ -335,13 +384,13 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 				
 			}else if(e.getSource() == name)
 				search = name.getText();
-				
-		//TODO Create a thread to search by name/number
-		if(isNumber){
-			records.removeAllElements();
-			getPeopleFromNumber(search, true);
-			tableModel.fireTableDataChanged();
-		}
+		
+		if(searchTerm == null)//if null first run so create a term
+			searchTerm = new SearchTerm(isNumber, search);
+		else if(!searchTerm.isLocked())//not locked = we're doing nothing so update
+			searchTerm.updateSearch(isNumber, search);
+		else if(searchTerm.isLocked())//locked = we're running a query so queue this search
+			searchTerm.queueSearch(isNumber, search);
 		
 	}
 
