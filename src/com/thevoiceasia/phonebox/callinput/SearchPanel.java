@@ -20,6 +20,7 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.UIManager;
@@ -69,10 +70,11 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 		this.readConnection = readConnection;
 		this.writeConnection = writeConnection;
 		
-		this.setSize(400, 200);
+		this.setSize(400, 320);
 		this.setTitle(title);
 		
 		LOGGER.info(xStrings.getString("SearchPanel.gettingPeopleFromNumber") + " " + numberToSearch); //$NON-NLS-1$ //$NON-NLS-2$
+		addNewPersonRecord();
 		getPeopleFromNumber(numberToSearch, false);
 		
 		LOGGER.info(xStrings.getString("SearchPanel.creatingSearchPanel")); //$NON-NLS-1$
@@ -142,7 +144,7 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 		people.setAutoCreateRowSorter(true);
 		
 		this.add(people.getTableHeader(), "growx, span, wrap"); //$NON-NLS-1$
-		this.add(people, "grow, pushy, span, wrap"); //$NON-NLS-1$
+		this.add(new JScrollPane(people), "grow, pushy, span, wrap"); //$NON-NLS-1$
 		
 		//Buttons
 		JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -314,6 +316,20 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 	}
 	
 	/**
+	 * Adds a placeholder for selecting a new person in the table of records
+	 */
+	private void addNewPersonRecord(){
+		
+		Person person = new Person(-1, language, country);
+    	person.name = xStrings.getString("SearchPanel.newPersonName"); //$NON-NLS-1$
+    	person.location = xStrings.getString("SearchPanel.newPersonLocation"); //$NON-NLS-1$
+    	person.number = ""; //$NON-NLS-1$
+    	
+    	records.add(person);
+		
+	}
+	
+	/**
 	 * Logs an error message and displays friendly message to user
 	 * @param e
 	 * @param friendlyErrorMessage
@@ -427,6 +443,9 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 		//Create a thread to search by name/number
 		records.removeAllElements();
 		
+		//Add the placeholder for the new person record
+		addNewPersonRecord();
+		
 		if(numberMode)
 			getPeopleFromNumber(search, true);
 		else
@@ -436,12 +455,43 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 		
 	}
 
+	/**
+	 * Internally called when OK is clicked
+	 */
+	private void ok(){
+		
+		//TODO ok button pressed
+		
+	}
+	
+	/**
+	 * Internally called when Cancel is clicked
+	 */
+	private void cancel(){
+		
+		//TODO cancel button pressed
+		
+	}
+	
+	/**
+	 * ActionEvent listener
+	 * @param e from the ok or cancel buttons
+	 */
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		// TODO Auto-generated method stub
+		
+		if(e.getActionCommand().equals("ok")) //$NON-NLS-1$
+			ok();
+		else if(e.getActionCommand().equals("cancel")) //$NON-NLS-1$
+			cancel();
 		
 	}
 
+	/**
+	 * KeyListener used on the name and number fields, this will invoke a search
+	 * on the db person/phone number records
+	 * @param e
+	 */
 	@Override
 	public void keyReleased(KeyEvent e) {
 		
