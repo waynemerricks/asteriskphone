@@ -27,6 +27,7 @@ import javax.swing.ScrollPaneConstants;
 import com.thevoiceasia.phonebox.calls.AnswerListener;
 import com.thevoiceasia.phonebox.calls.CallInfoPanel;
 import com.thevoiceasia.phonebox.chat.ChatManager;
+import com.thevoiceasia.phonebox.launcher.Client;
 import com.thevoiceasia.phonebox.records.Person;
 
 import net.miginfocom.swing.MigLayout;
@@ -319,24 +320,38 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 						JButton changePerson = new JButton(
 								xStrings.getString("CallInputPanel.changePerson")); //$NON-NLS-1$
 						
-						final Component owner = this.getParent();
+						Client owner = null;
+						Component parent = this.getParent();
+						
+						while(parent != null && !(parent instanceof Client))
+							parent = parent.getParent();
+						
+						if(parent != null)
+							owner = (Client)parent;
+						
+						final Client ownerFinal = owner;
 						final CallInputPanel cip = this;
 						
 						changePerson.addActionListener(new ActionListener(){
 							
 							public void actionPerformed(ActionEvent evt){
 								
-								if(searchPanel == null){
+								if(currentPanel != null)
+									if(searchPanel == null){
 									
-									searchPanel = new SearchPanel(owner, 
-											xStrings.getString("SearchPanel.title"),  //$NON-NLS-1$
-											language, country, 
-											databaseReadConnection, databaseWriteConnection, getPhoneNumber(currentPanel.getChannelID()));//TODO Get number we're using to search with
-									searchPanel.getSelectedPerson();
-									searchPanel.addPersonChangedListener(cip);
-									searchPanel.setVisible(true);
-									
-								}
+										//Get the Parent JFrame so that SearchPanel can have that as the owner
+										searchPanel = new SearchPanel(ownerFinal, 
+												xStrings.getString("SearchPanel.title"),  //$NON-NLS-1$
+												language, country, 
+												databaseReadConnection, databaseWriteConnection, 
+												getPhoneNumber(currentPanel.getChannelID()));
+										
+										searchPanel.addPersonChangedListener(cip);
+										searchPanel.setVisible(true);
+										
+										
+									}else
+										searchPanel.setVisible(true);
 								
 							}
 
