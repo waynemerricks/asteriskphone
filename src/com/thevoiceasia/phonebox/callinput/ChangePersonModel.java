@@ -82,6 +82,9 @@ public class ChangePersonModel extends AbstractTableModel {
 			case 2:
 				value = person.number;
 				break;
+			case 99://return the id of the person this is not shown in the table
+				value = "" + person.id; //$NON-NLS-1$
+				break;
 		
 		}
 		
