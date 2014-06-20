@@ -1,6 +1,6 @@
 package com.thevoiceasia.phonebox.callinput;
 
-public class SearchPersonThread implements Runnable {
+public class SearchPersonThread extends Thread {
 
 	private boolean go = true;
 	private SearchPanel search = null;
