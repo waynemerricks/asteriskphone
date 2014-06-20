@@ -2,13 +2,11 @@ package com.thevoiceasia.phonebox.callinput;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -17,14 +15,12 @@ import java.util.logging.Logger;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.UIManager;
-import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.table.TableCellRenderer;
 
 import net.miginfocom.swing.MigLayout;
@@ -61,8 +57,10 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 	 * @param writeConnection Write Connection to the database
 	 * @param numberToSearch Number this panel will search for on creation
 	 */
-	public SearchPanel(Component owner, String title, String language, String country, 
+	public SearchPanel(JFrame owner, String title, String language, String country, 
 			Connection readConnection, Connection writeConnection, String numberToSearch){
+		
+		super(owner, true);//Set owner and modal
 		
 		xStrings = new I18NStrings(language, country);
 		this.language = language;
@@ -90,7 +88,6 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 		
 		this.add(lbl);
 		this.add(name, "growx, pushx, wrap"); //$NON-NLS-1$
-		
 		
 		number = new JTextField(""); //$NON-NLS-1$
 		number.setToolTipText(xStrings.getString("SearchPanel.searchByNumber")); //$NON-NLS-1$
@@ -146,16 +143,16 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 		this.add(people.getTableHeader(), "growx, span, wrap"); //$NON-NLS-1$
 		this.add(new JScrollPane(people), "grow, pushy, span, wrap"); //$NON-NLS-1$
 		
-		//Buttons
-		JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+		this.add(new JLabel(" "), "push, growx");//blanking label to fill space  //$NON-NLS-1$//$NON-NLS-2$
 		
+		//Buttons
 		JButton button = new JButton(xStrings.getString("SearchPanel.cancelButton")); //$NON-NLS-1$
 		button.setMnemonic(xStrings.getString("SearchPanel.cancelButton").charAt(0)); //$NON-NLS-1$
 		button.setToolTipText(xStrings.getString("SearchPanel.cancelToolTip")); //$NON-NLS-1$
 		button.setActionCommand("cancel"); //$NON-NLS-1$
 		button.addActionListener(this);
 		
-		buttons.add(button);
+		this.add(button);
 		
 		button = new JButton(xStrings.getString("SearchPanel.okButton")); //$NON-NLS-1$
 		button.setMnemonic(xStrings.getString("SearchPanel.okButton").charAt(0)); //$NON-NLS-1$
@@ -163,9 +160,7 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 		button.setActionCommand("ok"); //$NON-NLS-1$
 		button.addActionListener(this);
 		
-		buttons.add(button);
-		
-		this.add(buttons, "dock south"); //$NON-NLS-1$
+		this.add(button, "wrap"); //$NON-NLS-1$
 		
 		//Spawn search thread
 		searchPersonThread = new SearchPersonThread(this);
@@ -373,46 +368,6 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 	}
 	
 	/**
-	 * Testing only creates a dialog with full functionality
-	 * @param args
-	 */
-	public static void main(String[] args){
-		//Component owner, String title, String language, String country, 
-		//Connection readConnection, Connection writeConnection
-		Connection conn = null;
-		
-		try{
-			//Connect to separate write DB too
-			conn = DriverManager.getConnection("jdbc:mysql://aServer/aDatabase?user=changeMe&password=changeMe"); //$NON-NLS-1$
-			
-		}catch(SQLException e){
-			
-			e.printStackTrace();
-			
-			
-		}catch(Exception e){
-			
-			e.printStackTrace();
-			
-		}
-		
-		// Set preferred L&F
-		try {
-		    for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-		        if ("Nimbus".equals(info.getName())) { //$NON-NLS-1$
-		            UIManager.setLookAndFeel(info.getClassName());
-		            break;
-		        }
-		    }
-		} catch (Exception e) {
-		    // Will use default L&F at this point, don't really care which it is
-		}
-		
-		new SearchPanel(null, "title", "en", "GB", conn, conn, "5003").setVisible(true);  //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$ //$NON-NLS-4$
-		
-	}
-	
-	/**
 	 * Looks at the state of the SearchTerm object and updates accordingly
 	 */
 	public void checkDataNeedsUpdating(){
@@ -461,6 +416,19 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 	private void ok(){
 		
 		//TODO ok button pressed
+		LOGGER.info(xStrings.getString("SearchPanel.okPressed")); //$NON-NLS-1$
+		
+		if(people.getSelectedRow() != -1){
+			
+			this.setVisible(false);
+			int i = Integer.parseInt((String)people.getValueAt(people.getSelectedRow(), 99));
+			
+			//TODO Thread to change person from one to another
+		}else{
+			//TODO prompt user about not selecting a person?
+		}
+			
+		
 		
 	}
 	
@@ -470,6 +438,9 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 	private void cancel(){
 		
 		//TODO cancel button pressed
+		LOGGER.info(xStrings.getString("SearchPanel.cancelPressed")); //$NON-NLS-1$
+		this.setVisible(false);
+		this.dispose();
 		
 	}
 	
