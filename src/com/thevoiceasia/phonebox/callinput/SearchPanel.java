@@ -440,7 +440,6 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 		//TODO cancel button pressed
 		LOGGER.info(xStrings.getString("SearchPanel.cancelPressed")); //$NON-NLS-1$
 		this.setVisible(false);
-		this.dispose();
 		
 	}
 	
