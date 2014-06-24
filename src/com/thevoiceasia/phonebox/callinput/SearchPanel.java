@@ -318,6 +318,7 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 		Person person = new Person(-1, language, country);
     	person.name = xStrings.getString("SearchPanel.newPersonName"); //$NON-NLS-1$
     	person.location = xStrings.getString("SearchPanel.newPersonLocation"); //$NON-NLS-1$
+    	person.id = -1; //-1 signifies this should create a record
     	person.number = ""; //$NON-NLS-1$
     	
     	records.add(person);
@@ -421,7 +422,7 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 		if(people.getSelectedRow() != -1){
 			
 			this.setVisible(false);
-			int i = Integer.parseInt((String)people.getValueAt(people.getSelectedRow(), 99));
+			int selectedID = Integer.parseInt((String)people.getValueAt(people.getSelectedRow(), 99));
 			
 			//TODO Thread to change person from one to another
 		}else{
@@ -437,7 +438,7 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 	 */
 	private void cancel(){
 		
-		//TODO cancel button pressed
+		//Cancel button pressed
 		LOGGER.info(xStrings.getString("SearchPanel.cancelPressed")); //$NON-NLS-1$
 		this.setVisible(false);
 		
