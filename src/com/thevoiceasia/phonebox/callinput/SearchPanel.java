@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Vector;
 import java.util.logging.Logger;
 
@@ -43,6 +44,7 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 	private Connection readConnection, writeConnection;//write needed if we create a new person
 	private SearchPersonThread searchPersonThread = null;
 	private SearchTerm searchTerm = null;
+	private ArrayList<PersonChangedListener> notifyMe = new ArrayList<PersonChangedListener>();
 	
 	/** STATICS **/
 	private static final Logger LOGGER = Logger.getLogger(SearchPanel.class.getName());//Logger
@@ -355,6 +357,7 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 		//TODO This should notify the object that the person has changed as it will
 		//usually be a call info panel so needs to update data accordingly and send
 		//a PERSONCHANGED message via chat
+		notifyMe.add(pcl);
 		
 	}
 	
@@ -436,6 +439,9 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 		 * and sending an update to all clients to swap
 		 */
 		
+		//Once done remove all the objects we're notifying, don't need it anymore
+		while(notifyMe.size() > 0)
+			notifyMe.remove(0);
 	}
 	
 	/**
