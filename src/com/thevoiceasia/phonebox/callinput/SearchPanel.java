@@ -412,11 +412,38 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 	}
 
 	/**
+	 * Spawns a thread to create a new Person record and associate it
+	 * with owner panel/call input
+	 */
+	private void createNewPerson(){
+		
+		/* TODO Spawn thread to create new person in DB
+		 * Discussion: Send XMPP to Server and server creates then responds
+		 * vs client doing direct writes (remote offices will have delays)
+		 */
+		
+	}
+	
+	/**
+	 * Spawns a thread to associate owner panel/call input with a given Person
+	 * record
+	 * @param selectedID id of the record to associate with
+	 */
+	private void setExistingPerson(int selectedID) {
+		
+		/* TODO Spawn thread to set the person to the given ID
+		 * This involves swapping input panel, possibly conversation,
+		 * and sending an update to all clients to swap
+		 */
+		
+	}
+	
+	/**
 	 * Internally called when OK is clicked
 	 */
 	private void ok(){
 		
-		//TODO ok button pressed
+		//OK button pressed, get selected person and update as necessary
 		LOGGER.info(xStrings.getString("SearchPanel.okPressed")); //$NON-NLS-1$
 		
 		if(people.getSelectedRow() != -1){
@@ -424,15 +451,29 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 			this.setVisible(false);
 			int selectedID = Integer.parseInt((String)people.getValueAt(people.getSelectedRow(), 99));
 			
-			//TODO Thread to change person from one to another
-		}else{
-			//TODO prompt user about not selecting a person?
-		}
+			if(selectedID == -1)
+				createNewPerson();//Must be threaded
+			else
+				setExistingPerson(selectedID);//Must be threaded
 			
-		
+		}else{
+			
+			//Prompt user about not selecting a person?
+			int confirm = JOptionPane.showConfirmDialog(this,
+					xStrings.getString("SearchPanel.noPersonSelected"), //$NON-NLS-1$
+					xStrings.getString("SearchPanel.noPersonSelectedTitle"), //$NON-NLS-1$
+					JOptionPane.QUESTION_MESSAGE,
+					JOptionPane.YES_NO_OPTION); 
+			
+			if(confirm == JOptionPane.YES_OPTION)//Do Nothing except hide me
+				this.setVisible(false);
+			
+		}	
 		
 	}
 	
+	
+
 	/**
 	 * Internally called when Cancel is clicked
 	 */
