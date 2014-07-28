@@ -431,10 +431,30 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 	 * record
 	 * @param selectedID id of the record to associate with
 	 */
-	private void setExistingPerson() {
+	private void setExistingPerson(int selectedID) {
 		
-		for(int i = 0; i < notifyMe.size(); i++)
-			notifyMe.get(i).personChanged(getSelectedPerson());
+		/* Set SelectedPerson to the one with an id match
+		 * In theory this should change depending on the table sort
+		 * so we can't just do a row 1 is selected so it should be person 1
+		 * I'm unclear how the model lookups map back to views and vice
+		 * versa so this may be unnecessary
+		 */
+		int found = -1;
+		int i = 0;
+		
+		while(found == -1 && i < records.size()){
+			
+			if(records.get(i).id == selectedID)
+				found = i;
+			
+			i++;
+			
+		}
+		
+		selectedPerson = records.get(found);
+			
+		for(int j = 0; j < notifyMe.size(); j++)
+			notifyMe.get(j).personChanged(getSelectedPerson());
 		
 	}
 	
@@ -459,12 +479,18 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 		if(people.getSelectedRow() != -1){
 			
 			this.setVisible(false);
-			int selectedID = Integer.parseInt((String)people.getValueAt(people.getSelectedRow(), 99));
+			
+			//BUG FIX: Need to get value from the model.  Means you have to convert
+			//Selected Row to model row and then call model.getValueAt(row, 99) for id
+			int selectedRow =  people.convertRowIndexToModel(people.getSelectedRow());
+			int selectedID = Integer.parseInt((String)tableModel.getValueAt(selectedRow, 99));
 			
 			if(selectedID == -1)
-				createNewPerson();//Must be threaded
+				createNewPerson();
 			else
-				setExistingPerson();//Must be threaded
+				setExistingPerson(selectedID);
+			
+			removePersonChangedListeners();
 			
 		}else{
 			
