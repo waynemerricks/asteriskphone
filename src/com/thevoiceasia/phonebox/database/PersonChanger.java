@@ -11,7 +11,7 @@ import org.jivesoftware.smackx.muc.MultiUserChat;
 
 public class PersonChanger implements Runnable {
 
-	private String fieldMapping, channelID, value;
+	private String channelID;
 	private Connection readConnection, writeConnection;
 	private I18NStrings xStrings;
 	private MultiUserChat controlRoom = null;
@@ -48,8 +48,44 @@ public class PersonChanger implements Runnable {
 	@Override
 	public void run() {
 		
-		//TODO
+		//TODO Create new person if we're -1 and not an valid id
+		if(personID == -1)//Create New
+			personID = createNewPerson();
+		
+		boolean success = false;
+		
+		if(personID != -1)
+			success = updateConversation();
+		
+		if(success)
+			success = updateCallLog();
+		
+		if(!success){
+			/* TODO Show Error but also show failed to clients via control XMPP
+			 * because we'll have the initiator client waiting for the result
+			 */
+		}
+		
+	}
 
+	private boolean updateCallLog() {
+		// TODO Auto-generated method stub
+		/*INSERT INTO callhistory (phonenumber, state, operator, callchannel, "
+		+ "activePerson) VALUES ('" + phoneNumber + "', 'C', '" + userName + "', '"
+				+ notifyMe.get(0).getChannel() + "', " + newRecordID + ")";*/
+		return false;
+	}
+
+	private boolean updateConversation() {
+		// TODO Auto-generated method stub
+		//SQL = "UPDATE conversations SET person_id = " + personID + WHERE channel = channelID 
+		return false;
+	}
+
+	private int createNewPerson() {
+		// TODO Auto-generated method stub
+		//String SQL = "INSERT INTO person VALUES()";//Retain ID
+		return 0;
 	}
 
 	/**
