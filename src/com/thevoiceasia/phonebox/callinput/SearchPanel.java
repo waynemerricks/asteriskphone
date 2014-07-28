@@ -41,7 +41,7 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 	private Vector<Person> records = new Vector<Person>();
 	private String country, language;
 	private String[] columnNames = null;
-	private Connection readConnection, writeConnection;//write needed if we create a new person
+	private Connection readConnection;
 	private SearchPersonThread searchPersonThread = null;
 	private SearchTerm searchTerm = null;
 	private ArrayList<PersonChangedListener> notifyMe = new ArrayList<PersonChangedListener>();
@@ -60,7 +60,7 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 	 * @param numberToSearch Number this panel will search for on creation
 	 */
 	public SearchPanel(JFrame owner, String title, String language, String country, 
-			Connection readConnection, Connection writeConnection, String numberToSearch){
+			Connection readConnection, String numberToSearch){
 		
 		super(owner, true);//Set owner and modal
 		
@@ -68,8 +68,6 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 		this.language = language;
 		this.country = country;
 		this.readConnection = readConnection;
-		this.writeConnection = writeConnection;
-		
 		this.setSize(400, 320);
 		this.setTitle(title);
 		
@@ -354,7 +352,7 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 	
 	public void addPersonChangedListener(PersonChangedListener pcl){
 		
-		//TODO This should notify the object that the person has changed as it will
+		//This should notify the object that the person has changed as it will
 		//usually be a call info panel so needs to update data accordingly and send
 		//a PERSONCHANGED message via chat
 		notifyMe.add(pcl);
@@ -420,10 +418,11 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 	 */
 	private void createNewPerson(){
 		
-		/* TODO Spawn thread to create new person in DB
-		 * Discussion: Send XMPP to Server and server creates then responds
-		 * vs client doing direct writes (remote offices will have delays)
+		/* Its better to keep writes on the server side for remote offices
+		 * TODO Test how much of a delay there is with swapping the person
 		 */
+		for(int i = 0; i < notifyMe.size(); i++)
+			notifyMe.get(i).personChanged(null);
 		
 	}
 	
@@ -432,16 +431,21 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 	 * record
 	 * @param selectedID id of the record to associate with
 	 */
-	private void setExistingPerson(int selectedID) {
+	private void setExistingPerson() {
 		
-		/* TODO Spawn thread to set the person to the given ID
-		 * This involves swapping input panel, possibly conversation,
-		 * and sending an update to all clients to swap
-		 */
+		for(int i = 0; i < notifyMe.size(); i++)
+			notifyMe.get(i).personChanged(getSelectedPerson());
 		
-		//Once done remove all the objects we're notifying, don't need it anymore
+	}
+	
+	/**
+	 * Removes all the objects that need to be notified of call changes
+	 */
+	public void removePersonChangedListeners(){
+		
 		while(notifyMe.size() > 0)
 			notifyMe.remove(0);
+		
 	}
 	
 	/**
@@ -460,7 +464,7 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 			if(selectedID == -1)
 				createNewPerson();//Must be threaded
 			else
-				setExistingPerson(selectedID);//Must be threaded
+				setExistingPerson();//Must be threaded
 			
 		}else{
 			
