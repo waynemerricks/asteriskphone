@@ -422,7 +422,6 @@ public class DatabaseManager {
 				
 		}
 		
-		
 		try {
 			if(!connection.isValid(3)){
 				
