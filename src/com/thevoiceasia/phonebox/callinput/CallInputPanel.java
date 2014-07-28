@@ -36,7 +36,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 
 	/* CLASS VARS */
 	private String language, country;
-	private Connection databaseReadConnection, databaseWriteConnection;
+	private Connection databaseReadConnection;
 	private Vector<CallInputField> components = new Vector<CallInputField>();
 	private I18NStrings xStrings;
 	private boolean hasErrors = false;
@@ -343,7 +343,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 										searchPanel = new SearchPanel(ownerFinal, 
 												xStrings.getString("SearchPanel.title"),  //$NON-NLS-1$
 												language, country, 
-												databaseReadConnection, databaseWriteConnection, 
+												databaseReadConnection, 
 												getPhoneNumber(currentPanel.getChannelID()));
 										
 										searchPanel.addPersonChangedListener(cip);
@@ -676,7 +676,10 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 
 	@Override
 	public void personChanged(Person changedTo) {
-		// TODO Auto-generated method stub
+		
+		/* TODO Send XMPP Requesting person change
+		 * null = new person otherwise change to existing
+		 */
 		
 	}
 
