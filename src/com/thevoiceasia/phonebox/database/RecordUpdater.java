@@ -14,6 +14,16 @@ public class RecordUpdater implements Runnable {
 	private I18NStrings xStrings;
 	private static final Logger LOGGER = Logger.getLogger(RecordUpdater.class.getName());//Logger
 	
+	/**
+	 * Creates a runnable object to update fields related to a call/person
+	 * @param language I18N Language
+	 * @param country I18N Country
+	 * @param readConnection Database Read Connection
+	 * @param writeConnection Database Write Connection
+	 * @param fieldMapping Field mapping we will be changing
+	 * @param channelID ID of the channel we're changing
+	 * @param value Value we're changing the field to
+	 */
 	public RecordUpdater(String language, String country, Connection readConnection, 
 			Connection writeConnection, String fieldMapping, String channelID, String value) {
 		
@@ -289,6 +299,11 @@ public class RecordUpdater implements Runnable {
 		
 	}
 
+	/**
+	 * Logs a severe error via LOGGER object
+	 * @param e Exception
+	 * @param friendlyError Error as it should appear in LOGGER
+	 */
 	private void showError(SQLException e, String friendlyError) {
 		
 		e.printStackTrace();
