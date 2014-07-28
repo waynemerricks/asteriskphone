@@ -46,6 +46,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 	private long maxRecordAge = 3600000L;
 	private String incomingQueue = null, onairQueue = null;
 	private SearchPanel searchPanel = null;
+	private ChatManager chat = null;
 	
 	/** STATICS **/
 	private static final long serialVersionUID = 1L;
@@ -57,6 +58,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 		
 		super(JTabbedPane.BOTTOM);
 		
+		this.chat = manager;
 		this.language = language;
 		this.country = country;
 		this.incomingQueue = incomingQueue;
@@ -481,7 +483,6 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 	 * @return
 	 */
 	private String getPhoneNumber(String channelID) {
-		// TODO Auto-generated method stub
 		
 		String number = null;
 		Statement statement = null;
@@ -677,9 +678,17 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 	@Override
 	public void personChanged(Person changedTo) {
 		
-		/* TODO Send XMPP Requesting person change
+		/* Send XMPP Requesting person change
 		 * null = new person otherwise change to existing
 		 */
+		if(changedTo == null)
+			chat.sendMessage(xStrings.getString("CallInputPanel.ChangeToNewPerson") + //$NON-NLS-1$
+					"/" + //$NON-NLS-1$
+					currentPanel.getChannelID(), true); 
+		else
+			chat.sendMessage(xStrings.getString("CallInputPanel.ChangeToExistingPerson") + //$NON-NLS-1$
+					"/" + currentPanel.getChannelID() + //$NON-NLS-1$
+					"/" + changedTo.id, true); //$NON-NLS-1$
 		
 	}
 
