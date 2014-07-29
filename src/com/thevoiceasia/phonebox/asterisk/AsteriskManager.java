@@ -634,7 +634,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 					dbLookUpService.execute(new PersonChanger(settings.get("language"),  //$NON-NLS-1$
 							settings.get("country"), databaseManager.getReadConnection(), //$NON-NLS-1$
 							databaseManager.getWriteConnection(), controlRoom, 
-							Integer.parseInt(command[1]), command[2]));
+							Integer.parseInt(command[2]), command[1])); 
 					
 				}
 				
