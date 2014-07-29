@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.logging.Logger;
 
+import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 
 public class PersonChanger implements Runnable {
@@ -64,13 +65,41 @@ public class PersonChanger implements Runnable {
 		
 		//If something went wrong send XMPP message failure notice
 		if(!success){
-			/* TODO Show Error but also show failed to clients via control XMPP
+			
+			/* Show Error but also show failed to clients via control XMPP
 			 * because we'll have the initiator client waiting for the result
+			 * CHANGEFAILED/CHANNEL
 			 */
+			try {
+				
+				controlRoom.sendMessage(xStrings.getString(
+						"PersonChanger.changeFailed") + "/" + channelID);  //$NON-NLS-1$//$NON-NLS-2$
+			
+			} catch (XMPPException e) {
+				
+				LOGGER.severe(xStrings.getString(
+						"PersonChanger.XMPPSendErrorChangeFailed")); //$NON-NLS-1$
+				e.printStackTrace();
+				
+			}
+			
 		}else{
 			
-			//TODO Send XMPP Changed notice
+			//Send XMPP Changed notice CHANGED/CHANNEL/PERSONID
+			try {
+				
+				controlRoom.sendMessage(xStrings.getString(
+						"PersonChanger.changed") + "/" + channelID + "/" +  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						personID);
 			
+			} catch (XMPPException e) {
+				
+				LOGGER.severe(xStrings.getString(
+						"PersonChanger.XMPPSendErrorChanged")); //$NON-NLS-1$
+				e.printStackTrace();
+				
+			}
+
 		}
 		
 	}
