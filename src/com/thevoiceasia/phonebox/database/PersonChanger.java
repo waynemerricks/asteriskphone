@@ -15,7 +15,7 @@ public class PersonChanger implements Runnable {
 	private Connection readConnection, writeConnection;
 	private I18NStrings xStrings;
 	private MultiUserChat controlRoom = null;
-	private int personID = -1;
+	private long personID = -1;
 	
 	private static final Logger LOGGER = Logger.getLogger(PersonChanger.class.getName());//Logger
 	
@@ -82,10 +82,60 @@ public class PersonChanger implements Runnable {
 		return false;
 	}
 
-	private int createNewPerson() {
-		// TODO Auto-generated method stub
+	/**
+	 * Inserts a blank record into the person table
+	 * @return the id of the inserted record or -1 if failed
+	 */
+	private long createNewPerson() {
+		
 		//String SQL = "INSERT INTO person VALUES()";//Retain ID
-		return 0;
+		long insertID = -1;
+		
+		PreparedStatement statement = null;
+		String SQL = null;
+		ResultSet results = null;
+		
+		try{
+			
+			SQL = "INSERT INTO `person` VALUES()"; //$NON-NLS-1$
+			
+			statement = writeConnection.prepareStatement(SQL, 
+					Statement.RETURN_GENERATED_KEYS);
+			
+			if(statement.executeUpdate() == 0)
+				showError(new SQLException(
+					xStrings.getString("PersonChanger.errorInsertingNewPerson")), //$NON-NLS-1$
+					xStrings.getString("PersonChanger.errorInsertingNewPerson")); //$NON-NLS-1$
+			else{
+				
+				results = statement.getGeneratedKeys();
+				
+				while(results.next())
+					insertID = results.getLong(1);
+				
+			}
+			
+		}catch(SQLException e){
+			
+			showError(e, 
+					xStrings.getString("PersonChanger.errorInsertingNewPerson")); //$NON-NLS-1$ 
+			
+		}finally{
+			
+			if(statement != null)
+            	try{
+            		statement.close();
+            	}catch(Exception e){}
+			
+			if(results != null)
+				try{
+					results.close();
+				}catch(Exception e){}
+			
+		}
+		
+		return insertID;
+		
 	}
 
 	/**
