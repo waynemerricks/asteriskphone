@@ -11,7 +11,7 @@ import org.jivesoftware.smackx.muc.MultiUserChat;
 
 public class PersonChanger implements Runnable {
 
-	private String channelID;
+	private String channelID, operator, phoneNumber;
 	private Connection readConnection, writeConnection;
 	private I18NStrings xStrings;
 	private MultiUserChat controlRoom = null;
@@ -48,32 +48,147 @@ public class PersonChanger implements Runnable {
 	@Override
 	public void run() {
 		
-		//TODO Create new person if we're -1 and not an valid id
+		//Create new person if we're -1
 		if(personID == -1)//Create New
 			personID = createNewPerson();
 		
 		boolean success = false;
 		
+		//If we have a valid id, update the conversation
 		if(personID != -1)
 			success = updateConversation();
 		
+		//If ok so far update the call log
 		if(success)
 			success = updateCallLog();
 		
+		//If something went wrong send XMPP message failure notice
 		if(!success){
 			/* TODO Show Error but also show failed to clients via control XMPP
 			 * because we'll have the initiator client waiting for the result
 			 */
+		}else{
+			
+			//TODO Send XMPP Changed notice
+			
 		}
 		
 	}
 
+	/**
+	 * Gets the latest operator/phonenumber associated with the channel of 
+	 * this object
+	 * @return true if success (sets global phoneNumber and operator vars)
+	 */
+	private boolean getCallLogInfo(){
+	
+		boolean success = false;
+		
+		Statement statement = null;
+		String SQL = null;
+		ResultSet results = null;
+		
+		try{
+			
+			/* Get number and operator from the DB */
+			SQL = "SELECT `phonenumber`, `operator` FROM `callhistory` " + //$NON-NLS-1$
+					"WHERE `state` = 'A' AND `callchannel` = " + channelID + //$NON-NLS-1$
+					" AND `operator` != 'NA' ORDER BY `time` DESC LIMIT 1";  //$NON-NLS-1$
+			
+			statement = readConnection.createStatement();
+		    results = statement.executeQuery(SQL);
+		    
+			while(results.next()){
+			
+				phoneNumber = results.getString("phonenumber"); //$NON-NLS-1$
+				operator = results.getString("operator"); //$NON-NLS-1$
+				success = true;
+				
+			}
+			
+		}catch(SQLException e){
+		
+			showError(e, xStrings.getString("PersonChanger.errorGettingNumOp") + //$NON-NLS-1$
+					channelID);
+			
+			success = false;
+			
+		}finally{
+			
+			if(statement != null)
+            	try{
+            		statement.close();
+            	}catch(Exception e){}
+			
+			if(results != null)
+				try{
+					results.close();
+				}catch(Exception e){}
+				
+		}
+		
+		return success;
+		
+	}
+	
+	/**
+	 * Updates the callhistory table for this objects channel
+	 * Will add a C state record to signify person was manually changed
+	 * on this call.
+	 * @return success 
+	 */
 	private boolean updateCallLog() {
-		// TODO Auto-generated method stub
-		/*INSERT INTO callhistory (phonenumber, state, operator, callchannel, "
-		+ "activePerson) VALUES ('" + phoneNumber + "', 'C', '" + userName + "', '"
-				+ notifyMe.get(0).getChannel() + "', " + newRecordID + ")";*/
-		return false;
+		
+		/* INSERT INTO callhistory (phonenumber, state, operator, callchannel, 
+		 *      activePerson) VALUES ('01234567890', 'C', 'operator', 
+		 *      1234567890.123, 555) 
+		 */
+		boolean success = false;
+		String SQL = null;
+		PreparedStatement statement = null;
+		
+		if(getCallLogInfo() && phoneNumber != null && operator != null){
+			
+			String error = xStrings.getString(
+					"PersonChanger.errorUpdatingCallLog") + //$NON-NLS-1$
+					"\n\tChannel: " + channelID + //$NON-NLS-1$
+					"\n\tPersonID: " + personID; //$NON-NLS-1$
+
+			try{
+				
+				SQL = "INSERT INTO `callhistory` (`phonenumber`, `state`, " + //$NON-NLS-1$
+						"`operator`, `callchannel`, `activePerson`) VALUES " + //$NON-NLS-1$
+						"(?, ?, ?, ?, ?)"; //$NON-NLS-1$
+				
+				statement = writeConnection.prepareStatement(SQL);
+				statement.setString(1, phoneNumber);
+				statement.setString(2, "C"); //$NON-NLS-1$
+				statement.setString(3, operator);
+				statement.setString(4, channelID);
+				statement.setLong(5, personID);
+				
+				if(statement.executeUpdate() == 0)
+					showError(new SQLException(error), error);
+				else
+					success = true;
+				
+			}catch(SQLException e){
+				
+				showError(e, error);
+				
+			}finally{
+				
+				if(statement != null)
+	            	try{
+	            		statement.close();
+	            	}catch(Exception e){}
+					
+			}
+			
+		}
+		
+		return success;
+		
 	}
 
 	/**
