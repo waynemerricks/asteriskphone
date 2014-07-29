@@ -78,8 +78,45 @@ public class PersonChanger implements Runnable {
 
 	private boolean updateConversation() {
 		// TODO Auto-generated method stub
-		//SQL = "UPDATE conversations SET person_id = " + personID + WHERE channel = channelID 
-		return false;
+		//SQL = "UPDATE conversations SET person_id = " + personID + 
+		//	WHERE channel = channelID
+		boolean success = false;
+		String error = xStrings.getString(
+				"PersonChanger.errorUpdatingConversation") + //$NON-NLS-1$
+				"\n\tChannel: " + channelID + //$NON-NLS-1$
+				"\n\tPersonID: " + personID; //$NON-NLS-1$
+
+		PreparedStatement statement = null;
+		String SQL = null;
+		
+		try{
+			
+			SQL = "UPDATE `conversations` SET `person_id` = ? WHERE `channel` = ?"; //$NON-NLS-1$
+			
+			statement = writeConnection.prepareStatement(SQL);
+			statement.setLong(1, personID);
+			statement.setString(2, channelID);
+			
+			if(statement.executeUpdate() == 0)
+				showError(new SQLException(error), error);
+			else
+				success = true;
+			
+		}catch(SQLException e){
+			
+			showError(e, error);
+			
+		}finally{
+			
+			if(statement != null)
+            	try{
+            		statement.close();
+            	}catch(Exception e){}
+				
+		}
+		
+		return success;
+		
 	}
 
 	/**
