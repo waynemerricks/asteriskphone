@@ -76,8 +76,13 @@ public class PersonChanger implements Runnable {
 		return false;
 	}
 
+	/**
+	 * Updates the conversation record thats associated with the channel id of this
+	 * object.  Sets the person id of that record to the person id of this object.
+	 * @return true if successful
+	 */
 	private boolean updateConversation() {
-		// TODO Auto-generated method stub
+		
 		//SQL = "UPDATE conversations SET person_id = " + personID + 
 		//	WHERE channel = channelID
 		boolean success = false;
