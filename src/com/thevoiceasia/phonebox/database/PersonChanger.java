@@ -252,8 +252,8 @@ public class PersonChanger implements Runnable {
 				//If no conversation has been typed, there won't be anything to
 				//update, so we should expect 0 rows changed too
 				LOGGER.info(xStrings.getString(
-						"PersonChanger.noConversationToUpdate") + 
-						"\n\tChannel: " + channelID);
+						"PersonChanger.noConversationToUpdate") +  //$NON-NLS-1$
+						"\n\tChannel: " + channelID); //$NON-NLS-1$
 				
 			}
 			
@@ -262,6 +262,7 @@ public class PersonChanger implements Runnable {
 		}catch(SQLException e){
 			
 			showError(e, error);
+			success = false;
 			
 		}finally{
 			
