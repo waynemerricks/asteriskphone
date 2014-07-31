@@ -39,6 +39,7 @@ public class PersonChanger implements Runnable {
 		this.readConnection = readConnection;
 		this.writeConnection = writeConnection;
 		this.personID = personID;
+		this.channelID = channelID;
 		this.controlRoom = controlRoom;
 		
 		LOGGER.info(xStrings.getString("PersonChanger.ChangingPerson") +  //$NON-NLS-1$
@@ -246,10 +247,17 @@ public class PersonChanger implements Runnable {
 			statement.setLong(1, personID);
 			statement.setString(2, channelID);
 			
-			if(statement.executeUpdate() == 0)
-				showError(new SQLException(error), error);
-			else
-				success = true;
+			if(statement.executeUpdate() == 0){
+				
+				//If no conversation has been typed, there won't be anything to
+				//update, so we should expect 0 rows changed too
+				LOGGER.info(xStrings.getString(
+						"PersonChanger.noConversationToUpdate") + 
+						"\n\tChannel: " + channelID);
+				
+			}
+			
+			success = true;
 			
 		}catch(SQLException e){
 			
