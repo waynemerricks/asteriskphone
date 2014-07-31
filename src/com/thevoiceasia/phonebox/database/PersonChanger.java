@@ -7,10 +7,13 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.logging.Logger;
 
+import org.jivesoftware.smack.Chat;
+import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 
-public class PersonChanger implements Runnable {
+public class PersonChanger implements Runnable, MessageListener {
 
 	private String channelID, operator, phoneNumber;
 	private Connection readConnection, writeConnection;
@@ -46,6 +49,31 @@ public class PersonChanger implements Runnable {
 				"\n\tChannel: " + channelID + "\n\tNew Person ID: " + personID); //$NON-NLS-1$ //$NON-NLS-2$
 		
 	}
+	
+	/**
+	 * Internal method to send a message to a given user
+	 * @param recipient
+	 * @param message
+	 */
+	private void sendPrivateMessage(String recipient, String message){
+	
+		Chat chat = controlRoom.createPrivateChat(controlRoom.getRoom() + "/" + recipient, this); //$NON-NLS-1$
+		
+		try {
+			
+			LOGGER.info(xStrings.getString("PersonChanger.sendingPrivateMessage") +  //$NON-NLS-1$
+					recipient + "/" + message); //$NON-NLS-1$
+			chat.sendMessage(message);
+			
+		} catch (XMPPException e) {
+			
+			LOGGER.severe(xStrings.getString(
+					"PersonChanger.XMPPSendErrorChangeFailed")); //$NON-NLS-1$
+			e.printStackTrace();
+			
+		}
+		
+	}
 
 	@Override
 	public void run() {
@@ -70,19 +98,14 @@ public class PersonChanger implements Runnable {
 			/* Show Error but also show failed to clients via control XMPP
 			 * because we'll have the initiator client waiting for the result
 			 * CHANGEFAILED/CHANNEL
+			 * 
+			 * Change failed will only need to notify the person who requested
+			 * the change so lets do that via a private message.
+			 * 
+			 * It will save other clients from unnecessary processing
 			 */
-			try {
-				
-				controlRoom.sendMessage(xStrings.getString(
+			sendPrivateMessage(operator, xStrings.getString(
 						"PersonChanger.changeFailed") + "/" + channelID);  //$NON-NLS-1$//$NON-NLS-2$
-			
-			} catch (XMPPException e) {
-				
-				LOGGER.severe(xStrings.getString(
-						"PersonChanger.XMPPSendErrorChangeFailed")); //$NON-NLS-1$
-				e.printStackTrace();
-				
-			}
 			
 		}else{
 			
@@ -342,6 +365,13 @@ public class PersonChanger implements Runnable {
 		
 		e.printStackTrace();
 		LOGGER.severe(friendlyError);
+		
+	}
+
+	@Override
+	public void processMessage(Chat chat, Message message) {
+		
+		//We don't need to respond to private messages here so ignore
 		
 	}
 		
