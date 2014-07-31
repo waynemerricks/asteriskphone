@@ -446,7 +446,7 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 		
 		//New chat initiated so add a message listener to it
 		chat.addMessageListener(this);
-		LOGGER.info(xStrings.getString("CallManagerPanel.receivedPrivateChatRequest")); //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("CallLogPanel.receivedPrivateChatRequest")); //$NON-NLS-1$
 				
 	}
 
