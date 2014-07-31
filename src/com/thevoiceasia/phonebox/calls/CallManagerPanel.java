@@ -856,6 +856,16 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 						
 					}//If it doesn't exist then ignore it, the call probably ended
 					
+				}else if(command.length == 2 && command[0].equals(
+						xStrings.getString("CallManagerPanel.changeFailed"))){ //$NON-NLS-1$
+				
+					//TODO CHANGEFAILED
+				
+				}else if(command.length == 3 && command[0].equals(
+						xStrings.getString("CallManagerPanel.changed"))){ //$NON-NLS-1$
+					
+					//TODO CHANGED
+					
 				}
 				
 			}
@@ -1445,9 +1455,6 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 			
 		}else
 			processPacket(message);
-		
-		
-		
 		
 	}
 	
