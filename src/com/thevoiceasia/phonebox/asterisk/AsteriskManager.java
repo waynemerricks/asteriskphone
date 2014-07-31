@@ -592,7 +592,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 				}else if(command.length == 2 && command[0].equals(
 						xStrings.getString("AsteriskManager.commandTransferEndPoint"))){ //$NON-NLS-1$
 					
-					//We're transfering the other side of the call here
+					//We're transferring the other side of the call here
 					/* When we transfer, a new channel is created for the receiver of this call
 					 * This makes all the call information get dropped
 					 * To work around this we have to do it client side so all clients stay in sync
