@@ -350,6 +350,22 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 		
 	}
 	
+	/**
+	 * Set the number of this class that is used to lookup records.
+	 * This allows you to set outside of the constructor and still have a
+	 * search performed
+	 * @param phoneNumber
+	 */
+	public void setNumber(String phoneNumber) {
+		
+		getPeopleFromNumber(phoneNumber, false);
+		
+	}
+	
+	/**
+	 * Adds an object that this class will notify when a person has been changed
+	 * @param pcl
+	 */
 	public void addPersonChangedListener(PersonChangedListener pcl){
 		
 		//This should notify the object that the person has changed as it will

@@ -323,6 +323,10 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 								xStrings.getString("CallInputPanel.changePerson")); //$NON-NLS-1$
 						
 						Client owner = null;
+						
+						//Get the parent of this object and keep getting their parents until
+						//We get the Client Object which will be the window owner of this
+						//Dialog
 						Component parent = this.getParent();
 						
 						while(parent != null && !(parent instanceof Client))
@@ -352,8 +356,15 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 										searchPanel.setVisible(true);
 										
 										
-									}else
+									}else{
+										//Reuse existing panel but reset number and panel
+										//we need to notify when theres a change
+										searchPanel.setNumber(
+												getPhoneNumber(
+														currentPanel.getChannelID()));
+										searchPanel.addPersonChangedListener(cip);
 										searchPanel.setVisible(true);
+									}
 								
 							}
 
