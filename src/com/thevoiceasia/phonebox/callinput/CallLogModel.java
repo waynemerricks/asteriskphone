@@ -109,9 +109,18 @@ public class CallLogModel extends AbstractTableModel {
 		boolean done = false;
 		int i = 0;
 		
+		/* BUG FIX Channel is sometimes the same in value but not as a String 
+		 * e.g. 123456.700 vs 123456.70
+		 * 
+		 * So lets convert channel and get channel to decimal
+		 */
+		double findChannel = Double.parseDouble(channel);
+		
 		while(!done && i < data.size()){
 			
-			if(data.get(i).getChannel().equals(channel)){
+			double dataChannel = Double.parseDouble(data.get(i).getChannel());
+			
+			if(dataChannel == findChannel){
 				
 				//We found the record so lets change the value
 				done = true;
