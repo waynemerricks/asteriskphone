@@ -236,6 +236,66 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 	}
 	
 	/**
+	 * Gets the name and location for a person given their record ID
+	 * @param readConnection Read connection to DB to use for query
+	 * @param id ID of the person you are looking up
+	 * @return Array with 2 elements, these will be CallLogPanel.nameNotFound 
+	 * and CallLogPanel.locationNotFound if the record doesn't exist
+	 */
+	private String[] getPerson(Connection readConnection, int id){
+		
+		String[] person = new String[2];
+		person[0] = xStrings.getString("CallLogPanel.nameNotFound"); //$NON-NLS-1$
+		person[1] = xStrings.getString("CallLogPanel.locationNotFound"); //$NON-NLS-1$
+		
+		//Get the records from callhistory
+		String SQL = "SELECT `name`, `location` FROM `person` " + //$NON-NLS-1$
+				"WHERE `person_id` = " + id; //$NON-NLS-1$
+		
+		Statement statement = null;
+		ResultSet resultSet = null;
+		
+		LOGGER.info(xStrings.getString("CallLogPanel.getPerson") + id); //$NON-NLS-1$
+		
+		try{
+			statement = readConnection.createStatement();
+		    resultSet = statement.executeQuery(SQL);
+		    
+		    while(resultSet.next()){
+		    	
+		    	person[0] = resultSet.getString("name"); //$NON-NLS-1$
+		    	person[1] = resultSet.getString("location"); //$NON-NLS-1$
+		    		
+		    }
+		    
+		}catch (SQLException e){
+			
+			showError(e, xStrings.getString(
+					"CallLogPanel.getPersonSQLError") + id); //$NON-NLS-1$
+			
+		}finally {
+		    
+			if (resultSet != null) {
+		        try {
+		        	resultSet.close();
+		        } catch (SQLException sqlEx) { } // ignore
+		        resultSet = null;
+		    }
+			
+		    if (statement != null) {
+		        try {
+		        	statement.close();
+		        } catch (SQLException sqlEx) { } // ignore
+		        statement = null;
+		    }
+		    
+		}
+		
+		return person;
+		
+	}
+	
+	/**
 	 * Adds a CallLog to the table
 	 * @param log
 	 */
@@ -403,7 +463,23 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 		    		
 		    	}
 		    	
-		    }
+		    }else if(command.length == 3 && command[0].equals(
+					xStrings.getString("CallLogPanel.changed"))){ //$NON-NLS-1$
+				
+				/* CHANGED
+				 * Update log record for a given channel to another person only 
+				 * need to change name and location as the rest of the call
+				 * follows the channelID
+		    	 */
+				//CHANGED/channelID/personID
+		    	
+		    	String[] person = getPerson(readConnection, 
+		    			Integer.parseInt(command[2]));
+		    	
+		    	changeCallLog(command[1], "name", person[0]); //$NON-NLS-1$
+		    	changeCallLog(command[1], "location", person[1]); //$NON-NLS-1$
+		    	
+			}
 			
 		}	
 
