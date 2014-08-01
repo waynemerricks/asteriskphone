@@ -14,6 +14,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
@@ -859,18 +860,39 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 				}else if(command.length == 2 && command[0].equals(
 						xStrings.getString("CallManagerPanel.changeFailed"))){ //$NON-NLS-1$
 				
-					//TODO CHANGEFAILED
+					showWarning(
+							xStrings.getString("CallManagerPanel.errorChangingPerson")); //$NON-NLS-1$
 				
 				}else if(command.length == 3 && command[0].equals(
 						xStrings.getString("CallManagerPanel.changed"))){ //$NON-NLS-1$
 					
 					//TODO CHANGED
+					//TODO
+					//TODO
+					//TODO
 					
 				}
 				
 			}
 			
 		}
+		
+	}
+	
+	
+	/**
+	 * Logs a warning message and displays friendly message to user
+	 * @param friendlyErrorMessage
+	 */
+	private void showWarning(String friendlyErrorMessage){
+		
+		System.err.println(xStrings.getString("CallManagerPanel.logErrorPrefix") //$NON-NLS-1$
+				+ friendlyErrorMessage); 
+		
+		JOptionPane.showMessageDialog(null, friendlyErrorMessage, 
+				xStrings.getString("CallManagerPanel.errorBoxTitle"), //$NON-NLS-1$
+				JOptionPane.WARNING_MESSAGE); 
+		LOGGER.warning(friendlyErrorMessage);
 		
 	}
 	
