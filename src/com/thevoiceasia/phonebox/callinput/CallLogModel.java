@@ -4,6 +4,7 @@ import javax.swing.table.AbstractTableModel;
 
 import com.thevoiceasia.phonebox.records.CallLog;
 
+import java.math.BigDecimal;
 import java.util.Vector;
 
 public class CallLogModel extends AbstractTableModel {
@@ -113,14 +114,19 @@ public class CallLogModel extends AbstractTableModel {
 		 * e.g. 123456.700 vs 123456.70
 		 * 
 		 * So lets convert channel and get channel to decimal
+		 * 
+		 * BUG FIX 2: Double rounding has come to haunt me with the stupid
+		 * 123456.700 being converted to stupid things like 123456.70001.
+		 * 
+		 * Going to BigDecimal instead
 		 */
-		double findChannel = Double.parseDouble(channel);
+		BigDecimal findChannel = new BigDecimal(channel);
 		
 		while(!done && i < data.size()){
 			
-			double dataChannel = Double.parseDouble(data.get(i).getChannel());
+			BigDecimal dataChannel = new BigDecimal(data.get(i).getChannel());
 			
-			if(dataChannel == findChannel){
+			if(dataChannel.compareTo(findChannel) == 0){
 				
 				//We found the record so lets change the value
 				done = true;
