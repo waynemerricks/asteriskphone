@@ -1019,6 +1019,15 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	}
 	
 	/**
+	 * Changes the active person for this panel to a new person given by the id
+	 * @param person Person record to change to
+	 */
+	public void changeActivePerson(Person person) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	/**
 	 * Hangs up this panel (called outside via CallManagerPanel)
 	 */
 	public void hangup(){
