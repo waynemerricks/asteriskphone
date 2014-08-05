@@ -57,84 +57,88 @@ public class Person {
 			statement = readConnection.createStatement();
 		    resultSet = statement.executeQuery(SQL);
 		    
-		    //Alert level e.g. person banned or warning because they're awkward
-    		alert = resultSet.getString("alert"); //$NON-NLS-1$
-    		
-    		if(alert.equals("N")) //$NON-NLS-1$
-    			alert = xStrings.getString("PhoneCall.alertNormal"); //$NON-NLS-1$
-    		else if(alert.equals("W")) //$NON-NLS-1$
-    			alert = xStrings.getString("PhoneCall.alertWarning"); //$NON-NLS-1$
-    		else if(alert.equals("B")) //$NON-NLS-1$
-    			alert = xStrings.getString("PhoneCall.alertBanned"); //$NON-NLS-1$
-    		else if(alert.equals("F")) //$NON-NLS-1$
-    			alert = xStrings.getString("PhoneCall.alertFavourite"); //$NON-NLS-1$
-    		
-    		//Name
-    		name = resultSet.getString("name"); //$NON-NLS-1$
-    		
-    		if(name == null || name.equals("null")) //$NON-NLS-1$
-    			name = xStrings.getString("PhoneCall.unknownCaller"); //$NON-NLS-1$
-    		
-    		//Gender
-    		gender = resultSet.getString("gender"); //$NON-NLS-1$
-    		
-    		if(gender.equals("U")) //$NON-NLS-1$
-    			gender = xStrings.getString("PhoneCall.genderUnknown"); //$NON-NLS-1$
-    		else if(gender.equals("M")) //$NON-NLS-1$
-    			gender = xStrings.getString("PhoneCall.genderMale"); //$NON-NLS-1$
-    		else if(gender.equals("F")) //$NON-NLS-1$
-    			gender = xStrings.getString("PhoneCall.genderFemale"); //$NON-NLS-1$
-    		
-    		//Location
-    		location = resultSet.getString("location"); //$NON-NLS-1$
-    		
-    		if(location == null || location.equals("null"))//$NON-NLS-1$
-    			location = xStrings.getString("PhoneCall.locationUnknown"); //$NON-NLS-1$
-    		
-    		//Postal Address
-    		postalAddress = resultSet.getString("address"); //$NON-NLS-1$
-    		
-    		if(postalAddress == null || postalAddress.equals("null")) //$NON-NLS-1$
-    			postalAddress = ""; //$NON-NLS-1$
-    		
-    		//Post Code
-    		postCode = resultSet.getString("postcode"); //$NON-NLS-1$
-    		
-    		if(postCode == null || postCode.equals("null")) //$NON-NLS-1$
-    			postCode = ""; //$NON-NLS-1$
-    		
-    		//Email Address
-    		email = resultSet.getString("email"); //$NON-NLS-1$
-    		
-    		if(email == null || email.equals("null")) //$NON-NLS-1$
-    			email = ""; //$NON-NLS-1$
-    		
-    		//Language
-    		language = resultSet.getString("language"); //$NON-NLS-1$
-    		
-    		if(language == null || language.equals("null")) //$NON-NLS-1$
-    			language = ""; //$NON-NLS-1$
-    		
-    		//Religion
-    		religion = resultSet.getString("religion"); //$NON-NLS-1$
-    		
-    		if(religion == null || religion.equals("null")) //$NON-NLS-1$
-    			religion = ""; //$NON-NLS-1$
-    		
-    		//Journey
-    		journey = resultSet.getString("journey"); //$NON-NLS-1$
-    		
-    		if(journey == null || journey.equals("null")) //$NON-NLS-1$
-    			journey = ""; //$NON-NLS-1$
-    		
-    		//Notes
-    		notes = resultSet.getString("notes"); //$NON-NLS-1$
-    		
-    		if(notes == null || notes.equals("null")) //$NON-NLS-1$
-    			notes = ""; //$NON-NLS-1$
-    		
-    		//Get the conversation history for this person
-    		populateConversationHistory(readConnection);
+		    while(resultSet.next()){
+		    	
+			    //Alert level e.g. person banned or warning because they're awkward
+	    		alert = resultSet.getString("alert"); //$NON-NLS-1$
+	    		
+	    		if(alert.equals("N")) //$NON-NLS-1$
+	    			alert = xStrings.getString("PhoneCall.alertNormal"); //$NON-NLS-1$
+	    		else if(alert.equals("W")) //$NON-NLS-1$
+	    			alert = xStrings.getString("PhoneCall.alertWarning"); //$NON-NLS-1$
+	    		else if(alert.equals("B")) //$NON-NLS-1$
+	    			alert = xStrings.getString("PhoneCall.alertBanned"); //$NON-NLS-1$
+	    		else if(alert.equals("F")) //$NON-NLS-1$
+	    			alert = xStrings.getString("PhoneCall.alertFavourite"); //$NON-NLS-1$
+	    		
+	    		//Name
+	    		name = resultSet.getString("name"); //$NON-NLS-1$
+	    		
+	    		if(name == null || name.equals("null")) //$NON-NLS-1$
+	    			name = xStrings.getString("PhoneCall.unknownCaller"); //$NON-NLS-1$
+	    		
+	    		//Gender
+	    		gender = resultSet.getString("gender"); //$NON-NLS-1$
+	    		
+	    		if(gender.equals("U")) //$NON-NLS-1$
+	    			gender = xStrings.getString("PhoneCall.genderUnknown"); //$NON-NLS-1$
+	    		else if(gender.equals("M")) //$NON-NLS-1$
+	    			gender = xStrings.getString("PhoneCall.genderMale"); //$NON-NLS-1$
+	    		else if(gender.equals("F")) //$NON-NLS-1$
+	    			gender = xStrings.getString("PhoneCall.genderFemale"); //$NON-NLS-1$
+	    		
+	    		//Location
+	    		location = resultSet.getString("location"); //$NON-NLS-1$
+	    		
+	    		if(location == null || location.equals("null"))//$NON-NLS-1$
+	    			location = xStrings.getString("PhoneCall.locationUnknown"); //$NON-NLS-1$
+	    		
+	    		//Postal Address
+	    		postalAddress = resultSet.getString("address"); //$NON-NLS-1$
+	    		
+	    		if(postalAddress == null || postalAddress.equals("null")) //$NON-NLS-1$
+	    			postalAddress = ""; //$NON-NLS-1$
+	    		
+	    		//Post Code
+	    		postCode = resultSet.getString("postcode"); //$NON-NLS-1$
+	    		
+	    		if(postCode == null || postCode.equals("null")) //$NON-NLS-1$
+	    			postCode = ""; //$NON-NLS-1$
+	    		
+	    		//Email Address
+	    		email = resultSet.getString("email"); //$NON-NLS-1$
+	    		
+	    		if(email == null || email.equals("null")) //$NON-NLS-1$
+	    			email = ""; //$NON-NLS-1$
+	    		
+	    		//Language
+	    		language = resultSet.getString("language"); //$NON-NLS-1$
+	    		
+	    		if(language == null || language.equals("null")) //$NON-NLS-1$
+	    			language = ""; //$NON-NLS-1$
+	    		
+	    		//Religion
+	    		religion = resultSet.getString("religion"); //$NON-NLS-1$
+	    		
+	    		if(religion == null || religion.equals("null")) //$NON-NLS-1$
+	    			religion = ""; //$NON-NLS-1$
+	    		
+	    		//Journey
+	    		journey = resultSet.getString("journey"); //$NON-NLS-1$
+	    		
+	    		if(journey == null || journey.equals("null")) //$NON-NLS-1$
+	    			journey = ""; //$NON-NLS-1$
+	    		
+	    		//Notes
+	    		notes = resultSet.getString("notes"); //$NON-NLS-1$
+	    		
+	    		if(notes == null || notes.equals("null")) //$NON-NLS-1$
+	    			notes = ""; //$NON-NLS-1$
+	    		
+	    		//Get the conversation history for this person
+	    		populateConversationHistory(readConnection);
+	    		
+		    }
 		   
 		}catch (SQLException e){
 			showError(e, xStrings.getString("Person.databaseSQLError")); //$NON-NLS-1$
