@@ -1076,7 +1076,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	
 	/**
 	 * Notifies any object listening to this CallManagerPanel
-	 * Primarily used to 
+	 * Primarily used to notify call input panel we've answered something
 	 * @param callInfoPanel
 	 */
 	private void notifyListeners(CallInfoPanel callInfoPanel) {
