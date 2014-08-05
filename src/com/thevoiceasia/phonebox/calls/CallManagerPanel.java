@@ -36,6 +36,7 @@ import com.thevoiceasia.phonebox.callinput.CallerUpdater;
 import com.thevoiceasia.phonebox.database.DatabaseManager;
 import com.thevoiceasia.phonebox.launcher.Client;
 import com.thevoiceasia.phonebox.misc.LastActionTimer;
+import com.thevoiceasia.phonebox.records.Person;
 
 public class CallManagerPanel extends JPanel implements PacketListener, MouseListener, 
 									LastActionTimer, ChatManagerListener, MessageListener,
@@ -55,6 +56,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	/** CLASS VARS */
 	private MultiUserChat controlRoom;//room to send control messages to
 	private I18NStrings xStrings;
+	private String country, language;
 	private CountryCodes countries;
 	private HashMap<String, CallInfoPanel> callPanels = new HashMap<String, CallInfoPanel>();
 	private HashMap<String, EndPointRecord> endPoints = new HashMap<String, EndPointRecord>();
@@ -92,6 +94,9 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		
 		this.settings = settings;
 		xStrings = new I18NStrings(settings.get("language"), settings.get("country")); //$NON-NLS-1$ //$NON-NLS-2$
+		this.language = settings.get("language"); //$NON-NLS-1$
+		this.country = settings.get("country"); //$NON-NLS-1$
+		
 		maxExecutorThreads = Integer.parseInt(settings.get("threadPoolMax")); //$NON-NLS-1$
 		dbLookUpService = Executors.newFixedThreadPool(maxExecutorThreads);
 		this.database = database;
@@ -866,10 +871,20 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 				}else if(command.length == 3 && command[0].equals(
 						xStrings.getString("CallManagerPanel.changed"))){ //$NON-NLS-1$
 					
-					//TODO CHANGED
-					//TODO
-					//TODO
-					//TODO
+					//CHANGED
+					//Update CallInfoPanel, CallInputPanel.  CallLogPanel has its own listener
+					//CallInputPanel to be notified via notifyListeners method
+					if(callPanels.get(command[1]) != null){//Check we actually have this panel
+					
+						callPanels.get(command[1]).changeActivePerson(
+								new Person(Integer.parseInt(command[2]), 
+										language, country, 
+										database.getReadConnection()));
+						
+						//Notify listeners
+						notifyListeners(callPanels.get(command[1]));
+						
+					}
 					
 				}
 				
@@ -1070,6 +1085,10 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		
 		if(answerListeners.size() < 1){
 			
+			/* Usually only happens on startup when the CallInfoPanel is not 
+			 * quite finished being created.  So we store this as something
+			 * we'll notify later
+			 */
 			LOGGER.info(xStrings.getString("CallManagerPanel.storeForNotifyListeners")); //$NON-NLS-1$
 			storedAnsweredPanel = callInfoPanel;
 			
