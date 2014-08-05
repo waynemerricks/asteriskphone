@@ -1064,6 +1064,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 			sendCallerUpdated(fieldName, value);
 		
 	}
+	
 	/**
 	 * Returns the PhoneCall object associated with this panel
 	 * @return Can be null if no record attached
