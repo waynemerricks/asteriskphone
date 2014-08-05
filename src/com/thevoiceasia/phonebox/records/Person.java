@@ -45,6 +45,7 @@ public class Person {
 	public Person(int id, String language, String country, 
 			Connection readConnection){
 		
+		this.id = id;
 		xStrings = new I18NStrings(language, country);
 		
 		String SQL = "SELECT * FROM `person` WHERE `person_id` = " + id; //$NON-NLS-1$
