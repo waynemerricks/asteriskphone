@@ -1023,7 +1023,10 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	 * @param person Person record to change to
 	 */
 	public void changeActivePerson(Person person) {
-		// TODO Auto-generated method stub
+		
+		// TODO Set New Active Person and update the labels
+		this.getPhoneCallRecord().addActivePerson(person);
+		updateLabels();
 		
 	}
 	
