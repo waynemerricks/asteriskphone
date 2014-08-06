@@ -1257,7 +1257,8 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		
 		boolean myPhone = false;
 		
-		if(settings.get("myExtension").equals(extension)) //$NON-NLS-1$
+		if(settings.get("myExtension") != null && //$NON-NLS-1$
+				settings.get("myExtension").equals(extension)) //$NON-NLS-1$
 			myPhone = true;
 		
 		return myPhone;
