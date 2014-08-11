@@ -57,7 +57,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 			String incomingQueue, String onairQueue) {
 		
 		super(JTabbedPane.BOTTOM);
-		
+
 		this.chat = manager;
 		this.language = language;
 		this.country = country;
@@ -132,7 +132,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 		
 		//Place the components
 		for(int i = 0; i < components.size(); i++){
-			
+
 			if(!components.get(i).isTab()){
 				
 				if(components.get(i).isLabel()){
