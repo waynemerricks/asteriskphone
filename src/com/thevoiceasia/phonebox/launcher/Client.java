@@ -200,6 +200,7 @@ public class Client extends JFrame implements WindowListener{
 				language = userSettings.get("language"); //$NON-NLS-1$
 				country = userSettings.get("country"); //$NON-NLS-1$
 				xStrings = new I18NStrings(language, country);//reset language to user settings
+				databaseManager.setNewLocale(language, country);//Set db manager language to above
 				
 				//Database Keep Alive Thread
 				databaseManager.spawnKeepAlive(language, country);
