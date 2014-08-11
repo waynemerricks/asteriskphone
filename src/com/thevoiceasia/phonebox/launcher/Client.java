@@ -47,7 +47,7 @@ public class Client extends JFrame implements WindowListener{
 	private static final Logger CALL_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.calls"); //$NON-NLS-1$
 	private static final Level CALL_LOG_LEVEL = Level.WARNING;
 	private static final Logger CALL_INPUT_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.callinput"); //$NON-NLS-1$
-	private static final Level CALL_INPUT_LEVEL = Level.INFO;
+	private static final Level CALL_INPUT_LEVEL = Level.WARNING;
 	
 	private static I18NStrings xStrings;
 	
@@ -60,7 +60,7 @@ public class Client extends JFrame implements WindowListener{
 		this.country = country;
 		
 		/** Initialise component daemons **/
-		xStrings = new I18NStrings(language, country);
+		xStrings = new I18NStrings(this.language, this.country);
 		this.setIconImage(createImage("images/app.png")); //$NON-NLS-1$
 		setupLogging();
 		
@@ -86,7 +86,7 @@ public class Client extends JFrame implements WindowListener{
 			loadingSplash.setStatus(xStrings.getString("Client.loadingChatModule")); //$NON-NLS-1$
 			
 			//Chat Module
-			ChatWindow chat = new ChatWindow(chatManager, language, country, userSettings.get("nickName"), //$NON-NLS-1$
+			ChatWindow chat = new ChatWindow(chatManager, this.language, this.country, userSettings.get("nickName"), //$NON-NLS-1$
 					userSettings.get("isStudio")); //$NON-NLS-1$
 			
 			if(chatManager.hasErrors())
@@ -110,7 +110,7 @@ public class Client extends JFrame implements WindowListener{
 				JPanel callModule = new JPanel(new BorderLayout());
 				callModule.add(new JScrollPane(callManagerPanel), BorderLayout.CENTER);
 				CallShortcutBar callShortcuts = new CallShortcutBar(callManagerPanel, 
-						language, country);
+						this.language, this.country);
 				callManagerPanel.addManualHangupListener(callShortcuts);
 				callModule.add(callShortcuts, BorderLayout.NORTH);
 				
@@ -120,7 +120,7 @@ public class Client extends JFrame implements WindowListener{
 				
 				CallInputPanel callInput = new CallInputPanel(
 						databaseManager.getReadConnection(), 
-						userSettings.get("maxRecordAge"), language, country, chatManager,  //$NON-NLS-1$
+						userSettings.get("maxRecordAge"), this.language, this.country, chatManager,  //$NON-NLS-1$
 						userSettings.get("incomingQueueNumber"), //$NON-NLS-1$
 						userSettings.get("onAirQueueNumber")); //$NON-NLS-1$
 				callManagerPanel.addAnswerListener(callInput);
@@ -195,6 +195,11 @@ public class Client extends JFrame implements WindowListener{
 				
 				boolean createUser = !databaseManager.populateUserSettings(null);
 				userSettings = databaseManager.getUserSettings();
+				
+				//BUG FIX rely on DB for locale info where possible
+				language = userSettings.get("language"); //$NON-NLS-1$
+				country = userSettings.get("country"); //$NON-NLS-1$
+				xStrings = new I18NStrings(language, country);//reset language to user settings
 				
 				//Database Keep Alive Thread
 				databaseManager.spawnKeepAlive(language, country);
