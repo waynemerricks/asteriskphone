@@ -640,4 +640,17 @@ public class DatabaseManager {
 		
 	}
 
+	/**
+	 * Allows other objects to change the locale used by I18N Strings
+	 * after creation.  Should really only be called by Client after
+	 * we have read user preferences for language and country from the DB
+	 * @param language I18N language e.g. en
+	 * @param country I18N country e.g. GB
+	 */
+	public void setNewLocale(String language, String country) {
+		
+		xStrings = new I18NStrings(language, country);
+		
+	}
+
 }
