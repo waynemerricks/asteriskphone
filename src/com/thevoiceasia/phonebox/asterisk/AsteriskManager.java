@@ -38,6 +38,7 @@ import com.thevoiceasia.phonebox.database.DatabaseManager;
 import com.thevoiceasia.phonebox.database.PersonChanger;
 import com.thevoiceasia.phonebox.database.RecordUpdater;
 import com.thevoiceasia.phonebox.records.PhoneCall;
+import com.thevoiceasia.phonebox.records.TrackDial;
 
 public class AsteriskManager implements AsteriskServerListener, PropertyChangeListener, OriginateCallback, PacketListener, MessageListener {
 
@@ -338,6 +339,8 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		
 		calls.put(fromNumber, toWithoutPrefix);
 		
+		trackDial(toWithoutPrefix, fromName);//Add an entry to callhistory D so we can track who dialled stuff
+		
 		HashMap<String, String> vars = new HashMap<String, String>();
 		asteriskServer.originateToExtensionAsync(SIP_PREFIX + fromNumber + "@" +  //$NON-NLS-1$
 				autoAnswerContext,  autoAnswerContext, to, DEFAULT_PRIORITY, defaultTimeOut, 
@@ -345,6 +348,19 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		
 	}
 	
+	/**
+	 * Adds an entry to the call history table for dialling a number
+	 * @param phoneNumber number dialled
+	 * @param operator operator who did it
+	 */
+	private void trackDial(String phoneNumber, String operator) {
+		
+		dbLookUpService.execute(new TrackDial(settings.get("language"),  //$NON-NLS-1$
+				settings.get("country"), databaseManager, operator,  //$NON-NLS-1$
+				phoneNumber));
+		 
+	}
+
 	/**
 	 * Redirects the given channel to the given extension
 	 * @param channelID Channel to redirect
@@ -457,9 +473,13 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		if(channel != null){
 			
 			channel.redirect(defaultContext, queueNumber, DEFAULT_PRIORITY);
-		
+			String callerID = channel.getCallerId().getNumber();
+			
+			if(removePrefix(callerID))
+				callerID = callerID.substring(dialPrefix.length());
+				
 			dbLookUpService.execute(new PhoneCall(databaseManager, 
-					channel.getCallerId().getNumber(), channel.getId(), this, 'Q', from));
+					callerID, channel.getId(), this, 'Q', from));
 			
 		}
 		
