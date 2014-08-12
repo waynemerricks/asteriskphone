@@ -503,13 +503,29 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 		LOGGER.info(xStrings.getString("CallLogPanel.logChannelUpdate")); //$NON-NLS-1$
 		
 		//Set Internal Record
-		CallLog log = records.get(fromChannel);
-		log.setChannel(toChannel);
-		records.remove(fromChannel);
-		records.put(toChannel, log);
-		
-		//Set table row value
-		changeCallLog(fromChannel, "channel", toChannel); //$NON-NLS-1$
+		if(!records.containsKey(fromChannel)){
+			
+			//The log didn't have this call so lets add it usually only happens
+			//if its a call that has been dialled
+			CallLog log = new CallLog(language, country,
+	    			toChannel,
+	    			readConnection, true);
+			
+			records.put(toChannel, log);
+			
+			appendCallLog(log);
+	    	
+		}else{
+			
+			CallLog log = records.get(fromChannel);
+			log.setChannel(toChannel);
+			records.remove(fromChannel);
+			records.put(toChannel, log);
+			
+			//Set table row value
+			changeCallLog(fromChannel, "channel", toChannel); //$NON-NLS-1$
+			
+		}
 		
 	}
 
