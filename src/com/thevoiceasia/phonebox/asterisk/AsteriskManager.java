@@ -60,13 +60,14 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	private HashMap<String, AsteriskChannel> activeChannels = new HashMap<String, AsteriskChannel>();
 	private HashMap<String, Long> lockedChannels = new HashMap<String, Long>();
 	private I18NStrings xStrings;
-	private String autoAnswerContext, defaultContext, contextMacroAuto, queueNumber;
+	private String autoAnswerContext, defaultContext, contextMacroAuto, queueNumber, dialPrefix;
 	private long defaultTimeOut, channelLockTimeOut;
 	private MultiUserChat controlRoom;
 	private DatabaseManager databaseManager;
 	private HashSet<String> systemExtensions = new HashSet<String>();
 	private HashMap<String, String> settings;
 	private HashMap<String, String> calls = new HashMap<String, String>(); //HashMap to store dialled calls in progress
+	private boolean startup = true; //Flag that we're starting up so ignore messages
 	
 	/* We need to spawn threads for event response with db lookups, in order to guard against
 	 * craziness, we'll use the ExecutorService to have X threads available to use (set via
@@ -89,6 +90,12 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		this.defaultContext = settings.get("defaultContext"); //$NON-NLS-1$
 		this.contextMacroAuto = settings.get("contextMacroAuto"); //$NON-NLS-1$
 		this.queueNumber = settings.get("onAirQueueNumber"); //$NON-NLS-1$
+		
+		//Set the dial prefix to whatever we call for an outside line or "" if null/blank
+		if(settings.containsKey("outsideCallPrefix")) //$NON-NLS-1$
+			this.dialPrefix = settings.get("outsideCallPrefix"); //$NON-NLS-1$
+		else
+			dialPrefix = ""; //$NON-NLS-1$
 		
 		if(settings.containsKey("defaultTimeOut")) //$NON-NLS-1$
 			this.defaultTimeOut = Long.parseLong(settings.get("defaultTimeOut")); //$NON-NLS-1$
@@ -117,6 +124,17 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 				settings.get("asteriskUser"), settings.get("asteriskPass"));  //$NON-NLS-1$//$NON-NLS-2$
 		
 		systemExtensions = databaseManager.getSystemExtensions();
+		
+	}
+	
+	/**
+	 * Set the startup flag to false once you're ready for this object to process
+	 * XMPP control messages
+	 */
+	public void startProcessingMessages(){
+		
+		LOGGER.info(xStrings.getString("AsteriskManager.finishedStarting")); //$NON-NLS-1$
+		startup = false;
 		
 	}
 	
@@ -304,7 +322,13 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	public void createCall(String to, String fromNumber, String fromName){
 		
 		//BUG FIX Store the call creation stuff here so we can look it up later
-		calls.put(fromNumber, to);
+		//BUG FIX Remove any dial prefix's from the call here
+		String toWithoutPrefix = to;
+		
+		if(dialPrefix.length() > 0 && to.startsWith(dialPrefix))
+			toWithoutPrefix = to.substring(dialPrefix.length());
+		
+		calls.put(fromNumber, toWithoutPrefix);
 		
 		HashMap<String, String> vars = new HashMap<String, String>();
 		asteriskServer.originateToExtensionAsync(SIP_PREFIX + fromNumber + "@" +  //$NON-NLS-1$
@@ -489,6 +513,11 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 			AsteriskQueue queue = entry.getQueue();
 			String name = queue.getName();
 			String number = checkNumberWithHeld(entry.getChannel().getCallerId());
+			
+			// Remove dialprefix from number if this is an external call
+			if(removePrefix(number))
+				number = number.substring(dialPrefix.length());
+			
 			String id = entry.getChannel().getId();
 			
 			String message = xStrings.getString("AsteriskManager.populatedQueueEntry") + "/" + //$NON-NLS-1$ //$NON-NLS-2$
@@ -544,7 +573,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	@Override
 	public void processPacket(Packet XMPPPacket) {
 		
-		if(XMPPPacket instanceof Message){
+		if(!startup && XMPPPacket instanceof Message){
 			
 			Message message = (Message)XMPPPacket;
 			
@@ -600,9 +629,17 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 					 * clients can store endpoint extension and then when the queue message comes in
 					 * update the channel properly (in theory)
 					 */
+					//Remove dial prefix if this was an outgoing external call
+					String endPointCallerID = activeChannels.get(
+							command[1]).getLinkedChannel().getCallerId().getNumber();
+					
+					if(removePrefix(endPointCallerID))
+						endPointCallerID = endPointCallerID.substring(
+								dialPrefix.length());
+					
 					sendMessage(xStrings.getString("AsteriskManager.commandEndPoint") + "/" + command[1] + "/"  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
 					 + activeChannels.get(command[1]).getLinkedChannel().getId() + "/"  //$NON-NLS-1$
-					 + activeChannels.get(command[1]).getLinkedChannel().getCallerId().getNumber());
+					 + endPointCallerID);
 					
 					redirectCallToQueue(activeChannels.get(command[1]).getLinkedChannel()
 							.getId(), from);
@@ -640,7 +677,39 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 				
 			}
 			
-		}	
+		}else if(startup)
+			LOGGER.info(xStrings.getString("AsteriskManager.receivedXMPPWhileStarting")); //$NON-NLS-1$
+		
+		
+	}
+	
+	/**
+	 * Signals true if you need to remove the dial prefix from the given caller
+	 * ID
+	 * @param callerID CallerID to lookup in the calls hashmap
+	 * @return true if this has a dial prefix on it
+	 */
+	private boolean removePrefix(String callerID){
+		
+		boolean removePrefix = false;
+		Iterator<String> keys = calls.keySet().iterator();
+		
+		while(keys.hasNext() && !removePrefix){
+			
+			String key = keys.next();
+			String to = calls.get(key);
+			
+			/* Dial outs will have caller id and the channel so lets get just
+			 * the id to check 
+			 */
+			String[] temp = to.split("/"); //$NON-NLS-1$
+			
+			if((dialPrefix + temp[0]).equals(callerID))
+				removePrefix = true;
+			
+		}
+		
+		return removePrefix;
 		
 	}
 	
@@ -661,8 +730,16 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 					//This channel is dialling out and listening to it ringing
 					AsteriskChannel ringing = (AsteriskChannel)evt.getSource();
 					
+					/* Check calls to see if ringing.getCallerId().equals anything in there
+					 * If so, remove the dial prefix if we have one there
+					 */
+					String callerID = checkNumberWithHeld(ringing.getCallerId());
+					
+					if(removePrefix(callerID))
+						callerID = callerID.substring(dialPrefix.length());
+					
 					String message = xStrings.getString("AsteriskManager.channelRinging") +  //$NON-NLS-1$
-							"/" + checkNumberWithHeld(ringing.getCallerId()) + "/" + ringing.getId(); //$NON-NLS-1$ //$NON-NLS-2$
+							"/" + callerID + "/" + ringing.getId(); //$NON-NLS-1$ //$NON-NLS-2$
 					LOGGER.info(message);
 					sendMessage(message);
 					
@@ -719,12 +796,18 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 						logCause = xStrings.getString("AsteriskManager.channelHangup") + " "   //$NON-NLS-1$//$NON-NLS-2$
 								+ hangupCause;
 					
+					//Remove the dial out prefix from callerID if this is a call we dialled
+					String callerID = checkNumberWithHeld(hangup.getCallerId());
+					
+					if(removePrefix(callerID))
+						callerID = callerID.substring(dialPrefix.length());
+					
 					//Log this in the DB
 					if(logHangup)
 						dbLookUpService.execute(new PhoneCall(databaseManager, 
-								checkNumberWithHeld(hangup.getCallerId()), hangup.getId(), this, 
+								callerID, hangup.getId(), this, 
 								'H', "NA")); //$NON-NLS-1$
-					
+						
 					/* BUG FIX: Hangup Cause sometimes has a slash in it which messes with our / command separator
 					 * HANGUP Circuit/channel congestion as one example there may be others so lets deal with it
 					 */
@@ -732,7 +815,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 					//END OF BUG FIX
 					
 					//Send XMPP Message
-					String message = logCause + "/" + checkNumberWithHeld(hangup.getCallerId()) + //$NON-NLS-1$
+					String message = logCause + "/" + callerID + //$NON-NLS-1$
 							"/" + hangup.getId();  //$NON-NLS-1$
 					LOGGER.info(message);
 					sendMessage(message);
@@ -778,10 +861,26 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 					//TODO Check this can't remember what significance no id had
 					/*if(channel.getCallerId().getNumber() != null && 
 							!channel.getCallerId().getNumber().equals("null")){ //$NON-NLS-1$ */
+						//Remove dial prefix if this was a call we dialled
+						String callerID = checkNumberWithHeld(channel.getCallerId());
+						
+						if(removePrefix(callerID))
+							callerID = callerID.substring(dialPrefix.length());
+						
+						/* Do the same with the extension this channel is 
+						 * calling because it could be 5103 (internal) to
+						 * 9901234567890 (external dial out)
+						 * So we need to remove prefix from external too
+						 */
+						String extensionCalling = calling.getExtension();
+						
+						if(removePrefix(extensionCalling))
+							extensionCalling = extensionCalling.substring(
+									dialPrefix.length());
 						
 						String message = xStrings.getString("AsteriskManager.callRingingFrom") +  //$NON-NLS-1$
-								"/" + checkNumberWithHeld(channel.getCallerId()) + "/" +  //$NON-NLS-1$ //$NON-NLS-2$
-								calling.getExtension() + "/" + channel.getId(); //$NON-NLS-1$
+								"/" + callerID + "/" +  //$NON-NLS-1$ //$NON-NLS-2$
+								extensionCalling + "/" + channel.getId(); //$NON-NLS-1$
 						
 						/* Track Incoming
 						 * We need to get an active person if possible or create a skeleton
@@ -796,17 +895,14 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 						 * On Dial store the channel stuff so we can substitute here?
 						 */
 						
-						CallerId callerToCheck = channel.getCallerId();
-						
-						if(calls.containsKey(channel.getCallerId().getNumber())){
+						if(calls.containsKey(callerID)){
 							
-							String to = calls.get(channel.getCallerId().getNumber());
-							callerToCheck = new CallerId(to, to);
-							calls.put(channel.getCallerId().getNumber(), to + "/" + channel.getId()); //$NON-NLS-1$
+							String to = calls.get(callerID);
+							calls.put(callerID, to + "/" + channel.getId()); //$NON-NLS-1$
 							
 						}
 						
-						dbLookUpService.execute(new PhoneCall(checkNumberWithHeld(callerToCheck), 
+						dbLookUpService.execute(new PhoneCall(callerID, 
 								channel.getId(), databaseManager));
 					
 						LOGGER.info(message);
@@ -830,13 +926,23 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 				
 				if(!linkedTo.equals(channel.getCallerId().getNumber())){
 					
+					//Remove dial prefix if it is on the callerID
+					String callerID = checkNumberWithHeld(channel.getCallerId());
+					
+					if(removePrefix(callerID))
+						callerID = callerID.substring(dialPrefix.length());
+					
+					//Do the same for the linkedTo ID
+					if(removePrefix(linkedTo))
+						linkedTo = linkedTo.substring(dialPrefix.length());
+					
 					String message = xStrings.getString("AsteriskManager.callConnected") +  //$NON-NLS-1$
-							"/" + checkNumberWithHeld(channel.getCallerId()) + "/" + //$NON-NLS-1$ //$NON-NLS-2$
+							"/" + callerID + "/" + //$NON-NLS-1$ //$NON-NLS-2$
 							linkedTo + "/" + channel.getId(); //$NON-NLS-1$
 					
 					if(systemExtensions.contains(linkedTo))//if we're linked to a system phone
 						dbLookUpService.execute(new PhoneCall(databaseManager, 
-								checkNumberWithHeld(channel.getCallerId()), channel.getId(), this, 'A', "NA")); //$NON-NLS-1$
+								callerID, channel.getId(), this, 'A', "NA")); //$NON-NLS-1$
 					
 					LOGGER.info(message);
 					sendMessage(message);

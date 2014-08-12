@@ -80,6 +80,9 @@ public class Server extends Thread{
 						
 							hasErrors = false; //Reset flag as everything is working
 							
+							//Turn off the startup flag so we start processing XMPP messages
+							asteriskManager.startProcessingMessages();
+							
 						}catch(ManagerCommunicationException e){
 						
 							showError(e, xStrings.getString("Server.asteriskConnectionError")); //$NON-NLS-1$
