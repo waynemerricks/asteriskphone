@@ -387,6 +387,10 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 			    			command[2],
 			    			readConnection, true);
 			    	
+					LOGGER.info(
+							xStrings.getString("CallLogPanel.addingChannelToLog") + //$NON-NLS-1$
+							log.getChannel()); 
+					
 			    	records.put(log.getChannel(), log);
 			    	appendCallLog(log);
 					
@@ -435,6 +439,10 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 		    			command[3],
 		    			readConnection, true);
 		    	
+				LOGGER.info(
+						xStrings.getString("CallLogPanel.addingChannelToLog") + //$NON-NLS-1$
+						log.getChannel()); 
+				
 		    	records.put(log.getChannel(), log);
 		    	appendCallLog(log);
 		    		
