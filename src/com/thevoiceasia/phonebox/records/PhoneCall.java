@@ -113,9 +113,10 @@ public class PhoneCall implements Runnable{
 	 * @param database
 	 * @param queueEntry
 	 * @param asteriskManager
+	 * @param callerIDSubstitute If not null, use this as the callerid, not the queue entry record
 	 */
 	public PhoneCall(DatabaseManager database, AsteriskQueueEntry queueEntry, 
-			AsteriskManager asteriskManager) {
+			AsteriskManager asteriskManager, String callerIDSubstitute) {
 		
 		this.database = database;
 		this.queueEntry = queueEntry;
@@ -129,7 +130,11 @@ public class PhoneCall implements Runnable{
 				database.getUserSettings().get("country")); //$NON-NLS-1$
 		
 		/* BUG FIX CALLERID WITHHELD */
-		this.callerID =  checkNumberWithHeld(queueEntry.getChannel().getCallerId());
+		if(callerIDSubstitute != null)
+			this.callerID = callerIDSubstitute;
+		else
+			this.callerID =  checkNumberWithHeld(
+					queueEntry.getChannel().getCallerId());
 		
 	}
 	
