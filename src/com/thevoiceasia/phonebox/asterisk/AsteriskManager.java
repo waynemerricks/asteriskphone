@@ -494,11 +494,16 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		
 		AsteriskChannel channel = activeChannels.get(channelID);
 		
+		String callerID = channel.getCallerId().getNumber();
+		
+		if(removePrefix(callerID))
+			callerID = callerID.substring(dialPrefix.length());
+		
 		if(channel != null)
 			channel.hangup();
 		
 		dbLookUpService.execute(new PhoneCall(databaseManager, 
-				channel.getCallerId().getNumber(), channel.getId(), this, 'H', from));
+				callerID, channel.getId(), this, 'H', from));
 		
 	}
 	
