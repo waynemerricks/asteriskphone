@@ -501,8 +501,15 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		//Returns via sendNewQueueEntryMessage
 		LOGGER.info(xStrings.getString("AsteriskManager.newQueueEntry") + //$NON-NLS-1$
 				entry.getQueue().getName() + "/" + entry.getChannel().getId()); //$NON-NLS-1$
+
+		String callerID = checkNumberWithHeld(entry.getChannel().getCallerId());
 		
-		dbLookUpService.execute(new PhoneCall(databaseManager, entry, this));
+		if(removePrefix(callerID))
+			callerID = callerID.substring(dialPrefix.length());
+		else
+			callerID = null;
+		
+		dbLookUpService.execute(new PhoneCall(databaseManager, entry, this, callerID));
 		
 	}
 
