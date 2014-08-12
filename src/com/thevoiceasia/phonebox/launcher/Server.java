@@ -23,6 +23,7 @@ public class Server extends Thread{
 	/** STATICS **/
 	private static final Logger LOGGER = Logger.getLogger("com.thevoiceasia.phonebox");//Logger //$NON-NLS-1$
 	private static final Level LOG_LEVEL = Level.INFO;
+	private static final long STARTUP_DELAY = 1000L;
 	private static I18NStrings xStrings;
 	
 	public Server(String language, String country){
@@ -81,7 +82,17 @@ public class Server extends Thread{
 							hasErrors = false; //Reset flag as everything is working
 							
 							//Turn off the startup flag so we start processing XMPP messages
-							asteriskManager.startProcessingMessages();
+							try {
+								
+								sleep(STARTUP_DELAY);
+								asteriskManager.startProcessingMessages();
+								
+							} catch (InterruptedException e) {
+								//We were interrupted flag error and shut down
+								showError(e, xStrings.getString("Server.startupInterruptedError")); //$NON-NLS-1$
+								e.printStackTrace();
+							}
+							
 							
 						}catch(ManagerCommunicationException e){
 						
