@@ -67,6 +67,14 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	private HashSet<String> systemExtensions = new HashSet<String>();
 	private HashMap<String, String> settings;
 	private HashMap<String, String> calls = new HashMap<String, String>(); //HashMap to store dialled calls in progress
+	/* To work around the dial prefix issue, we need to keep hold of any calls we're expecting
+	 * to hang up as part of a TRANSFERENDPOINT event.
+	 * Normally this would cause the original channel to hang up and be removed from the 
+	 * calls hash map.  What we'll do is add them to expectHangup so that we can stop them
+	 * being removed from calls when the HANGUP message follows as they're transferred to the
+	 * QUEUE
+	 */
+	private Vector<String> expectHangup = new Vector<String>();
 	private boolean startup = true; //Flag that we're starting up so ignore messages
 	
 	/* We need to spawn threads for event response with db lookups, in order to guard against
@@ -641,6 +649,11 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 					 + activeChannels.get(command[1]).getLinkedChannel().getId() + "/"  //$NON-NLS-1$
 					 + endPointCallerID);
 					
+					/* BUG FIX: Store in expectHangup so that when channel gets dropped
+					 * we don't remove it from the calls hash map
+					 */
+					expectHangup.add(endPointCallerID);
+					
 					redirectCallToQueue(activeChannels.get(command[1]).getLinkedChannel()
 							.getId(), from);
 					
@@ -747,20 +760,47 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 					
 					AsteriskChannel hangup = (AsteriskChannel)evt.getSource();
 					
-					/* Remove any old dialled calls in progress */
-					if(calls.size() > 0){
+					/* Remove any old dialled calls in progress unless we're expecting
+					 * a hang up on this CallerID due to TRANSFERENDPOINT */
+					if(expectHangup.size() > 0){ //Check we're not expecting this to hangup
 						
-						Iterator<String> keys = calls.keySet().iterator();
-						boolean done = false;
+						boolean expected = false;
+						int i = 0;
 						
-						while(keys.hasNext() && !done){
+						while(!expected && i < expectHangup.size()){
+						
+							String hangupCallerID = 
+									hangup.getCallerId().getNumber();
 							
-							String key = keys.next();
-							String to = calls.get(key);
+							if(removePrefix(hangupCallerID))
+								hangupCallerID = hangupCallerID.substring(
+										dialPrefix.length());
 							
-							if(to.contains(hangup.getId())){
-								calls.remove(key);
-								done = true;
+							if(hangupCallerID.equals(expectHangup.get(i))){
+								expected = true;
+								
+								//Remove it as we don't need it anymore
+								expectHangup.remove(i);
+								
+							}
+							
+						}
+						
+						if(!expected && calls.size() > 0){
+							
+							Iterator<String> keys = calls.keySet().iterator();
+							boolean done = false;
+							
+							while(keys.hasNext() && !done){
+								
+								String key = keys.next();
+								String to = calls.get(key);
+								
+								if(to.contains(hangup.getId())){
+									calls.remove(key);
+									done = true;
+								}
+								
 							}
 							
 						}
