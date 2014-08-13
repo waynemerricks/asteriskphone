@@ -1024,7 +1024,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	 */
 	public void changeActivePerson(Person person) {
 		
-		// TODO Set New Active Person and update the labels
+		// Set New Active Person and update the labels
 		this.getPhoneCallRecord().addActivePerson(person);
 		updateLabels();
 		
