@@ -429,14 +429,17 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 				
 			}else if(locked){
 				
-				String message = xStrings.getString("AsteriskManager.commandLocked") + "/" +  //$NON-NLS-1$ //$NON-NLS-2$
+				String message = xStrings.getString(
+						"AsteriskManager.commandLocked") + "/" +  //$NON-NLS-1$ //$NON-NLS-2$
 				channel.getId();
 				sendMessage(message);
 				
 			}
 			
 		}else//Extension offline/in error state so send failed message
-			sendPrivateMessage(from, xStrings.getString("AsteriskManager.FAILED") + "/" + to + "/" + extensionStatus); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$;
+			sendPrivateMessage(from, xStrings.getString(
+					"AsteriskManager.FAILED") + "/" + channelID + "/" +  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$;
+					extensionStatus);
 		
 	}
 	
