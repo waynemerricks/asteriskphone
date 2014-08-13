@@ -1108,11 +1108,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	public void onDialing(AsteriskChannel channel) {}
 
 	@Override
-	public void onFailure(LiveException exception) { 
-		
-		sendMessage(exception.toString());
-		
-	}
+	public void onFailure(LiveException exception) {}
 
 	@Override
 	public void onNoAnswer(AsteriskChannel channel) {}
