@@ -2,6 +2,7 @@ package com.thevoiceasia.phonebox.asterisk;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -26,6 +27,9 @@ import org.asteriskjava.live.ManagerCommunicationException;
 import org.asteriskjava.live.MeetMeUser;
 import org.asteriskjava.live.OriginateCallback;
 import org.asteriskjava.live.internal.AsteriskAgentImpl;
+import org.asteriskjava.manager.TimeoutException;
+import org.asteriskjava.manager.action.ExtensionStateAction;
+import org.asteriskjava.manager.response.ExtensionStateResponse;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.PacketListener;
@@ -362,6 +366,39 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	}
 
 	/**
+	 * Returns the status of the given extension in the default context
+	 *
+	 * @param extension Extension to query
+	 * @return  0: Extension Online/Ready
+	 *		    1: Extension On a call
+	 *		    4: Extension Offline
+	 *		   -1: Extension does not exist
+	 */
+	private int isExtensionOnline(String extension){
+	
+		int online = -1;
+		
+		try {
+			
+			ExtensionStateResponse response = (ExtensionStateResponse)
+					asteriskServer.getManagerConnection().sendAction(
+					new ExtensionStateAction(extension, 
+							settings.get("defaultContext"))); //$NON-NLS-1$
+			
+			online = response.getStatus();
+			
+		} catch (IllegalArgumentException | IllegalStateException | IOException
+				| TimeoutException e) {
+			LOGGER.severe(xStrings.getString(
+					"AsteriskManager.extensionQueryFailed" + extension)); //$NON-NLS-1$
+			e.printStackTrace();
+		}
+		
+		return online;
+		
+	}
+	
+	/**
 	 * Redirects the given channel to the given extension
 	 * @param channelID Channel to redirect
 	 * @param to extension to send channel to
@@ -371,28 +408,36 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		/* Need to check to see if we're already on a call
 		 * If we are then park the original calls before transferring this one
 		 */
-		parkActiveCalls(to, from);
+		int extensionStatus = isExtensionOnline(to);
 		
-		// Get the channel and if its not locked, transfer it to this phone
-		AsteriskChannel channel = activeChannels.get(channelID);
+		if(extensionStatus == 1)//On a call
+			parkActiveCalls(to, from);
 		
-		boolean locked = isLocked(channel);
+		if(extensionStatus == 0) {//Ready/Online
 		
-		if(channel != null && !locked){//null = channel not found
+			// Get the channel and if its not locked, transfer it to this phone
+			AsteriskChannel channel = activeChannels.get(channelID);
 			
-			channel.redirect(autoAnswerContext, to, DEFAULT_PRIORITY);
-		
-			dbLookUpService.execute(new PhoneCall(databaseManager, 
-					channel.getCallerId().getNumber(), channel.getId(), this, 'A', from));
+			boolean locked = isLocked(channel);
 			
-		}else if(locked){
+			if(channel != null && !locked){//null = channel not found
+				
+				channel.redirect(autoAnswerContext, to, DEFAULT_PRIORITY);
 			
-			String message = xStrings.getString("AsteriskManager.commandLocked") + "/" +  //$NON-NLS-1$ //$NON-NLS-2$
-			channel.getId();
-			sendMessage(message);
+				dbLookUpService.execute(new PhoneCall(databaseManager, 
+						channel.getCallerId().getNumber(), channel.getId(), this, 'A', from));
+				
+			}else if(locked){
+				
+				String message = xStrings.getString("AsteriskManager.commandLocked") + "/" +  //$NON-NLS-1$ //$NON-NLS-2$
+				channel.getId();
+				sendMessage(message);
+				
+			}
 			
-		}
-		
+		}else//Extension offline/in error state so send failed message
+			sendMessage(xStrings.getString("AsteriskManager.FAILED") + "/" + to + "/" + extensionStatus); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$;
+			
 	}
 	
 	/**
@@ -1060,7 +1105,11 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	public void onDialing(AsteriskChannel channel) {}
 
 	@Override
-	public void onFailure(LiveException exception) {}
+	public void onFailure(LiveException exception) { 
+		
+		sendMessage(exception.toString());
+		
+	}
 
 	@Override
 	public void onNoAnswer(AsteriskChannel channel) {}
