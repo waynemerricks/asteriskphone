@@ -436,8 +436,8 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 			}
 			
 		}else//Extension offline/in error state so send failed message
-			sendMessage(xStrings.getString("AsteriskManager.FAILED") + "/" + to + "/" + extensionStatus); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$;
-			
+			sendPrivateMessage(from, xStrings.getString("AsteriskManager.FAILED") + "/" + to + "/" + extensionStatus); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$;
+		
 	}
 	
 	/**
