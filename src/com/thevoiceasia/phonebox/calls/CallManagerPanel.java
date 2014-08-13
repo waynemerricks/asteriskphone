@@ -3,6 +3,7 @@ package com.thevoiceasia.phonebox.calls;
 import java.awt.Component;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,6 +37,7 @@ import com.thevoiceasia.phonebox.callinput.CallerUpdater;
 import com.thevoiceasia.phonebox.database.DatabaseManager;
 import com.thevoiceasia.phonebox.launcher.Client;
 import com.thevoiceasia.phonebox.misc.LastActionTimer;
+import com.thevoiceasia.phonebox.records.OutgoingCall;
 import com.thevoiceasia.phonebox.records.Person;
 
 public class CallManagerPanel extends JPanel implements PacketListener, MouseListener, 
@@ -60,7 +62,9 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	private CountryCodes countries;
 	private HashMap<String, CallInfoPanel> callPanels = new HashMap<String, CallInfoPanel>();
 	private HashMap<String, EndPointRecord> endPoints = new HashMap<String, EndPointRecord>();
-	private HashMap<String, String> outgoingCalls = new HashMap<String, String>();//HashMap<Client Extension, Outgoing Number>
+	/* outgoingCalls = ArrayList<OutgoingCall>
+	 */
+	private ArrayList<OutgoingCall> outgoingCalls = new ArrayList<OutgoingCall>();
 	private DatabaseManager database;
 	private HashMap<String, String> settings;
 	private HashMap<String, String> studioExtensions = new HashMap<String, String>();
@@ -345,6 +349,57 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		
 	}
 	
+	/**
+	 * Checks to see if this extension/destination is part of an outgoing call
+	 * @param extension
+	 * @param destination
+	 * @return true if outgoing
+	 */
+	private boolean isOutgoingCall(String extension, String destination){
+		
+		boolean outgoing = false;
+	
+		/* If we have two unknowns coming at the same time we need multiple 
+		 * objects so can't use HashMap here, converted to 
+		 * ArrayList<OutgoingCall> as we have to iterate over the list so 
+		 * HashMap loses its advantage
+		 * 
+		 * TODO Potential performance increase by implementing our own Map and 
+		 * keeping track of key locations e.g. 5103/1234 = 1, 5103/1235 = 5 etc
+		 */
+		if(outgoingCalls.size() > 0){
+			
+			int i = 0;
+			
+			while(!outgoing && i < outgoingCalls.size()){
+				
+				if(outgoingCalls.get(i).extension.equals(extension)){
+					
+					if(outgoingCalls.get(i).destination == null){ 
+						
+						//Probably outgoing TEST IT!
+						outgoing = true;
+						outgoingCalls.get(i).destination = destination;
+						
+					}else if(outgoingCalls.get(i).destination.equals(destination)){
+						
+						//Definitely outgoing TODO should we update channel?
+						outgoing = true;
+						
+					}
+					
+				}else 
+				
+				i++;
+				
+			}
+		
+		}
+		
+		return outgoing;
+		
+	}
+	
 	@Override
 	public void processPacket(Packet XMPPPacket) {
 		
@@ -410,16 +465,22 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 							if(systemExtensions.contains(command[1]) && 
 									systemExtensions.contains(command[2])){
 								
-								//Internal call amongst ourselves TODO outgoing check
+								//Internal call amongst ourselves
+								boolean outgoing = isOutgoingCall(command[1], command[2]);
+								
 								if(isMyPhone(command[1])){
 									int mode = CallInfoPanel.MODE_RINGING_ME;
 									
 									if(isOnAirQueue(command[2]))
 										mode = CallInfoPanel.MODE_QUEUED_ME;
 									
-									createSkeletonCallInfoPanel(command[1], command[3], 
+									if(!outgoing)
+										createSkeletonCallInfoPanel(command[1], command[3], 
 											mode, command[2], creationTime, null);
-									
+									else
+										createSkeletonCallInfoPanel(command[2], command[3], 
+												mode, command[2], creationTime, null);
+										
 									callPanels.get(command[3]).setOriginator(command[1]);
 								}else{
 									int mode = CallInfoPanel.MODE_RINGING;
@@ -427,16 +488,20 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									if(isOnAirQueue(command[2]))
 										mode = CallInfoPanel.MODE_QUEUED;
 									
-									createSkeletonCallInfoPanel(command[1], command[3], 
+									if(!outgoing)
+										createSkeletonCallInfoPanel(command[1], command[3], 
 											mode, command[2], creationTime, null);
-									
+									else
+										createSkeletonCallInfoPanel(command[2], command[3], 
+												mode, command[2], creationTime, null);
+										
 									callPanels.get(command[3]).setOriginator(command[1]);
 								}
 								
 							}else if(systemExtensions.contains(command[1]) && 
 									!systemExtensions.contains(command[2])){
 								
-								/* CALL/1234/4444444/1396477192.139 TODO Outgoing check
+								/* CALL/1234/4444444/1396477192.139
 								 * BUG FIX: Originally this caused the person you were dialling to have their details
 								 * removed once it was put on hold as originally you were changing details for the person
 								 * who made the call, not the person who was receiving the call.
@@ -449,6 +514,8 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								 * 
 								 * Remove leading 9s (or whatever you use for outside numbers based on DB)
 							     */
+								boolean outgoing = isOutgoingCall(command[1], command[2]);
+								
 								//Internal call to outside from me
 								if(isMyPhone(command[1])){
 									
@@ -457,6 +524,9 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 											creationTime, null);//Number Swap
 									callPanels.get(command[3]).setOriginator(command[1]);
 									
+									if(outgoing)
+										callPanels.get(command[3]).setOutgoing();
+									
 								}else{//Internal call to outside not from me
 									
 									createSkeletonCallInfoPanel(command[2], command[3], 
@@ -464,6 +534,8 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 											creationTime, null);//Number Swap
 									callPanels.get(command[3]).setOriginator(command[1]);
 									
+									if(outgoing)
+										callPanels.get(command[3]).setOutgoing();
 								}
 								
 							}else if(!systemExtensions.contains(command[1]) && 
@@ -492,7 +564,6 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									 * a channel change and then point the record to the original call
 									 * channel
 									 */
-									//TODO
 									if(endPoints.containsKey(command[1])){
 										
 										EndPointRecord updateMe = endPoints.get(command[1]);
@@ -537,7 +608,8 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									 * check this note and instead of creating the wrong panel,
 									 * do it with the details of this outgoing person instead 
 									 */
-									outgoingCalls.put(command[2], null);
+									outgoingCalls.add(new OutgoingCall(
+											command[2], command[3], null));
 									
 								}
 								
