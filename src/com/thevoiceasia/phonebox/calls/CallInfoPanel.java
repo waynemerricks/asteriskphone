@@ -78,7 +78,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	private TimerTask ringingTask;
 	private MultiUserChat controlRoom;
 	private String channelID, myExtension, myNickName, originator; 
-	private boolean hangupActive, canTakeCall;
+	private boolean hangupActive, canTakeCall, outgoing = false;
 	private PhoneCall phoneCallRecord;
 	private Vector<ManualHangupListener> hangupListeners = new Vector<ManualHangupListener>();
 	private CallerUpdater updateThread = null;
@@ -203,6 +203,18 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	public void setUpdaterThread(CallerUpdater thread){
 		
 		updateThread = thread;
+		
+	}
+	
+	/**
+	 * Helper method to change the channel ID on this panel
+	 * Used with outgoing calls, if its not outgoing you don't need to change
+	 * this
+	 * @param id new id to change this objects channelID to
+	 */
+	public void changeChannelID(String id){
+		
+		channelID = id;
 		
 	}
 	
@@ -1145,6 +1157,28 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	}
 	
 	/**
+	 * Sets a flag that shows this panel is an outgoing call
+	 * We'll need this to change the channel later
+	 * @param yes true if this panel should be outgoing, false if not
+	 */
+	public void setOutgoing(boolean yes){
+	
+		LOGGER.info(xStrings.getString("CallInfoPanel.setOutgoing") + yes + " " + channelID); //$NON-NLS-1$ //$NON-NLS-2$
+		outgoing = yes;
+		
+	}
+	
+	/**
+	 * Returns true if this panel is an outgoing call
+	 * @return
+	 */
+	public boolean isOutgoing(){
+		
+		return outgoing;
+		
+	}
+	
+	/**
 	 * Resets this panel to the mode it was in before being clicked
 	 */
 	public void reset() {
@@ -1237,5 +1271,5 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 
 	@Override
 	public void mouseReleased(MouseEvent evt) {}
-	
+
 }
