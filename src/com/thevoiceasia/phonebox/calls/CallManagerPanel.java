@@ -899,6 +899,9 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 					LOGGER.info(xStrings.getString(
 							"CallManagerPanel.clientPhoneError")); //$NON-NLS-1$
 					
+					//Reset CallInfoPanel
+					callPanels.get(command[1]).reset();
+					
 					int errorCode = Integer.parseInt(command[2]);
 					
 					if(errorCode == 4)
@@ -910,9 +913,6 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 					else
 						showWarning(xStrings.getString(
 								"CallManagerPanel.errorExtension" + errorCode)); //$NON-NLS-1$
-					
-					//Reset CallInfoPanel
-					callPanels.get(command[1]).reset();
 					
 				}
 				
