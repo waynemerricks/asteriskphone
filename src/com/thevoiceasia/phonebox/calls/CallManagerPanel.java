@@ -60,6 +60,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	private CountryCodes countries;
 	private HashMap<String, CallInfoPanel> callPanels = new HashMap<String, CallInfoPanel>();
 	private HashMap<String, EndPointRecord> endPoints = new HashMap<String, EndPointRecord>();
+	private HashMap<String, String> outgoingCalls = new HashMap<String, String>();//HashMap<Client Extension, Outgoing Number>
 	private DatabaseManager database;
 	private HashMap<String, String> settings;
 	private HashMap<String, String> studioExtensions = new HashMap<String, String>();
@@ -313,7 +314,8 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 							updateMe.callerChannel, location));
 		else
 			dbLookUpService.execute(
-				new InfoPanelPopulator(database, call, phoneNumber, channelID, location));
+				new InfoPanelPopulator(database, call, phoneNumber, channelID, 
+						location));
 		
 	}
 	
@@ -362,6 +364,8 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 						message.getBody()); 
 				
 				String[] command = message.getBody().split("/"); //$NON-NLS-1$
+				if(command[1].equals("UNKNOWN")) //$NON-NLS-1$
+					System.out.println("UNKNOWN"); //$NON-NLS-1$
 				/*
 				 * Current Control Messages:
 				 * -- RINGING/Number thats ringing/Channel thats ringing
@@ -406,7 +410,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 							if(systemExtensions.contains(command[1]) && 
 									systemExtensions.contains(command[2])){
 								
-								//Internal call amongst ourselves
+								//Internal call amongst ourselves TODO outgoing check
 								if(isMyPhone(command[1])){
 									int mode = CallInfoPanel.MODE_RINGING_ME;
 									
@@ -432,7 +436,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 							}else if(systemExtensions.contains(command[1]) && 
 									!systemExtensions.contains(command[2])){
 								
-								/* CALL/5102/9907886031657/1396477192.139
+								/* CALL/1234/4444444/1396477192.139 TODO Outgoing check
 								 * BUG FIX: Originally this caused the person you were dialling to have their details
 								 * removed once it was put on hold as originally you were changing details for the person
 								 * who made the call, not the person who was receiving the call.
@@ -448,23 +452,20 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								//Internal call to outside from me
 								if(isMyPhone(command[1])){
 									
-									
-									/*createSkeletonCallInfoPanel(command[1], command[3], 
-											CallInfoPanel.MODE_RINGING_ME, command[2], 
-											creationTime);*/
 									createSkeletonCallInfoPanel(command[2], command[3], 
 											CallInfoPanel.MODE_RINGING_ME, command[1], 
 											creationTime, null);//Number Swap
 									callPanels.get(command[3]).setOriginator(command[1]);
+									
 								}else{//Internal call to outside not from me
-									/*createSkeletonCallInfoPanel(command[1], command[3], 
-											CallInfoPanel.MODE_ANSWERED_ELSEWHERE, command[2], 
-											creationTime);*/
+									
 									createSkeletonCallInfoPanel(command[2], command[3], 
 											CallInfoPanel.MODE_ANSWERED_ELSEWHERE, command[1], 
 											creationTime, null);//Number Swap
 									callPanels.get(command[3]).setOriginator(command[1]);
+									
 								}
+								
 							}else if(!systemExtensions.contains(command[1]) && 
 									systemExtensions.contains(command[2])){
 								
@@ -526,6 +527,18 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									createSkeletonCallInfoPanel(command[1], command[3], 
 											CallInfoPanel.MODE_RINGING, command[2], creationTime, null);
 									callPanels.get(command[3]).setOriginator(command[1]);
+									
+								}else if(command[1].equals(xStrings.getString(
+										"CallManagerPanel.callSystemUnknown"))){ //$NON-NLS-1$
+									
+									/* This is probably an outgoing call so make a note of
+									 * the extension doing it.
+									 * When you then see the reverse CALL/EXTENSION/Destination
+									 * check this note and instead of creating the wrong panel,
+									 * do it with the details of this outgoing person instead 
+									 */
+									outgoingCalls.put(command[2], null);
+									
 								}
 								
 							}
