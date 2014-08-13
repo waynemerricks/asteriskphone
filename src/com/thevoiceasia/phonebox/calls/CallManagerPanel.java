@@ -525,7 +525,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									callPanels.get(command[3]).setOriginator(command[1]);
 									
 									if(outgoing)
-										callPanels.get(command[3]).setOutgoing();
+										callPanels.get(command[3]).setOutgoing(true);
 									
 								}else{//Internal call to outside not from me
 									
@@ -535,7 +535,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									callPanels.get(command[3]).setOriginator(command[1]);
 									
 									if(outgoing)
-										callPanels.get(command[3]).setOutgoing();
+										callPanels.get(command[3]).setOutgoing(true);
 								}
 								
 							}else if(!systemExtensions.contains(command[1]) && 
