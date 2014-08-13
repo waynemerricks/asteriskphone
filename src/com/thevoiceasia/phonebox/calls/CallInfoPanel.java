@@ -1149,38 +1149,50 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	 */
 	public void reset() {
 		
-		mode = modeWhenClicked;
-		
-		switch(mode){
-		
-			case MODE_RINGING:
-				setRinging(null, false);
-				break;
-			case MODE_ANSWERED:
-				setAnswered(false);
-				break;
-			case MODE_ANSWERED_ELSEWHERE:
-				setAnsweredElseWhere(null, false);
-				break;
-			case MODE_QUEUED:
-				setQueued(false);
-				break;
-			case MODE_ON_AIR:
-				setQueuedMe(false);
-				break;
-			case MODE_RINGING_ME:
-				setRingingMe(false);
-				break;
-			case MODE_QUEUED_ME:
-				setQueuedMe(false);
-				break;
-			case MODE_ANSWERED_ME:
-				setAnsweredMe(null, false);
-				break;
-			case MODE_ON_AIR_ME:
-				setOnAirMe(null, false);
-				break;
-				
+		/* BUG FIX: If it was ringing (modeWhenClicked) the colour will change
+		 * but the ringing task is not started as its only started if the mode
+		 * is not ringing.
+		 * 
+		 * We need to deal with ringing before we set mode = modeWhenClicked
+		 */
+		if(modeWhenClicked == MODE_RINGING)
+			setRinging(null, false);
+		else{
+			
+			mode = modeWhenClicked;
+			
+			switch(mode){
+			
+				case MODE_RINGING:
+					setRinging(null, false);
+					break;
+				case MODE_ANSWERED:
+					setAnswered(false);
+					break;
+				case MODE_ANSWERED_ELSEWHERE:
+					setAnsweredElseWhere(null, false);
+					break;
+				case MODE_QUEUED:
+					setQueued(false);
+					break;
+				case MODE_ON_AIR:
+					setQueuedMe(false);
+					break;
+				case MODE_RINGING_ME:
+					setRingingMe(false);
+					break;
+				case MODE_QUEUED_ME:
+					setQueuedMe(false);
+					break;
+				case MODE_ANSWERED_ME:
+					setAnsweredMe(null, false);
+					break;
+				case MODE_ON_AIR_ME:
+					setOnAirMe(null, false);
+					break;
+					
+			}
+			
 		}
 		
 	}
