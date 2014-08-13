@@ -886,6 +886,34 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 						
 					}
 					
+				}else if(command.length == 3 && command[0].equals(
+						xStrings.getString("CallManagerPanel.FAILED"))){ //$NON-NLS-1$
+					
+					/* Call failed to transfer to us
+					 * FAILED/Channel/Failure Code
+					 * 0: Extension Online/Ready
+					 * 1: Extension On a call
+					 * 4: Extension Off line
+					 *-1: Extension does not exist
+					 */
+					LOGGER.info(xStrings.getString(
+							"CallManagerPanel.clientPhoneError")); //$NON-NLS-1$
+					
+					int errorCode = Integer.parseInt(command[2]);
+					
+					if(errorCode == 4)
+						showWarning(xStrings.getString(
+								"CallManagerPanel.errorExtensionOffline")); //$NON-NLS-1$
+					else if(errorCode == -1)
+						showWarning(xStrings.getString(
+								"CallManagerPanel.errorExtensionDoesNotExist")); //$NON-NLS-1$
+					else
+						showWarning(xStrings.getString(
+								"CallManagerPanel.errorExtension" + errorCode)); //$NON-NLS-1$
+					
+					//Reset CallInfoPanel
+					callPanels.get(command[1]).reset();
+					
 				}
 				
 			}
