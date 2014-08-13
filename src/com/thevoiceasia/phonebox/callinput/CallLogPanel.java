@@ -379,7 +379,11 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 				if(!records.containsKey(command[2])){
 					
 					//Create a new one based on this
-					//TODO fix dial channel swap
+					/* TODO BUG fix dial channel swap
+					 * When we dial, the channel in command[2] will only show you
+					 * the person who called.  We need to find out who we're calling
+					 * and use that for the channel vs person lookup					
+					 */
 					//Add to call log table
 					LOGGER.info(xStrings.getString("CallLogPanel.logNewUpdate") + " " + command[2]); //$NON-NLS-1$ //$NON-NLS-2$
 					
