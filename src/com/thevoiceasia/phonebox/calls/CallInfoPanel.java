@@ -826,7 +826,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 			
 			if(messageMode == MODE_RINGING || messageMode == MODE_QUEUED){
 				
-				if(hangupActive){
+				if(hangupActive){//Hang Up RINGING or QUEUED CALL
 					
 					message = xStrings.getString("calls.hangup") + "/" + channelID;  //$NON-NLS-1$//$NON-NLS-2$
 					hangupActive = false;
@@ -834,16 +834,16 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 							+ channelID);
 					notifyManualHangupListeners();
 					
-				}else{
+				}else{//Transfer the call to my phone (aka Answer it)
 					message = xStrings.getString("calls.transfer") + "/" + channelID + "/"  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 									+ myExtension;
 					LOGGER.info(xStrings.getString("CallInfoPanel.requestTransferCall") //$NON-NLS-1$
 							+ channelID + "/" + myExtension); //$NON-NLS-1$
 				}
 			}else if(messageMode == MODE_RINGING_ME || messageMode == MODE_QUEUED_ME 
-					|| messageMode == MODE_ON_AIR_ME || messageMode == MODE_ANSWERED_ME){
+					|| messageMode == MODE_ON_AIR_ME){
 				
-				if(hangupActive){
+				if(hangupActive){//Hangup Call RINGING ME or QUEUED ME or ON AIR ME or ANSWERED ME
 					
 					message = xStrings.getString("calls.hangup") + "/" + channelID;  //$NON-NLS-1$//$NON-NLS-2$
 					hangupActive = false;
@@ -871,20 +871,31 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 							setOnAirMe(null, false);
 							break;
 						case MODE_ANSWERED_ME:
-							//If this is our call we can transfer the end point
-							message = xStrings.getString("calls.transferEndPoint") + "/" + channelID;  //$NON-NLS-1$//$NON-NLS-2$
-							LOGGER.info(xStrings.getString(
+							/* Due to changes in call flow with how we deal with outgoing calls
+							 * the channel has already been swapped to the end point so we no longer
+							 * have to TRANSFERENDPOINT we can just QUEUE the channel given by
+							 * this call.
+							 * 
+							 * We need to also send the original channel so that we can update the
+							 * proper activePerson
+							 */
+							/* Old TRANSFERENDPOINT code for reference
+							
+							  //If this is our call we can transfer the end point
+							  message = xStrings.getString("calls.transferEndPoint") + "/" + channelID;  //$NON-NLS-1$//$NON-NLS-2$
+							  LOGGER.info(xStrings.getString(
 									"CallInfoPanel.requestTransferEndpoint")  //$NON-NLS-1$
 									+ channelID);
+							 */
 							break;
+							
 					}
 					
 				}
 				
-			}else if(messageMode == MODE_ANSWERED){
-			
+			}else if(messageMode == MODE_ANSWERED || messageMode == MODE_ANSWERED_ME){
 				
-				if(hangupActive){
+				if(hangupActive){//Hangup an ANSWERED call
 					
 					message = xStrings.getString("calls.hangup") + "/" + channelID; //$NON-NLS-1$ //$NON-NLS-2$
 					hangupActive = false;
@@ -892,7 +903,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 							+ channelID);
 					notifyManualHangupListeners();
 					
-				}else{
+				}else{//Transfer this call to QUEUE
 					message = xStrings.getString("calls.queue") + "/" + channelID; //$NON-NLS-1$ //$NON-NLS-2$
 					LOGGER.info(xStrings.getString("CallInfoPanel.requestQueueCall") //$NON-NLS-1$
 							+ channelID + "/" + myExtension); //$NON-NLS-1$
