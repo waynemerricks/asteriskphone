@@ -420,15 +420,9 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 						message.getBody()); 
 				
 				String[] command = message.getBody().split("/"); //$NON-NLS-1$
-				if(command[1].equals("UNKNOWN")) //$NON-NLS-1$
-					System.out.println("UNKNOWN"); //$NON-NLS-1$
 				/*
 				 * Current Control Messages:
-				 * -- RINGING/Number thats ringing/Channel thats ringing
-				 * -- CALL/From Number/To Number/Channel that is calling
-				 * -- QUEUE/Queue Name/Channel that is queued
-				 * -- HANGUP/Number Hung up/Channel that Hung up
-				 * -- TRANSFER/Channel to Transfer/Number to transfer it to
+				 * SEE Wiki
 				 */
 				
 				//RINGING - Can Ignore
@@ -1001,7 +995,9 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 							"CallManagerPanel.clientPhoneError")); //$NON-NLS-1$
 					
 					//Reset CallInfoPanel
-					callPanels.get(command[1]).reset();
+					if(!command[1].equals("NA") &&  //$NON-NLS-1$
+							callPanels.get(command[1]) != null)
+						callPanels.get(command[1]).reset();
 					
 					int errorCode = Integer.parseInt(command[2]);
 					
