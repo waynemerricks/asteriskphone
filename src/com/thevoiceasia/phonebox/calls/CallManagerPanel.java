@@ -3,6 +3,7 @@ package com.thevoiceasia.phonebox.calls;
 import java.awt.Component;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -63,7 +64,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	private HashMap<String, CallInfoPanel> callPanels = new HashMap<String, CallInfoPanel>();
 	private HashMap<String, EndPointRecord> endPoints = new HashMap<String, EndPointRecord>();
 	/* outgoingCalls = ArrayList<OutgoingCall>
-	 */
+	 * TODO need to remove dead calls from outgoingCalls */
 	private ArrayList<OutgoingCall> outgoingCalls = new ArrayList<OutgoingCall>();
 	private DatabaseManager database;
 	private HashMap<String, String> settings;
@@ -808,7 +809,9 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								 * for the receiver after we've dialled.
 								 * 
 								 * So check to see if we aren't already connected to this person
-								 * on another channel and if so ignore it, else make the panel
+								 * on another channel and if so we'll need to change the channelID
+								 * otherwise you lose conversation and call type as soon as the
+								 * call is put on hold under its own channelID
 								 */
 								
 								if(!isAlreadyConnected(command[1])){
@@ -825,16 +828,27 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									
 									/* If already connected is an older channel then we 
 									 * dialled this channel so need to change the mode to 
-									 * an answered_me instead of generic answered 
+									 * an answered_me instead of generic answered
+									 * 
+									 *  BUG FIX can't use doubles as it won't pick up
+									 *  "1.407...E9" etc from callPanels
 									 */
-									double oldChannel = Double.parseDouble(
-											getAlreadyConnectedChannel(command[1]));
-									double newChannel = Double.parseDouble(command[3]);
+									String oldChannelID = getAlreadyConnectedChannel(command[1]);
 									
-									if(oldChannel < newChannel && callPanels.get(
-											oldChannel + "") != null) //$NON-NLS-1$
-										callPanels.get(oldChannel + "").setAnsweredMe( //$NON-NLS-1$
-												command[1], false);
+									BigDecimal oldChannel = new BigDecimal(oldChannelID);
+									BigDecimal newChannel = new BigDecimal(command[3]);
+									
+									CallInfoPanel temp = callPanels.get(oldChannelID);
+									
+									if(oldChannel.compareTo(newChannel) == -1 &&
+											temp != null){
+										
+										callPanels.remove(temp.getChannelID());
+										temp.changeChannelID(command[3]);
+										callPanels.put(command[3], temp);
+										temp.setAnsweredMe(command[1], false);
+										
+									}
 									
 								}
 								
@@ -843,6 +857,8 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								
 								/* If we get here by normal control messages then this should 
 								 * be ignored
+								 * TODO We can't ignore this, if you dial out then reload program
+								 * you won't get any panel for this call
 								 */
 								
 							}
