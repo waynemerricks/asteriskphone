@@ -1035,7 +1035,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								"CallManagerPanel.errorExtensionDoesNotExist")); //$NON-NLS-1$
 					else
 						showWarning(xStrings.getString(
-								"CallManagerPanel.errorExtension" + errorCode)); //$NON-NLS-1$
+								"CallManagerPanel.errorExtension") + errorCode); //$NON-NLS-1$
 					
 				}
 				
