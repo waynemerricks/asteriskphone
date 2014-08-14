@@ -38,6 +38,7 @@ import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 
+import com.thevoiceasia.phonebox.database.ActivePersonChanger;
 import com.thevoiceasia.phonebox.database.DatabaseManager;
 import com.thevoiceasia.phonebox.database.PersonChanger;
 import com.thevoiceasia.phonebox.database.RecordUpdater;
@@ -725,6 +726,9 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 				}else if(command.length == 2 && command[0].equals(
 						xStrings.getString("AsteriskManager.commandTransferEndPoint"))){ //$NON-NLS-1$
 					
+					/* TODO 14/08/2014 WMM: Removed Transfer EndPoint from outgoing calls
+					 * Test impact, do we even need this anymore?
+					 */
 					//We're transferring the other side of the call here
 					/* When we transfer, a new channel is created for the receiver of this call
 					 * This makes all the call information get dropped
@@ -781,6 +785,15 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 							settings.get("country"), databaseManager.getReadConnection(), //$NON-NLS-1$
 							databaseManager.getWriteConnection(), controlRoom, 
 							Integer.parseInt(command[2]), command[1])); 
+					
+				}else if(command.length == 3 && command[0].equals(
+						xStrings.getString("AsteriskManager.changeActive"))){ //$NON-NLS-1$
+					
+					//Update the Active Person on an outgoing call
+					dbLookUpService.execute(new ActivePersonChanger(settings.get("language"),  //$NON-NLS-1$
+							settings.get("country"),  //$NON-NLS-1$
+							databaseManager.getWriteConnection(), command[2], 
+							command[1])); 
 					
 				}
 				
