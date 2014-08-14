@@ -147,6 +147,24 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	}
 	
 	/**
+	 * Sends a control room message telling the server to change the 
+	 * activePerson for a given channel
+	 * @param channel Channel to change
+	 * @param activePerson Person to change it to (by record id)
+	 */
+	private void sendSetActivePersonOnChannel(String channel, int activePerson){
+		
+		try {
+			controlRoom.sendMessage(xStrings.getString("CallManagerPanel.changeActive") +  //$NON-NLS-1$
+					"/" + channel + "/" + activePerson); //$NON-NLS-1$ //$NON-NLS-2$
+		} catch (XMPPException e) {
+			LOGGER.severe(xStrings.getString("CallManagerPanel.errorSendingChangeActive")); //$NON-NLS-1$
+			showWarning(xStrings.getString("CallManagerPanel.errorSendingChangeActive")); //$NON-NLS-1$
+		}
+		
+	}
+	
+	/**
 	 * Sends an UPDATE command to the control room
 	 */
 	public void sendUpdateRequest(){
@@ -156,6 +174,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 					"/" + settings.get("myExtension")); //$NON-NLS-1$ //$NON-NLS-2$
 		} catch (XMPPException e) {
 			LOGGER.severe(xStrings.getString("CallManagerPanel.errorSendingUpdateCommand")); //$NON-NLS-1$
+			showWarning(xStrings.getString("CallManagerPanel.errorSendingUpdateCommand")); //$NON-NLS-1$
 		}
 		
 	}
@@ -836,6 +855,13 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									
 									if(oldChannel.compareTo(newChannel) == -1 &&
 											temp != null){
+										
+										/* Get the active person of the old channel ID because
+										 * When we swap to the new channel, the active person
+										 * won't be set and we'll lose info (and nullpointer)
+										 */
+										int activePerson = callPanels.get(oldChannelID).getPhoneCallRecord().getActivePerson().id;
+										sendSetActivePersonOnChannel(command[3], activePerson);
 										
 										callPanels.remove(temp.getChannelID());
 										temp.changeChannelID(command[3]);
