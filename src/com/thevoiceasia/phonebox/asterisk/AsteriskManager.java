@@ -443,6 +443,8 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		
 	}
 	
+	
+	
 	/**
 	 * Checks for any active calls to the given extension
 	 * If we have an active call, it will be put in the on air queue (or should we hang up?)
@@ -695,6 +697,20 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 				
 					//Send updates to the person who asked for it (usually when they login)
 					sendChannelInfo(from);
+					
+					/* If the user has an extension check it is working
+					 * If it is null they don't have an extension so they are 
+					 * using this in read only mode */
+					if(!command[1].equals("null")){ //$NON-NLS-1$
+						
+						int extensionStatus = isExtensionOnline(command[1]);
+						
+						if(extensionStatus != 0)//If the users phone is not working, tell them
+							sendPrivateMessage(from, xStrings.getString(
+									"AsteriskManager.FAILED") + "/NA/" +  //$NON-NLS-1$ //$NON-NLS-2$
+									extensionStatus);
+						
+					}
 					
 				}else if(command.length == 2 && command[0].equals(
 						xStrings.getString("AsteriskManager.commandHangup"))){ //$NON-NLS-1$
