@@ -4,7 +4,6 @@ import java.awt.Component;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -38,7 +37,6 @@ import com.thevoiceasia.phonebox.callinput.CallerUpdater;
 import com.thevoiceasia.phonebox.database.DatabaseManager;
 import com.thevoiceasia.phonebox.launcher.Client;
 import com.thevoiceasia.phonebox.misc.LastActionTimer;
-import com.thevoiceasia.phonebox.records.OutgoingCall;
 import com.thevoiceasia.phonebox.records.Person;
 
 public class CallManagerPanel extends JPanel implements PacketListener, MouseListener, 
@@ -48,13 +46,6 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	/** STATICS */
 	private static final long serialVersionUID = 1L;
 	private static final Logger LOGGER = Logger.getLogger(CallManagerPanel.class.getName());//Logger
-	/* Modes:
-	 * 1 = Ringing
-	 * 2 = Answered
-	 * 3 = Answered Elsewhere
-	 * 4 = Queued
-	 * 5 = On Air
-	 */
 	
 	/** CLASS VARS */
 	private MultiUserChat controlRoom;//room to send control messages to
