@@ -7,6 +7,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -73,6 +75,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	private HashSet<String> systemExtensions = new HashSet<String>();
 	private HashMap<String, String> settings;
 	private HashMap<String, String> calls = new HashMap<String, String>(); //HashMap to store dialled calls in progress
+	private HashMap<String, String> ringingExternal = new HashMap<String, String>(); //For external outbound calls channel => callerid
 	private boolean startup = true; //Flag that we're starting up so ignore messages
 	
 	/* We need to spawn threads for event response with db lookups, in order to guard against
@@ -81,6 +84,13 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	 */
 	private ExecutorService dbLookUpService; 
 	private int maxExecutorThreads;
+	
+	/* TODO we never remove anything from calls or ringingExternal fix this!
+	 * Wait for connected then flag that we can remove when we see a hangup
+	 * 
+	 * Upon hangup get channels from ringingExternal and if its there it will
+	 * also be in calls so remove both
+	 */
 	
 	/**
 	 * Creates a new Asterisk Manager instance that handles events and sends commands via XMPP
@@ -850,6 +860,47 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 					
 					String message = xStrings.getString("AsteriskManager.channelRinging") +  //$NON-NLS-1$
 							"/" + callerID + "/" + ringing.getId(); //$NON-NLS-1$ //$NON-NLS-2$
+					
+					/* When we dial out to an external call you get connection messages
+					 * based on the outbound callerid
+					 * e.g. 
+					 * (17:15:03) server: CONNECTED/5578098/01234567890/1408724095.656
+					 * (17:15:03) server: CONNECTED/01234567890/5578098/1408724095.659
+					 * What I want to do is store the dialler extension and substitute
+					 * that for the outbound callerid so that we can properly track 
+					 * channels without too much fiddling in the client
+					 * 
+					 * In order to do this for the dialler: at the CALL stage do a clid
+					 * lookup in calls and append the dialler + channel
+					 * 
+					 * For the receiver: at the ringing stage do a clid lookup in calls
+					 * and at the connected stage do a channel lookup in ringing external
+					 * to substitute appropriately
+					 * calls ==> <fromNumber, toNumber>
+					 */
+					if(calls.containsValue(callerID)){//this is an outgoing call we're tracking
+						
+						LOGGER.info(xStrings.getString("AsteriskManager.loggingExternalCall") + ringing.getId());
+						Set<Entry<String, String>> entries = calls.entrySet();
+						
+						Iterator<Entry<String, String>> index = entries.iterator();
+						boolean done = false;
+						
+						while(index.hasNext() && !done){
+							
+							Entry<String, String> callRecord = index.next();
+							
+							if(callRecord.getValue().equals(ringing.getId())){
+								
+								done = true;
+								ringingExternal.put(ringing.getId(), callRecord.getKey());
+								
+							}
+								
+						}
+						
+					}
+						
 					LOGGER.info(message);
 					sendMessage(message);
 					
@@ -972,25 +1023,25 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 								"/" + callerID + "/" +  //$NON-NLS-1$ //$NON-NLS-2$
 								extensionCalling + "/" + channel.getId(); //$NON-NLS-1$
 						
-						/* Track Incoming
-						 * We need to get an active person if possible or create a skeleton
-						 * record if its someone new before the clients start processing
-						 * and things go crazy
-						 */
-						/* At this point it could be a call from this channel that we're making to 
-						 * someone else.  Ideally we'd like to have the panel show up with the right
-						 * person attached to it but in order to do that we need to swap this channels
-						 * caller id with the id of the channel we're trying to call
+						/* When we dial out to an external call you get connection messages
+						 * based on the outbound callerid
+						 * e.g. 
+						 * (17:15:03) server: CONNECTED/5578098/01234567890/1408724095.656
+						 * (17:15:03) server: CONNECTED/01234567890/5578098/1408724095.659
+						 * What I want to do is store the dialler extension and substitute
+						 * that for the outbound callerid so that we can properly track 
+						 * channels without too much fiddling in the client
 						 * 
-						 * On Dial store the channel stuff so we can substitute here?
+						 * In order to do this for the dialler: at the CALL stage do a clid
+						 * lookup in calls and append the dialler + channel
+						 * 
+						 * For the receiver: at the ringing stage do a clid lookup in calls
+						 * and at the connected stage do a channel lookup in ringing external
+						 * to substitute appropriately
+						 * calls ==> <fromNumber, toNumber>
 						 */
-						
-						/*if(calls.containsKey(callerID)){//TODO If we track by dialled we probably don't need this
-							
-							String to = calls.get(callerID);
-							calls.put(callerID, to + "/" + channel.getId()); //$NON-NLS-1$
-							
-						}*/
+						if(calls.containsKey(callerID))
+							ringingExternal.put(callerID, channel.getId());
 						
 						dbLookUpService.execute(new PhoneCall(callerID, 
 								channel.getId(), databaseManager));
@@ -1026,9 +1077,39 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 					if(removePrefix(linkedTo))
 						linkedTo = linkedTo.substring(dialPrefix.length());
 					
+					/* When we dial out to an external call you get connection messages
+					 * based on the outbound callerid
+					 * e.g. 
+					 * (17:15:03) server: CONNECTED/5578098/01234567890/1408724095.656
+					 * (17:15:03) server: CONNECTED/01234567890/5578098/1408724095.659
+					 * What I want to do is store the dialler extension and substitute
+					 * that for the outbound callerid so that we can properly track 
+					 * channels without too much fiddling in the client
+					 * 
+					 * In order to do this for the dialler: at the CALL stage do a clid
+					 * lookup in calls and append the dialler + channel
+					 * 
+					 * For the receiver: at the ringing stage do a clid lookup in calls
+					 * and at the connected stage do a channel lookup in ringing external
+					 * to substitute dialler appropriately
+					 * calls ==> <fromNumber, toNumber>
+					 * ringingExternal ==> <channel, extension>//TODO
+					 */
+					if(ringingExternal.containsKey(channel.getId())){
+						
+						String dialler = calls.get(ringingExternal.get(channel.getId()));
+						
+						if(!callerID.equals(dialler))//we want to change whatever doesn't match this
+							callerID = dialler;
+						else
+							linkedTo = dialler;
+						
+					}
+						
 					String message = xStrings.getString("AsteriskManager.callConnected") +  //$NON-NLS-1$
 							"/" + callerID + "/" + //$NON-NLS-1$ //$NON-NLS-2$
 							linkedTo + "/" + channel.getId(); //$NON-NLS-1$
+					
 					
 					if(systemExtensions.contains(linkedTo))//if we're linked to a system phone
 						dbLookUpService.execute(new PhoneCall(databaseManager, 
