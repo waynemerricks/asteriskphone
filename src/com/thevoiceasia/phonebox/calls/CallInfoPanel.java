@@ -213,8 +213,8 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	 * @param id new id to change this objects channelID to
 	 */
 	public void changeChannelID(String id){
-		
-		LOGGER.info(xStrings.getString("CallInfoPanel.changingChannelID") +  //$NON-NLS-1$
+		//TODO
+		LOGGER.severe(xStrings.getString("CallInfoPanel.changingChannelID") +  //$NON-NLS-1$
 				channelID + "/" + id); //$NON-NLS-1$
 		channelID = id;
 		

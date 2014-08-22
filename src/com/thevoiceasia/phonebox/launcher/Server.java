@@ -22,7 +22,7 @@ public class Server extends Thread{
 	
 	/** STATICS **/
 	private static final Logger LOGGER = Logger.getLogger("com.thevoiceasia.phonebox");//Logger //$NON-NLS-1$
-	private static final Level LOG_LEVEL = Level.INFO;
+	private static final Level LOG_LEVEL = Level.WARNING;
 	private static final long STARTUP_DELAY = 1000L;
 	private static I18NStrings xStrings;
 	

@@ -390,8 +390,8 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 					CallLog log = new CallLog(language, country,
 			    			command[2],
 			    			readConnection, true);
-			    	
-					LOGGER.info(
+			    	//TODO DEBUG change back to info
+					LOGGER.severe(
 							xStrings.getString("CallLogPanel.addingChannelToLog") + //$NON-NLS-1$
 							log.getChannel()); 
 					
@@ -442,8 +442,8 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 				CallLog log = new CallLog(language, country,
 		    			command[3],
 		    			readConnection, true);
-		    	
-				LOGGER.info(
+		    	//TODO DEBUG change back to info
+				LOGGER.severe(
 						xStrings.getString("CallLogPanel.addingChannelToLog") + //$NON-NLS-1$
 						log.getChannel()); 
 				
@@ -452,9 +452,9 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 		    		
 		    }else if(command.length == 4 && command[0].equals(
 		    		xStrings.getString("CallLogPanel.commandEndPoint"))){ //$NON-NLS-1$
-		    	
+		    	//TODO DEBUG change back to info
 		    	//Store as we'll expect a channel swap on this
-		    	LOGGER.info(xStrings.getString("CallLogPanel.logEndPoint") + " " +  //$NON-NLS-1$ //$NON-NLS-2$
+		    	LOGGER.severe(xStrings.getString("CallLogPanel.logEndPoint") + " " +  //$NON-NLS-1$ //$NON-NLS-2$
 		    			"Number: " + command[3] + " Channel: " + command[1]);   //$NON-NLS-1$//$NON-NLS-2$
 		    	channelSwapList.put(command[3], command[1]);//key = number, value = channel
 		    	
@@ -503,8 +503,9 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 	 * @param toChannel new value to swap it to
 	 */
 	private void swapChannel(String fromChannel, String toChannel) {
-		
-		LOGGER.info(xStrings.getString("CallLogPanel.logChannelUpdate")); //$NON-NLS-1$
+		//TODO DEBUG change to info
+		LOGGER.severe(xStrings.getString("CallLogPanel.logChannelUpdate") +  //$NON-NLS-1$
+				fromChannel + "/" + toChannel); //$NON-NLS-1$
 		
 		//Set Internal Record
 		if(!records.containsKey(fromChannel)){
@@ -514,7 +515,8 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 			CallLog log = new CallLog(language, country,
 	    			toChannel,
 	    			readConnection, true);
-			
+			//TODO DEBUG change to info TODO xStrings Swap Adding New Log
+			LOGGER.severe("Swap Adding New Log: " + toChannel); //$NON-NLS-1$
 			records.put(toChannel, log);
 			
 			appendCallLog(log);
@@ -572,6 +574,8 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 			
 			//Calls that aren't in the incoming queue will already be in the conversation
 			//list (in theory but needs testing)
+			//TODO DEBUG info & xStrings
+			LOGGER.severe("Private Add New Log: " + command[3]); //$NON-NLS-1$
 			CallLog log = new CallLog(language, country,
 	    			command[3],
 	    			readConnection, true);
