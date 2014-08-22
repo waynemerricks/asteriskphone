@@ -1097,7 +1097,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 					 */
 					if(ringingExternal.containsKey(channel.getId())){
 						
-						String dialler = calls.get(ringingExternal.get(channel.getId()));
+						String dialler = ringingExternal.get(channel.getId());
 						
 						if(!callerID.equals(dialler))//we want to change whatever doesn't match this
 							callerID = dialler;
