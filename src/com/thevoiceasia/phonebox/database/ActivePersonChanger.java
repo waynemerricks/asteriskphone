@@ -63,7 +63,6 @@ public class ActivePersonChanger implements Runnable {
 				"\n\tChannel: " + channelID + //$NON-NLS-1$
 				"\n\tPersonID: " + activePerson; //$NON-NLS-1$
 
-		
 		try{
 				
 			SQL = "UPDATE `callhistory` SET `activePerson` = ? " + //$NON-NLS-1$
