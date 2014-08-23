@@ -53,7 +53,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	private String country, language;
 	private CountryCodes countries;
 	private HashMap<String, CallInfoPanel> callPanels = new HashMap<String, CallInfoPanel>();
-	private HashMap<String, EndPointRecord> endPoints = new HashMap<String, EndPointRecord>();
+	//private HashMap<String, EndPointRecord> endPoints = new HashMap<String, EndPointRecord>();
 	private DatabaseManager database;
 	private HashMap<String, String> settings;
 	private HashMap<String, String> studioExtensions = new HashMap<String, String>();
@@ -433,14 +433,13 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 										mode, command[2], creationTime, null);
 									
 								callPanels.get(command[3]).setOriginator(command[1]);
-								//TODO Cleaned up ifs, have removed outgoing record swap
+								
 							}else if(systemExtensions.contains(command[1]) && 
 									!systemExtensions.contains(command[2])){
 								
 								/* Call from our system to someone else
 								 * CALL/1234/4444444/1396477192.139
 							     */
-								//TODO TODO TODO
 								int mode = CallInfoPanel.MODE_ANSWERED_ELSEWHERE;
 								
 								if(isMyPhone(command[1]))//Internal call to someone from me
@@ -469,7 +468,8 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									
 									//Outside call coming into a queue as normal
 									
-									/* After placing a call and transferring the endpoint, a new channel
+									/* TODO ENDPOINT Removed, check this functions as intended
+									 * After placing a call and transferring the endpoint, a new channel
 									 * is created and all the record information is lost as the channel
 									 * is different.
 									 * 
@@ -477,10 +477,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									 * a channel change and then point the record to the original call
 									 * channel
 									 */
-									//TODO Check if this is an old call getting a new permanent channel for queue
-									//TODO
-									//TODO
-									if(endPoints.containsKey(command[1])){
+									/*if(endPoints.containsKey(command[1])){
 										
 										EndPointRecord updateMe = endPoints.get(command[1]);
 										endPoints.remove(command[2]);
@@ -493,13 +490,13 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 													CallInfoPanel.MODE_QUEUED, null, creationTime, updateMe);
 										//TODO Creation time taken from original channel at point of transferendpoint?
 										
-									}else{
+									}else{*/
 										
 										//TODO Should we check for MODE_QUEUED_ME here?
 										createSkeletonCallInfoPanel(command[1], command[3], 
 												CallInfoPanel.MODE_QUEUED, null, creationTime, null);
 										
-									}
+									//}
 									
 									//Set Number and Queue Badge
 									callPanels.get(command[3]).setOriginator(command[1]);
@@ -838,7 +835,8 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 						//Store endpoint and extension here then act on it in subsequent queue message
 						//ENDPOINT/1397214684.388/1397214684.391/9901234567890
 						//ENDPOINT/dialler ch    /receiver ch   /receiver clid
-						endPoints.put(command[3], new EndPointRecord(command[1], command[2], command[3]));
+						//endPoints.put(command[3], new EndPointRecord(command[1], command[2], command[3]));
+						//TODO Check removal is OK
 						
 					}
 					
