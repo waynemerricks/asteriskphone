@@ -623,6 +623,10 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 			
 			String number = null;
 			
+			/* TODO
+			 * If callerID not null then we need to add this number back to 
+			 * remove prefix stuff until the permanent channel is dropped
+			 */
 			if(callerID != null)
 				number = callerID;
 			else
