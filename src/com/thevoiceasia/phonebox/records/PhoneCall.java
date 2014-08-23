@@ -977,7 +977,7 @@ public class PhoneCall implements Runnable{
 		if(threadMode == 'Q'){
 			//Will be Q or R when it first comes in, we use R to setup call skeleton
 			trackQueue(threadOperator);
-			asteriskManager.sendNewQueueEntryMessage(queueEntry);
+			asteriskManager.sendNewQueueEntryMessage(queueEntry, callerID);
 		}else if(threadMode == 'H'){
 			//Automated Hang up, user hang ups will bypass this
 			trackHangup(threadOperator); 

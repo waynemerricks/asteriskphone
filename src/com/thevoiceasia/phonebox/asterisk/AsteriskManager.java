@@ -608,8 +608,9 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	/**
 	 * Sends a message to the XMPP control room that we have a new QueueEntry
 	 * @param entry
+	 * @param callerID over ride the queue entry with this caller id
 	 */
-	public void sendNewQueueEntryMessage(AsteriskQueueEntry entry){
+	public void sendNewQueueEntryMessage(AsteriskQueueEntry entry, String callerID){
 		
 		//Transfers from handlers goes into Studio Queue
 		/* There seems to be two queue entries that are fired in the events.
@@ -619,7 +620,13 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 			
 			AsteriskQueue queue = entry.getQueue();
 			String name = queue.getName();
-			String number = checkNumberWithHeld(entry.getChannel().getCallerId());
+			
+			String number = null;
+			
+			if(callerID != null)
+				number = callerID;
+			else
+				number = checkNumberWithHeld(entry.getChannel().getCallerId());
 			
 			// Remove dialprefix from number if this is an external call
 			if(removePrefix(number))
