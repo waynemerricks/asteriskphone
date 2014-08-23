@@ -140,7 +140,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	 * @param channel Channel to change
 	 * @param activePerson Person to change it to (by record id)
 	 */
-	private void sendSetActivePersonOnChannel(String channel, int activePerson){
+	/*private void sendSetActivePersonOnChannel(String channel, int activePerson){
 		
 		try {
 			controlRoom.sendMessage(xStrings.getString("CallManagerPanel.changeActive") +  //$NON-NLS-1$
@@ -150,7 +150,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 			showWarning(xStrings.getString("CallManagerPanel.errorSendingChangeActive")); //$NON-NLS-1$
 		}
 		
-	}
+	}*/
 	
 	/**
 	 * Sends an UPDATE command to the control room
@@ -1017,7 +1017,8 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 					if(panel.getConnectedTo().equals(number))
 						channelID = panel.getChannelID();
 					
-					Integer.parseInt(panel.getConnectedTo());//FIX Don't parse the number until you've tested equality
+					if(channelID == null)//We didn't find so try a friendly name
+						Integer.parseInt(panel.getConnectedTo());//FIX Don't parse the number until you've tested equality
 					
 				}catch(NumberFormatException e){
 					
@@ -1063,7 +1064,8 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 					if(panel.getConnectedTo().equals(number))
 						isConnected = true;
 					
-					Integer.parseInt(panel.getConnectedTo());//FIX don't fail the parse before you've checked it!
+					if(!isConnected)//We didn't find so try a friendly name
+						Integer.parseInt(panel.getConnectedTo());//FIX don't fail the parse before you've checked it!
 					
 				}catch(NumberFormatException e){
 					
