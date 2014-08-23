@@ -352,18 +352,22 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	/**
 	 * Sets ringing mode
 	 */
-	public void setRingingMe(boolean reset){
+	public void setRingingMe(String connectedTo, boolean reset){
 		
 		if(mode != MODE_RINGING_ME){
 			
 			if(reset)
 				timeLabel.resetStageTime(); //Reset Stage Time
 			
+			final String connected = connectedTo;
 			ringingTask = new TimerTask(){//Setup new ringing animation
 				
 				public void run(){
 					
-					setRingingMe(false);
+					setRingingMe(null, false);
+					
+					if(connected != null)
+						connectedToLabel.setText(connected);
 					
 				}
 				
@@ -392,6 +396,8 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	
 	/**
 	 * Sets this panel to ringing mode
+	 * @param connectedTo String to put in connectedTo label
+	 * @param reset if true we'll reset the stage time
 	 */
 	public void setRinging(String connectedTo, boolean reset){
 		
@@ -811,8 +817,6 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		
 	}
 	
-	
-
 	/**
 	 * Sends a message to control room via XMPP
 	 */
@@ -862,7 +866,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 					switch(messageMode){
 					
 						case MODE_RINGING_ME:
-							setRingingMe(false);
+							setRingingMe(null, false);
 							break;
 						case MODE_QUEUED_ME:
 							setQueuedMe(false);
@@ -1226,7 +1230,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 					setQueuedMe(false);
 					break;
 				case MODE_RINGING_ME:
-					setRingingMe(false);
+					setRingingMe(null, false);
 					break;
 				case MODE_QUEUED_ME:
 					setQueuedMe(false);
