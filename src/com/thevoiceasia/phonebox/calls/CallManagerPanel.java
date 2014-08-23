@@ -3,7 +3,7 @@ package com.thevoiceasia.phonebox.calls;
 import java.awt.Component;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.math.BigDecimal;
+//import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -215,7 +215,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	 * @param connectedTo Name or extension this panel is connected to
 	 */
 	private void createSkeletonCallInfoPanel(String phoneNumber, String channelID, int mode,
-			String connectedTo, long creationTime, EndPointRecord updateMe){
+			String connectedTo, long creationTime){
 		
 		String location = null;
 		LOGGER.severe(xStrings.getString("CallManagerPanel.createSkeletonCallPanel") + //$NON-NLS-1$
@@ -276,7 +276,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 				call.setRinging(friendlyConnected, true);
 				break;
 			case CallInfoPanel.MODE_RINGING_ME:
-				call.setRingingMe(true);
+				call.setRingingMe(phoneNumber, true);//FIX Outgoing Call needs dialling number here
 				break;
 			case CallInfoPanel.MODE_ANSWERED:
 				call.setAnswered(true);
@@ -318,13 +318,14 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 			
 		});
 		
+		//Removed Endpoint to reflect new Server behaviour WMM 23/08/2014
 		//Spawn thread to populate details, if updateme not null then we need to transfer
 		//info from the original call channel
-		if(updateMe != null)
-			dbLookUpService.execute(
-					new InfoPanelPopulator(database, call, phoneNumber, 
-							updateMe.callerChannel, location));
-		else
+		//if(updateMe != null)
+		//	dbLookUpService.execute(
+		//			new InfoPanelPopulator(database, call, phoneNumber, 
+		//					updateMe.callerChannel, location));
+		//else
 			dbLookUpService.execute(
 				new InfoPanelPopulator(database, call, phoneNumber, channelID, 
 						location));
@@ -430,7 +431,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									mode = CallInfoPanel.MODE_QUEUED;
 									
 								createSkeletonCallInfoPanel(command[1], command[3], 
-										mode, command[2], creationTime, null);
+										mode, command[2], creationTime);
 									
 								callPanels.get(command[3]).setOriginator(command[1]);
 								
@@ -447,7 +448,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								
 								createSkeletonCallInfoPanel(command[2], command[3], 
 									mode, command[1], 
-									creationTime, null);
+									creationTime);
 							
 								callPanels.get(command[3]).setOriginator(command[1]);
 								
@@ -458,7 +459,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								if(isIncomingQueue(command[2])){
 									//Outside call coming into a queue as normal
 									createSkeletonCallInfoPanel(command[1], command[3], 
-											CallInfoPanel.MODE_RINGING, null, creationTime, null);
+											CallInfoPanel.MODE_RINGING, null, creationTime);
 									callPanels.get(command[3]).setOriginator(command[1]);
 									
 									if(settings.get("queue_" + command[2] + "_icon") != null) //$NON-NLS-1$ //$NON-NLS-2$
@@ -494,7 +495,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 										
 										//TODO Should we check for MODE_QUEUED_ME here?
 										createSkeletonCallInfoPanel(command[1], command[3], 
-												CallInfoPanel.MODE_QUEUED, null, creationTime, null);
+												CallInfoPanel.MODE_QUEUED, null, creationTime);
 										
 									//}
 									
@@ -507,9 +508,9 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									
 								}else if(!command[1].equals(xStrings.getString("CallManagerPanel.callSystemUnknown"))){ //$NON-NLS-1$
 									
-									//Outside call coming direct to a phone
+									//Outside call coming direct to a phone TODO wasn't this UNKNOWN removed from server?
 									createSkeletonCallInfoPanel(command[1], command[3], 
-											CallInfoPanel.MODE_RINGING, command[2], creationTime, null);
+											CallInfoPanel.MODE_RINGING, command[2], creationTime);
 									callPanels.get(command[3]).setOriginator(command[1]);
 									
 								}
@@ -552,10 +553,10 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								//queue, name, number, channel
 								if(isMyPhone(command[2]))
 									createSkeletonCallInfoPanel(command[2], command[3], 
-											CallInfoPanel.MODE_QUEUED_ME, null, -1, null);
+											CallInfoPanel.MODE_QUEUED_ME, null, -1);
 								else
 									createSkeletonCallInfoPanel(command[2], command[3], 
-											CallInfoPanel.MODE_QUEUED, null, -1, null);
+											CallInfoPanel.MODE_QUEUED, null, -1);
 									
 							}
 							
@@ -647,7 +648,9 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								
 							}else{
 								
-								/* Here we arrive in an odd state because neither number
+								/* WMM 23/08/2014 Server will parse out outgoing callerid, probably
+								 * don't need this anymore TODO
+								 * Here we arrive in an odd state because neither number
 								 * is registering as any phone in the system.  However, when dialling out
 								 * the callerid is swapped to the outgoing caller id so a call that 
 								 * would start as:
@@ -691,13 +694,13 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									if(!isStudioExtension(command[2]))
 										createSkeletonCallInfoPanel(command[1], command[3], 
 												CallInfoPanel.MODE_ANSWERED_ELSEWHERE, command[2], 
-												creationTime, null);
+												creationTime);
 									else{
 										
 										createSkeletonCallInfoPanel(command[1], command[3], 
 												CallInfoPanel.MODE_ON_AIR, 
 												studioExtensions.get(command[2]), 
-												creationTime, null);
+												creationTime);
 										
 									}
 									
@@ -720,20 +723,36 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									 * internal or external phone
 									 */
 									createSkeletonCallInfoPanel(command[1], command[3],
-											CallInfoPanel.MODE_ANSWERED, null, creationTime, null);
+											CallInfoPanel.MODE_ANSWERED, null, creationTime);
 								
 									notifyListeners(callPanels.get(command[3]));
 									
 								}else{
 									
-									/* If already connected is an older channel then we 
+									/* Need to drop original channel to reflect new
+									 * server behaviour 23/08/2014 WMM */
+									//CONNECTED/01234567890/5103/1408832327.787
+									String oldChannelID = getAlreadyConnectedChannel(command[1]);
+									
+									if(callPanels.get(oldChannelID) != null)
+										removePanel(oldChannelID);
+									
+									//Create new panel based on old outgoing call
+									createSkeletonCallInfoPanel(command[1], command[3],
+											CallInfoPanel.MODE_ANSWERED, command[2], creationTime);
+								
+									notifyListeners(callPanels.get(command[3]));
+									
+									/*Removed Old behaviour 23/08/2014
+									 * String oldChannelID = getAlreadyConnectedChannel(command[1]);
+									 * 
+									 * If already connected is an older channel then we 
 									 * dialled this channel so need to change the mode to 
 									 * an answered_me instead of generic answered
 									 * 
 									 *  BUG FIX can't use doubles as it won't pick up
 									 *  "1.407...E9" etc from callPanels
-									 */
-									String oldChannelID = getAlreadyConnectedChannel(command[1]);
+									 *
 									
 									BigDecimal oldChannel = new BigDecimal(oldChannelID);
 									BigDecimal newChannel = new BigDecimal(command[3]);
@@ -746,7 +765,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 										/* Get the active person of the old channel ID because
 										 * When we swap to the new channel, the active person
 										 * won't be set and we'll lose info (and nullpointer)
-										 */
+										 *//*
 										int activePerson = callPanels.get(oldChannelID).getPhoneCallRecord().getActivePerson().id;
 										sendSetActivePersonOnChannel(command[3], activePerson);
 										
@@ -756,7 +775,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 										temp.setAnsweredMe(command[1], false);
 										notifyListeners(temp);
 										
-									}
+									}*/
 									
 								}
 								
@@ -994,10 +1013,12 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 				
 				//5001 || tvaadmin
 				try{
-					Integer.parseInt(panel.getConnectedTo());
 					
 					if(panel.getConnectedTo().equals(number))
 						channelID = panel.getChannelID();
+					
+					Integer.parseInt(panel.getConnectedTo());//FIX Don't parse the number until you've tested equality
+					
 				}catch(NumberFormatException e){
 					
 					if(number.equals(getNumberFromFriendlyName(panel.getConnectedTo())))
@@ -1038,10 +1059,12 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 				
 				//5001 || tvaadmin
 				try{
-					Integer.parseInt(panel.getConnectedTo());
 					
 					if(panel.getConnectedTo().equals(number))
 						isConnected = true;
+					
+					Integer.parseInt(panel.getConnectedTo());//FIX don't fail the parse before you've checked it!
+					
 				}catch(NumberFormatException e){
 					
 					if(number.equals(getNumberFromFriendlyName(panel.getConnectedTo())))
@@ -1531,7 +1554,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 			long creationTime = getCreationTime(command[4]);
 			
 			createSkeletonCallInfoPanel(command[2], command[3],
-					CallInfoPanel.MODE_ANSWERED, null, creationTime, null);
+					CallInfoPanel.MODE_ANSWERED, null, creationTime);
 		
 			notifyListeners(callPanels.get(command[3]));
 			
