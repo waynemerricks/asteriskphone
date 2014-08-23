@@ -77,6 +77,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	private HashMap<String, String> settings;
 	private HashMap<String, String> calls = new HashMap<String, String>(); //HashMap to store dialled calls in progress
 	private HashMap<String, OutgoingCall> ringingExternal = new HashMap<String, OutgoingCall>(); //For external outbound calls channel => outbound
+	private HashMap<String, String> expectedInQueue = new HashMap<String, String>(); //For calls we know will go to queue with a new channel, callerid => old/current channel
 	private boolean startup = true; //Flag that we're starting up so ignore messages
 	
 	/* We need to spawn threads for event response with db lookups, in order to guard against
@@ -524,6 +525,14 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		
 		if(channel != null){
 			
+			if(ringingExternal.containsKey(channelID)){
+				
+				OutgoingCall out = ringingExternal.get(channelID);
+				expectedInQueue.put(out.destination, channelID);
+				//TODO Potential memory leak, what if call never makes it to queue?
+					
+			}
+				
 			channel.redirect(defaultContext, queueNumber, DEFAULT_PRIORITY);
 			String callerID = channel.getCallerId().getNumber();
 			
@@ -582,10 +591,15 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 
 		String callerID = checkNumberWithHeld(entry.getChannel().getCallerId());
 		
-		if(removePrefix(callerID))
+		if(removePrefixExpectedQueue(callerID)){
+			
+			callerID = callerID.substring(dialPrefix.length());//TODO other stuff with DB here (reinstating call info to this channel)
+			expectedInQueue.remove(callerID);//TODO DB updates here
+			
+		}else if(removePrefix(callerID))
 			callerID = callerID.substring(dialPrefix.length());
 		else
-			callerID = null;
+			callerID = null;//null because we don't want to override the entry callerid
 		
 		dbLookUpService.execute(new PhoneCall(databaseManager, entry, this, callerID));
 		
@@ -801,6 +815,23 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		
 		
 	}
+	
+	/**
+	 * Similar to removePrefix except checks the expectedInQueue list
+	 * @param callerID
+	 * @return
+	 */
+	private boolean removePrefixExpectedQueue(String callerID) {
+		
+		boolean removePrefix = false;
+		
+		if(expectedInQueue.containsKey(callerID.substring(2)))
+			removePrefix = true;
+			
+		return removePrefix;
+		
+	}
+
 	
 	/**
 	 * Signals true if you need to remove the dial prefix from the given caller
