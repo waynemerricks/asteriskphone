@@ -4,7 +4,7 @@ import java.util.Date;
 
 public class OutgoingCall {
 
-	public String extension, channel, destination;
+	public String source, channel, destination;
 	public long creationTime = new Date().getTime();
 	
 	/**
@@ -13,11 +13,20 @@ public class OutgoingCall {
 	 * @param channel
 	 * @param destination
 	 */
-	public OutgoingCall(String extension, String channel, String destination){
+	public OutgoingCall(String channel, String source, String destination){
 		
-		this.extension = extension;
+		this.source = source;
 		this.channel = channel;
 		this.destination = destination;
+		
+	}
+	
+	/**
+	 * Formats this as channel/source/destination
+	 */
+	public String toString(){
+		
+		return channel + "/" + source + "/" + destination;
 		
 	}
 	
