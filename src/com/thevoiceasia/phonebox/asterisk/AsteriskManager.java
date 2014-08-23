@@ -517,6 +517,9 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		/* TODO Check against outgoing calls and update DB as necessary because
 		 * outgoing call will generate a final permanent channel as it enters
 		 * the queue (no idea why)
+		 * 
+		 * The only way to track this is by caller ID which will be set for
+		 * outbound calls as we dialled it
 		 */
 		
 		if(channel != null){
