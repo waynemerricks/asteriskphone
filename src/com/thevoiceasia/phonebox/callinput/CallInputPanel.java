@@ -649,7 +649,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 	@Override
 	public void callAnswered(CallInfoPanel call) {
 		
-		LOGGER.info(xStrings.getString("CallInputPanel.answeredCall") + //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("CallInputPanel.answeredCall") + ": " + //$NON-NLS-1$
 				call.getPhoneCallRecord().getActivePerson().name); 
 		
 		/* This panel has been answered so we need to update the fields as necessary */

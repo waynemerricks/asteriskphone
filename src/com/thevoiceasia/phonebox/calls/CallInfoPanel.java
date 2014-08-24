@@ -79,7 +79,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	private MultiUserChat controlRoom;
 	private String channelID, myExtension, myNickName, originator; 
 	private boolean hangupActive, canTakeCall, outgoing = false;
-	private PhoneCall phoneCallRecord;
+	private PhoneCall phoneCallRecord = null;
 	private Vector<ManualHangupListener> hangupListeners = new Vector<ManualHangupListener>();
 	private CallerUpdater updateThread = null;
 	
