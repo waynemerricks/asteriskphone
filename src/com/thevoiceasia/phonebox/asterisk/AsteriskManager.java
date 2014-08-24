@@ -75,7 +75,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	private DatabaseManager databaseManager;
 	private HashSet<String> systemExtensions = new HashSet<String>();
 	private HashMap<String, String> settings;
-	private HashMap<String, String> calls = new HashMap<String, String>(); //HashMap to store dialled calls in progress
+	private HashMap<String, String> calls = new HashMap<String, String>(); //HashMap to store dialled calls in progress <fromNumber or channel, toWithoutPrefix>
 	private HashMap<String, OutgoingCall> ringingExternal = new HashMap<String, OutgoingCall>(); //For external outbound calls channel => outbound
 	private HashMap<String, String> expectedInQueue = new HashMap<String, String>(); //For calls we know will go to queue with a new channel, callerid => old/current channel
 	private boolean startup = true; //Flag that we're starting up so ignore messages
@@ -623,13 +623,15 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 			
 			String number = null;
 			
-			/* TODO
-			 * If callerID not null then we need to add this number back to 
+			/* If callerID not null then we need to add this number back to 
 			 * remove prefix stuff until the permanent channel is dropped
 			 */
-			if(callerID != null)
+			if(callerID != null){
+				
 				number = callerID;
-			else
+				calls.put(entry.getChannel().getId(), callerID);//will add as channel, callerid need to check for channel in hangups
+				
+			}else
 				number = checkNumberWithHeld(entry.getChannel().getCallerId());
 			
 			// Remove dialprefix from number if this is an external call
@@ -861,7 +863,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 			String to = calls.get(key);
 			
 			/* Dial outs will have caller id and the channel so lets get just
-			 * the id to check 
+			 * the id to check TODO we removed the channel?
 			 */
 			String[] temp = to.split("/"); //$NON-NLS-1$
 			
@@ -1029,6 +1031,10 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 						}
 						
 					}
+					
+					//Clear calls of any channels that made it into the queue
+					if(calls.containsKey(hangup.getId()))
+						calls.remove(hangup.getId());
 					
 					removeActiveChannel(hangup.getId());
 					
