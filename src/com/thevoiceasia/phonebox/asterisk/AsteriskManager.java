@@ -226,6 +226,12 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		 * Loop through AsteriskQueue.getEntries().getChannel to pick up channels 
 		 * and what not.
 		 */
+		/* FIXME Check for removePrefix on this lot might be difficult with 
+		 * outbound caller id.  This causes the problem where if a client starts
+		 * up and is connected to what was an outbound call they'll get a panel
+		 * thats set as "ANSWERED_ELSEWHERE" even if it is a call active on
+		 * their phone.
+		 */
 		LOGGER.info(xStrings.getString("AsteriskManager.sendingChannelInfo") + recipient); //$NON-NLS-1$
 		
 		Vector<AsteriskChannel> orderedChannels = new Vector<AsteriskChannel>();
@@ -336,7 +342,8 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		if(dialPrefix.length() > 0 && to.startsWith(dialPrefix))
 			toWithoutPrefix = to.substring(dialPrefix.length());
 		
-		LOGGER.info(xStrings.getString("AsteriskManager.loggingExternalCall") + fromNumber + "/" + toWithoutPrefix);
+		LOGGER.info(xStrings.getString("AsteriskManager.loggingExternalCall") + //$NON-NLS-1$
+				fromNumber + "/" + toWithoutPrefix); //$NON-NLS-1$ 
 		calls.put(fromNumber, toWithoutPrefix);
 		
 		trackDial(toWithoutPrefix, fromName);//Add an entry to callhistory D so we can track who dialled stuff
@@ -593,12 +600,17 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		
 		if(removePrefixExpectedQueue(callerID)){
 			
-			callerID = callerID.substring(dialPrefix.length());//TODO other stuff with DB here (reinstating call info to this channel)
+			callerID = callerID.substring(dialPrefix.length());
 			
-			/* callhistory where state = Q callchannel = expectedInQueue old channel
-			 * 
-			 */
-			expectedInQueue.remove(callerID);//TODO DB updates before here
+			//Create OutboundChannelUpdater to change old channel to new channel in call records
+			dbLookUpService.execute(new OutboundChannelUpdater(
+					settings.get("language"), settings.get("country"),  //$NON-NLS-1$//$NON-NLS-2$
+					databaseManager.getReadConnection(), 
+					databaseManager.getWriteConnection(),
+					expectedInQueue.get(callerID), entry.getChannel().getId(), 
+					callerID, this));
+			
+			expectedInQueue.remove(callerID);
 			
 		}else if(removePrefix(callerID))
 			callerID = callerID.substring(dialPrefix.length());
@@ -880,6 +892,19 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		
 	}
 	
+	/**
+	 * Send a force update on panel to clients
+	 * @param channel
+	 */
+	public void sendPanelUpdate(String channel){
+		
+		String message = xStrings.getString("AsteriskManager.channelUpdate") +  //$NON-NLS-1$
+				"/" + channel; //$NON-NLS-1$
+		LOGGER.info(message);
+		sendMessage(message);
+		
+	}
+	
 	/** PropertyChangeListener **/
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
@@ -941,7 +966,9 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 								done = true;
 								OutgoingCall out = new OutgoingCall(ringing.getId(), callRecord.getKey(), callerID);
 								ringingExternal.put(ringing.getId(), out);
-								LOGGER.info(xStrings.getString("AsteriskManager.loggingExternalCall") + out);
+								LOGGER.info(xStrings.getString(
+										"AsteriskManager.loggingExternalCall") + //$NON-NLS-1$
+										out); 
 								
 							}
 								
@@ -1124,7 +1151,9 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 							
 							OutgoingCall out = new OutgoingCall(channel.getId(), callerID, extensionCalling);
 							ringingExternal.put( channel.getId(), out);
-							LOGGER.info(xStrings.getString("AsteriskManager.loggingExternalCall") + out);
+							LOGGER.info(xStrings.getString(
+									"AsteriskManager.loggingExternalCall") + //$NON-NLS-1$
+									out); 
 							
 						}
 						
@@ -1218,7 +1247,9 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 								callerID, channel.getId(), this, 'A', "NA")); //$NON-NLS-1$
 					
 					if(calls.containsKey(callerID))
-						LOGGER.info(xStrings.getString("AsteriskManager.suppressingConnectedMessage") + message);
+						LOGGER.info(xStrings.getString(
+								"AsteriskManager.suppressingConnectedMessage") + //$NON-NLS-1$
+								message); 
 					else{
 						
 						LOGGER.info(message);
