@@ -949,6 +949,14 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 						showWarning(xStrings.getString(
 								"CallManagerPanel.errorExtension") + errorCode); //$NON-NLS-1$
 					
+				}else if(command.length == 2 && 
+						command[0].equals(xStrings.getString(
+								"CallManagerPanel.channelUpdate"))){ //$NON-NLS-1$
+					
+					//TODO update given panel looking for X in callhistory
+					//Then redo call answered if necessary
+					
+					
 				}
 				
 			}
@@ -1182,7 +1190,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 			while(record == null && waitForActivePerson < 3){
 				
 				LOGGER.info(xStrings.getString(
-						"CallManagerPanel.waitingForActivePerson") + 
+						"CallManagerPanel.waitingForActivePerson") +  //$NON-NLS-1$
 						waitForActivePerson);
 				try {
 					
@@ -1190,7 +1198,9 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 					
 				} catch (InterruptedException e) {
 					
-					showWarning(xStrings.getString("CallManagerPanel.waitForActiveInterrupted"));
+					showWarning(xStrings.getString(
+							"CallManagerPanel.waitForActiveInterrupted")); //$NON-NLS-1$
+					waitForActivePerson = 3;
 					e.printStackTrace();
 					
 				}
