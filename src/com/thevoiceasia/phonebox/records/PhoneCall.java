@@ -157,6 +157,16 @@ public class PhoneCall implements Runnable{
 	}
 	
 	/**
+	 * Returns the callerid of this record
+	 * @return
+	 */
+	public String getNumber() {
+		
+		return callerID;
+		
+	}
+	
+	/**
 	 * Helper method to replace with held number with a suitable string
 	 * @param id callerid to check
 	 * @return caller id number or suitable string if withheld/null

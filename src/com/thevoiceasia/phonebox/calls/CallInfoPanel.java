@@ -1196,6 +1196,26 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	}
 	
 	/**
+	 * Returns the number associated with the phone call record
+	 * @return
+	 */
+	public String getNumber() {
+		
+		return getPhoneCallRecord().getNumber();
+		
+	}
+
+	/**
+	 * Returns the text from the location label
+	 * @return
+	 */
+	public String getCallLocation() {
+		
+		return locationLabel.getText();
+		
+	}
+	
+	/**
 	 * Resets this panel to the mode it was in before being clicked
 	 */
 	public void reset() {

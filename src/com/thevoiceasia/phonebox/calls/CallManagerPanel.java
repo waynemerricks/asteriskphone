@@ -953,9 +953,23 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 						command[0].equals(xStrings.getString(
 								"CallManagerPanel.channelUpdate"))){ //$NON-NLS-1$
 					
-					//TODO update given panel looking for X in callhistory
+					//Update given panel looking for X in callhistory
 					//Then redo call answered if necessary
-					
+					if(callPanels.containsKey(command[1])){
+						
+						CallInfoPanel panel = callPanels.get(command[1]);
+						
+						dbLookUpService.execute(
+								new InfoPanelPopulator(database, 
+										panel, 
+										panel.getNumber(), 
+										command[1], 
+										panel.getCallLocation()));
+						
+						if(panel.getMode() == CallInfoPanel.MODE_ANSWERED)
+							notifyListeners(panel);
+						
+					}
 					
 				}
 				
