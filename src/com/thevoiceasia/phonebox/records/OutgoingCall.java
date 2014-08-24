@@ -26,7 +26,7 @@ public class OutgoingCall {
 	 */
 	public String toString(){
 		
-		return channel + "/" + source + "/" + destination;
+		return channel + "/" + source + "/" + destination; //$NON-NLS-1$ //$NON-NLS-2$
 		
 	}
 	

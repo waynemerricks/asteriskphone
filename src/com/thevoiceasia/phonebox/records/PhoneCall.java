@@ -366,7 +366,7 @@ public class PhoneCall implements Runnable{
 		
 		// If operator = null set it to NA
 		if(operator == null)
-			operator = "NA";
+			operator = "NA"; //$NON-NLS-1$
 		
 		// Lookup phone number if its already there get person id
 		Statement statement = null, writeStatement = null;
@@ -410,8 +410,8 @@ public class PhoneCall implements Runnable{
 		    	
 			    // Use person id to add an R Log with channel to callhistory
 			    SQL = "INSERT INTO callhistory(`phonenumber`, `state`, `callchannel`, `activePerson`, `operator`) " //$NON-NLS-1$
-			    		+ "VALUES ('" + callerID + "', '" + mode + "', '" + channelID + "', '" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$  
-			    		+ personID + "', '" + operator + "')"; //$NON-NLS-1$ 
+			    		+ "VALUES ('" + callerID + "', '" + mode + "', '" + channelID + "', '" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$  
+			    		+ personID + "', '" + operator + "')"; //$NON-NLS-1$ //$NON-NLS-2$ 
 			    
 			    if(writeStatement == null)
 			    	writeStatement = database.getWriteConnection().createStatement();
@@ -986,10 +986,10 @@ public class PhoneCall implements Runnable{
 			//Automated Hang up, user hang ups will bypass this
 			trackHangup(threadOperator); 
 		}else if(threadMode == 'A'){
-			createCallSkeleton("A", threadOperator);
+			createCallSkeleton("A", threadOperator); //$NON-NLS-1$
 			//trackAnswered(threadOperator);
 		}else if(threadMode == 'R')
-			createCallSkeleton("R", null);
+			createCallSkeleton("R", null); //$NON-NLS-1$
 		
 	}
 	
