@@ -362,7 +362,11 @@ public class PhoneCall implements Runnable{
 	/**
 	 * Used by Server to create a skeleton record if this is a first time caller
 	 */
-	public void createCallSkeleton(){
+	public void createCallSkeleton(String mode, String operator){
+		
+		// If operator = null set it to NA
+		if(operator == null)
+			operator = "NA";
 		
 		// Lookup phone number if its already there get person id
 		Statement statement = null, writeStatement = null;
@@ -405,9 +409,9 @@ public class PhoneCall implements Runnable{
 		    if(personID != -1){ //Should never be -1 if got this far
 		    	
 			    // Use person id to add an R Log with channel to callhistory
-			    SQL = "INSERT INTO callhistory(phonenumber, state, callchannel, activePerson) " //$NON-NLS-1$
-			    		+ "VALUES ('" + callerID + "', 'R', '" + channelID + "', '" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$  
-			    		+ personID + "')"; //$NON-NLS-1$ 
+			    SQL = "INSERT INTO callhistory(`phonenumber`, `state`, `callchannel`, `activePerson`, `operator`) " //$NON-NLS-1$
+			    		+ "VALUES ('" + callerID + "', '" + mode + "', '" + channelID + "', '" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$  
+			    		+ personID + "', '" + operator + "')"; //$NON-NLS-1$ 
 			    
 			    if(writeStatement == null)
 			    	writeStatement = database.getWriteConnection().createStatement();
@@ -982,9 +986,10 @@ public class PhoneCall implements Runnable{
 			//Automated Hang up, user hang ups will bypass this
 			trackHangup(threadOperator); 
 		}else if(threadMode == 'A'){
-			trackAnswered(threadOperator);
+			createCallSkeleton("A", threadOperator);
+			//trackAnswered(threadOperator);
 		}else if(threadMode == 'R')
-			createCallSkeleton();
+			createCallSkeleton("R", null);
 		
 	}
 	
