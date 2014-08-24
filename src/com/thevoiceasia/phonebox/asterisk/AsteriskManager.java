@@ -515,7 +515,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	public void redirectCallToQueue(String channelID, String from){
 		
 		AsteriskChannel channel = activeChannels.get(channelID);
-		/* TODO Check against outgoing calls and update DB as necessary because
+		/* Check against outgoing calls and update DB as necessary because
 		 * outgoing call will generate a final permanent channel as it enters
 		 * the queue (no idea why)
 		 * 
@@ -529,7 +529,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 				
 				OutgoingCall out = ringingExternal.get(channelID);
 				expectedInQueue.put(out.destination, channelID);
-				//TODO Potential memory leak, what if call never makes it to queue?
+				//Discuss: Potential memory leak, what if call never makes it to queue?
 					
 			}
 				
@@ -594,7 +594,11 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		if(removePrefixExpectedQueue(callerID)){
 			
 			callerID = callerID.substring(dialPrefix.length());//TODO other stuff with DB here (reinstating call info to this channel)
-			expectedInQueue.remove(callerID);//TODO DB updates here
+			
+			/* callhistory where state = Q callchannel = expectedInQueue old channel
+			 * 
+			 */
+			expectedInQueue.remove(callerID);//TODO DB updates before here
 			
 		}else if(removePrefix(callerID))
 			callerID = callerID.substring(dialPrefix.length());
