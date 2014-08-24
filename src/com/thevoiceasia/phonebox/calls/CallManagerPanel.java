@@ -38,6 +38,7 @@ import com.thevoiceasia.phonebox.database.DatabaseManager;
 import com.thevoiceasia.phonebox.launcher.Client;
 import com.thevoiceasia.phonebox.misc.LastActionTimer;
 import com.thevoiceasia.phonebox.records.Person;
+import com.thevoiceasia.phonebox.records.PhoneCall;
 
 public class CallManagerPanel extends JPanel implements PacketListener, MouseListener, 
 									LastActionTimer, ChatManagerListener, MessageListener,
@@ -583,7 +584,10 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								/* BUG FIX: Forgot to notify listeners that we'd answered something
 								 * This only occurs when we dial out
 								 */
-								notifyListeners(callPanels.get(command[3]));
+								//notifyListeners(callPanels.get(command[3]));
+								/* TODO Do we still need this?
+								 * Seems logically incorrect to notify a listener that our own call has
+								 * been answered to ourselves */
 								
 							/* if 2nd argument = myphone its a call I've answered */
 							}else if(isMyPhone(command[2])){
@@ -1161,6 +1165,40 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 			
 			LOGGER.info(xStrings.getString("CallManagerPanel.notifyListeners") + //$NON-NLS-1$
 					callInfoPanel.getChannelID()); 
+			
+			/* When there is an outbound call that we've answered, we will be passing
+			 * a call answered message from this panel but the active person won't have 
+			 * been set yet because the updaterThread may not have finished yet
+			 * 
+			 * So We should wait and pass answered once the update thread has finished
+			 * 
+			 * We can be lazy and just introduce a 500ms wait for a max of 3 times
+			 * 
+			 * Ideally we'd have a call back from the updater thread TODO
+			 */
+			int waitForActivePerson = 0;
+			PhoneCall record = callInfoPanel.getPhoneCallRecord();
+			
+			while(record == null && waitForActivePerson < 3){
+				
+				LOGGER.info(xStrings.getString(
+						"CallManagerPanel.waitingForActivePerson") + 
+						waitForActivePerson);
+				try {
+					
+					Thread.sleep(500L);
+					
+				} catch (InterruptedException e) {
+					
+					showWarning(xStrings.getString("CallManagerPanel.waitForActiveInterrupted"));
+					e.printStackTrace();
+					
+				}
+				
+				record = callInfoPanel.getPhoneCallRecord();
+				waitForActivePerson++;
+				
+			}
 			
 			for(int i = 0; i < answerListeners.size(); i++)
 				answerListeners.get(i).callAnswered(callInfoPanel);
