@@ -219,7 +219,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 			String connectedTo, long creationTime){
 		
 		String location = null;
-		LOGGER.severe(xStrings.getString("CallManagerPanel.createSkeletonCallPanel") + //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("CallManagerPanel.createSkeletonCallPanel") + //$NON-NLS-1$
 				phoneNumber + "/" + channelID + "/" + mode); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		if(phoneNumber.equals(xStrings.getString("CallManagerPanel.numberWithHeld"))) //$NON-NLS-1$
@@ -688,10 +688,16 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 							
 							//Not exists so check details in case something slipped through
 							if(!isMyPhone(command[1]) && !isMyPhone(command[2])){
-								
+								//TODO
 								//This isn't us so someone connected to someone else
 								//Check if we're connected to someone who is monitored by this program
 								if(systemExtensions.contains(command[2])){
+									
+									/* If we have a panel that was spawned by CALL
+									 * and it was from command[2] then drop the original
+									 * panel 
+									 */
+									checkDialledCall(command[1]);
 									
 									//This is an outside call connecting to someone else
 									//Check to see if someone else = studio
@@ -979,7 +985,38 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		
 	}
 	
-	
+	/**
+	 * Checks all the panels to see if we dialled a call with this number
+	 * If it exists then remove the dialler end as we will be creating the
+	 * receiver end now we're connected
+	 * @param callerID
+	 */
+	private void checkDialledCall(String callerID) {
+		
+		if(callPanels.size() > 0){
+			
+			Iterator<CallInfoPanel> calls = callPanels.values().iterator();
+			boolean done = false;
+			
+			while(calls.hasNext() && !done){
+				
+				CallInfoPanel panel = calls.next();
+				
+				if(panel.getNumber().equals(callerID)){
+					
+					done = true;
+					//We found the dialler end of this connected so remove
+					//the panel (because we're about to create the receiver end)
+					removePanel(panel.getChannelID());
+					
+				}
+				
+			}
+			
+		}
+		
+	}
+
 	/**
 	 * Logs a warning message and displays friendly message to user
 	 * @param friendlyErrorMessage
