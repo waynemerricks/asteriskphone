@@ -537,7 +537,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 				OutgoingCall out = ringingExternal.get(channelID);
 				expectedInQueue.put(out.destination, channelID);
 				//Discuss: Potential memory leak, what if call never makes it to queue?
-					
+				
 			}
 				
 			channel.redirect(defaultContext, queueNumber, DEFAULT_PRIORITY);
@@ -598,9 +598,12 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 
 		String callerID = checkNumberWithHeld(entry.getChannel().getCallerId());
 		
-		if(removePrefixExpectedQueue(callerID)){
+		int expected = isExpectedQueue(callerID);
+		
+		if(expected == 1 || expected == 2){
 			
-			callerID = callerID.substring(dialPrefix.length());
+			if(expected == 2)
+				callerID = callerID.substring(dialPrefix.length());
 			
 			//Create OutboundChannelUpdater to change old channel to new channel in call records
 			dbLookUpService.execute(new OutboundChannelUpdater(
@@ -848,16 +851,20 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	/**
 	 * Similar to removePrefix except checks the expectedInQueue list
 	 * @param callerID
-	 * @return
+	 * @return 	0 NOT EXPECTED
+	 * 			1 EXPECTED
+	 * 			2 EXPECTED BUT REMOVE DIALPREFIX
 	 */
-	private boolean removePrefixExpectedQueue(String callerID) {
+	private int isExpectedQueue(String callerID) {
 		
-		boolean removePrefix = false;
+		int expected = 0;
 		
 		if(expectedInQueue.containsKey(callerID.substring(2)))
-			removePrefix = true;
+			expected = 2;
+		else if(expectedInQueue.containsKey(callerID))
+			expected = 1;
 			
-		return removePrefix;
+		return expected;
 		
 	}
 
