@@ -327,6 +327,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		//			new InfoPanelPopulator(database, call, phoneNumber, 
 		//					updateMe.callerChannel, location));
 		//else
+		
 			dbLookUpService.execute(
 				new InfoPanelPopulator(database, call, phoneNumber, channelID, 
 						location));
@@ -458,13 +459,9 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								
 								//Outside call coming in
 								if(isIncomingQueue(command[2])){
-									//Outside call coming into a queue as normal
-									createSkeletonCallInfoPanel(command[1], command[3], 
-											CallInfoPanel.MODE_RINGING, null, creationTime);
-									callPanels.get(command[3]).setOriginator(command[1]);
 									
-									if(settings.get("queue_" + command[2] + "_icon") != null) //$NON-NLS-1$ //$NON-NLS-2$
-										callPanels.get(command[3]).getIconPanel().setBadgeIcon(settings.get("queue_" + command[2] + "_icon"));  //$NON-NLS-1$//$NON-NLS-2$
+									//Outside call coming into a queue as normal
+									createIncomingCall(command, creationTime);
 									
 								}else if(isOnAirQueue(command[2])){
 									
@@ -515,7 +512,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									callPanels.get(command[3]).setOriginator(command[1]);
 									
 								}
-								
+																
 							}
 							
 						}
@@ -526,11 +523,36 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 						if(command[1].equals(settings.get("incomingQueueNumber"))){ //$NON-NLS-1$
 							
 							//IncomingQueue
-							/* 
-							 * Normally handled by CALL keeping this in case I decide to implement
-							 * on hold
-							 */
 							LOGGER.info(xStrings.getString("CallManagerPanel.CallIncomingQueue")); //$NON-NLS-1$
+							
+							/* 
+							 * Normally handled by CALL however depending on the trunk a CALL may have the following format:
+							 * CALL/person's phone number/trunk phone number that the person called/channel
+							 * 
+							 * In this case, CALL does not handle the call creation so we can do it here instead
+							 *
+							 * If channel not exists create call same as CALL outside to us
+							 *  
+							 */
+							if(callPanels.get(command[3]) == null){
+								
+								/* Normal command array at this point looks like this:
+								 * QUEUE/4000/07886031657/1452171951.10
+								 * 
+								 * In order for creation to lookup correctly we need to swap
+								 * to the CALL format which is this:
+								 * CALL/07886031657/441216554060/1452171951.10
+								 */
+								String[] temp = new String[4];
+								temp[0] = xStrings.getString("CallManagerPanel.callRingingFrom"); //$NON-NLS-1$
+								temp[1] = command[2];
+								temp[2] = command[1];
+								temp[3] = command[3];
+								
+								createIncomingCall(temp, creationTime);
+								
+							}
+							
 							
 						}else if(command[1].equals(settings.get("onAirQueueNumber"))){ //$NON-NLS-1$
 							
@@ -1183,6 +1205,22 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 			isOnAir = true;
 		
 		return isOnAir;
+		
+	}
+	
+	/**
+	 * TODO
+	 * @param command
+	 * @param creationTime
+	 */
+	private void createIncomingCall(String[] command, long creationTime){
+		
+		createSkeletonCallInfoPanel(command[1], command[3], 
+				CallInfoPanel.MODE_RINGING, null, creationTime);
+		callPanels.get(command[3]).setOriginator(command[1]);
+		
+		if(settings.get("queue_" + command[2] + "_icon") != null) //$NON-NLS-1$ //$NON-NLS-2$
+			callPanels.get(command[3]).getIconPanel().setBadgeIcon(settings.get("queue_" + command[2] + "_icon"));  //$NON-NLS-1$//$NON-NLS-2$
 		
 	}
 	
