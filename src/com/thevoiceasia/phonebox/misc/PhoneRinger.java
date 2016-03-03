@@ -47,6 +47,9 @@ public class PhoneRinger {
 		
 	}
 	
+	/**
+	 * Loops the clip this class was instantiated with
+	 */
 	public void ring(){
 		
 		if(!ringing){
@@ -60,6 +63,9 @@ public class PhoneRinger {
 		
 	}
 	
+	/**
+	 * Stops playing the clip
+	 */
 	public void stop(){
 	
 		if(ringing){
