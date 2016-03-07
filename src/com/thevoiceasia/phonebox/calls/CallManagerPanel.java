@@ -3,6 +3,7 @@ package com.thevoiceasia.phonebox.calls;
 import java.awt.Component;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.net.URL;
 //import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashMap;
@@ -15,6 +16,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
+import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -37,6 +39,7 @@ import com.thevoiceasia.phonebox.callinput.CallerUpdater;
 import com.thevoiceasia.phonebox.database.DatabaseManager;
 import com.thevoiceasia.phonebox.launcher.Client;
 import com.thevoiceasia.phonebox.misc.LastActionTimer;
+import com.thevoiceasia.phonebox.misc.PhoneRinger;
 import com.thevoiceasia.phonebox.records.Person;
 import com.thevoiceasia.phonebox.records.PhoneCall;
 
@@ -67,6 +70,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	private Vector<AnswerListener> answerListeners = new Vector<AnswerListener>();
 	private CallerUpdater updateCallerThread = null;
 	private CallInfoPanel storedAnsweredPanel = null;
+	private PhoneRinger ringer = null;
 	
 	/* We need to spawn threads for event response with db lookups, in order to guard 
 	 * against craziness, we'll use the ExecutorService to have X threads available 
@@ -108,6 +112,11 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		//to handle
 		systemExtensions = database.getSystemExtensions();
 		
+		//Setup a ringer so we can play ringing noises for calls
+		if(settings.get("playRinging") != null &&
+				settings.get("playRinging").equals("true"))
+			ringer = new PhoneRinger(getAudioURL("audio/ringing.wav"));
+
 	}
 	
 	/**
@@ -1209,6 +1218,28 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	}
 	
 	/**
+	 * Gets the audio from a relative path and returns a URL for reference
+	 * @param path path where audio resides
+	 * @return URL pointing to the audio
+	 */
+	private URL getAudioURL(String path){
+
+		URL audioURL = null;
+
+		if(path != null){
+
+			audioURL = getClass().getResource(path);
+
+			if(audioURL == null)
+				LOGGER.warning(xStrings.getString("CallManagerPanel.logLoadAudioError") + path); //$NON-NLS-1$
+
+		}
+
+		return audioURL;
+
+	}
+
+	/**
 	 * TODO
 	 * @param command
 	 * @param creationTime
@@ -1416,6 +1447,52 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		
 	}
 	
+	/**
+	 * Checks to see if any calls are in the ringing state (only necessary on
+	 * startup)
+	 * @return true if ringing
+	 */
+	private boolean hasRinging(){
+
+		boolean ringing = false;
+
+		Iterator<Entry<String, CallInfoPanel>> calls = callPanels.entrySet().iterator();
+
+		while(calls.hasNext() && !ringing){
+
+			CallInfoPanel c = calls.next().getValue();
+
+			if(c.getMode() == CallInfoPanel.MODE_RINGING ||
+					c.getMode() == CallInfoPanel.MODE_RINGING_ME)
+				ringing = true;
+
+		}
+
+		return ringing;
+
+	}
+
+	/**
+	 * Sets the client to play ringing.  Currently only plays ringing audio
+	 * but you could use this as an entry to flash/shake the client or whatever
+	 * else you want to know
+	 */
+	private void playRinging(){
+
+		ringer.ring();
+
+	}
+
+	/**
+	 * Sets the client to stop ringing.  Currently only stops audio ringing but
+	 * could be used as entry to stop other actions
+	 */
+	private void stopRinging(){
+
+		ringer.stop();
+
+	}
+
 	/**
 	 * Answers the oldest call that is ringing
 	 * unless you're a studio in which case it grabs oldest studio ready call
