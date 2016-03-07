@@ -2,6 +2,7 @@ package com.thevoiceasia.phonebox.misc;
 
 import javax.sound.sampled.*;
 import java.io.*;
+import java.net.URL;
 
 public class PhoneRinger {
 
@@ -16,13 +17,13 @@ public class PhoneRinger {
      * WAV format only sadly
      * @param pathToSoundClip 
      */
-	public PhoneRinger(String pathToSoundClip){
+	public PhoneRinger(URL pathToSoundClip){
 		
 		AudioInputStream in = null;
 				
 		try{
 			
-			in = AudioSystem.getAudioInputStream(new File(pathToSoundClip));
+			in = AudioSystem.getAudioInputStream(pathToSoundClip);
 			DataLine.Info info = new DataLine.Info(Clip.class, in.getFormat());
 			phone = (Clip)AudioSystem.getLine(info);
 			phone.open(in);
