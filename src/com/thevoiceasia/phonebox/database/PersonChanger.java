@@ -7,13 +7,13 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.logging.Logger;
 
-import org.jivesoftware.smack.Chat;
-import org.jivesoftware.smack.MessageListener;
-import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.SmackException.NotConnectedException;
+import org.jivesoftware.smack.chat.Chat;
+import org.jivesoftware.smack.chat.ChatMessageListener;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 
-public class PersonChanger implements Runnable, MessageListener {
+public class PersonChanger implements Runnable, ChatMessageListener {
 
 	private String channelID, operator, phoneNumber;
 	private Connection readConnection, writeConnection;
@@ -65,7 +65,7 @@ public class PersonChanger implements Runnable, MessageListener {
 					recipient + "/" + message); //$NON-NLS-1$
 			chat.sendMessage(message);
 			
-		} catch (XMPPException e) {
+		} catch (NotConnectedException e) {
 			
 			LOGGER.severe(xStrings.getString(
 					"PersonChanger.XMPPSendErrorChangeFailed")); //$NON-NLS-1$
@@ -116,7 +116,7 @@ public class PersonChanger implements Runnable, MessageListener {
 						"PersonChanger.changed") + "/" + channelID + "/" +  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 						personID);
 			
-			} catch (XMPPException e) {
+			} catch (NotConnectedException e) {
 				
 				LOGGER.severe(xStrings.getString(
 						"PersonChanger.XMPPSendErrorChanged")); //$NON-NLS-1$
