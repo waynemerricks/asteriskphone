@@ -78,4 +78,14 @@ public class PhoneRinger {
 		
 	}
 	
+	/**
+	 * Helper to determine if this object is already in the ringing state
+	 * @return true if ringing, false if not
+	 */
+	public boolean isRinging(){
+		
+		return ringing;
+		
+	}
+	
 }
