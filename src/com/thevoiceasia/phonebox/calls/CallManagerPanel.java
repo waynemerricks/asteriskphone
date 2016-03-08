@@ -1501,6 +1501,13 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 			ringer.stop();
 			LOGGER.info(xStrings.getString("CallManagerPanel.ringingStopped"));
 			
+		}else{
+			
+			//If we're not on a call and there are more ringing channels, play ringing
+			if(isOnCall() == null && ringingChannels.size() > 0)
+				playRinging();
+				
+			
 		}
 
 	}
