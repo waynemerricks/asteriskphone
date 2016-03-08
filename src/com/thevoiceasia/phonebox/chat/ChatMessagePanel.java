@@ -11,9 +11,9 @@ import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 
-import org.jivesoftware.smack.PacketListener;
+import org.jivesoftware.smack.StanzaListener;
 import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smack.packet.Packet;
+import org.jivesoftware.smack.packet.Stanza;
 import org.jivesoftware.smackx.muc.ParticipantStatusListener;
 import org.jivesoftware.smackx.muc.SubjectUpdatedListener;
 
@@ -25,7 +25,7 @@ import org.jivesoftware.smackx.muc.SubjectUpdatedListener;
  * @author Wayne Merricks
  *
  */
-public class ChatMessagePanel extends JPanel implements PacketListener, SubjectUpdatedListener, ParticipantStatusListener{
+public class ChatMessagePanel extends JPanel implements StanzaListener, SubjectUpdatedListener, ParticipantStatusListener{
 
 	private JTextPane messages = new JTextPane();
 	private Style chatStyle;
@@ -109,7 +109,7 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 	}
 	
 	@Override
-	public void processPacket(Packet XMPPPacket) {
+	public void processPacket(Stanza XMPPPacket) {
 		
 		LOGGER.info(xStrings.getString("ChatMessagePanel.logReceivedMessage") + XMPPPacket); //$NON-NLS-1$
 		
