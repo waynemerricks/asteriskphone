@@ -32,12 +32,13 @@ import org.asteriskjava.live.internal.AsteriskAgentImpl;
 import org.asteriskjava.manager.TimeoutException;
 import org.asteriskjava.manager.action.ExtensionStateAction;
 import org.asteriskjava.manager.response.ExtensionStateResponse;
-import org.jivesoftware.smack.Chat;
+import org.jivesoftware.smack.chat.Chat;
+import org.jivesoftware.smack.chat.ChatMessageListener;
 import org.jivesoftware.smack.MessageListener;
-import org.jivesoftware.smack.PacketListener;
-import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.SmackException.NotConnectedException;
+import org.jivesoftware.smack.StanzaListener;
 import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smack.packet.Packet;
+import org.jivesoftware.smack.packet.Stanza;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 
 import com.thevoiceasia.phonebox.database.ActivePersonChanger;
@@ -48,7 +49,8 @@ import com.thevoiceasia.phonebox.records.OutgoingCall;
 import com.thevoiceasia.phonebox.records.PhoneCall;
 import com.thevoiceasia.phonebox.records.TrackDial;
 
-public class AsteriskManager implements AsteriskServerListener, PropertyChangeListener, OriginateCallback, PacketListener, MessageListener {
+public class AsteriskManager implements AsteriskServerListener, PropertyChangeListener, OriginateCallback, StanzaListener, 
+											MessageListener, ChatMessageListener {
 
 	//STATICS
 	private static final Logger AST_LOGGER = Logger.getLogger("org.asteriskjava"); //$NON-NLS-1$
@@ -321,7 +323,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 			LOGGER.info(xStrings.getString("AsteriskManager.sendingPrivateMessage") +  //$NON-NLS-1$
 					recipient + "/" + message); //$NON-NLS-1$
 			chat.sendMessage(message);
-		} catch (XMPPException e) {
+		} catch (NotConnectedException e) {
 			LOGGER.warning(xStrings.getString("AsteriskManager.errorSendingPrivateMessage") + //$NON-NLS-1$
 					recipient); 
 		}
@@ -700,7 +702,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 				
 			controlRoom.sendMessage(message);
 			
-		}catch(XMPPException e){
+		}catch(NotConnectedException e){
 			LOGGER.severe(xStrings.getString("AsteriskManager.XMPPError")); //$NON-NLS-1$
 		}catch(IllegalStateException e){
 			LOGGER.severe(xStrings.getString("AsteriskManager.XMPPServerGoneError")); //$NON-NLS-1$
@@ -710,7 +712,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	
 	/** PacketListener **/
 	@Override
-	public void processPacket(Packet XMPPPacket) {
+	public void processPacket(Stanza XMPPPacket) {
 		
 		if(!startup && XMPPPacket instanceof Message){
 			
@@ -1282,13 +1284,12 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		
 	}
 	
-	/** MESSAGE LISTENER **/
+	/** MESSAGE LISTENER & CHAT MESSAGE LISTENER UNUSED**/
+	//We don't care about any private messages the server might receive
 	@Override
-	public void processMessage(Chat chat, Message message) {
-		
-		//We don't care about any private messages we get so just ignore
-		
-	}
+	public void processMessage(Chat chat, Message message) {}
+	@Override
+	public void processMessage(Message message) {}
 	
 	/** UNUSED AsteriskServerListener methods **/
 	@Override
