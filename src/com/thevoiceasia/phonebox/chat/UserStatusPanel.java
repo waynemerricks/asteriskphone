@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.logging.Logger;
 
@@ -18,10 +19,10 @@ import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 
-import org.jivesoftware.smack.PacketListener;
-import org.jivesoftware.smack.packet.Packet;
+import org.jivesoftware.smack.StanzaListener;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.packet.Presence.Mode;
+import org.jivesoftware.smack.packet.Stanza;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.ParticipantStatusListener;
 
@@ -30,7 +31,7 @@ import org.jivesoftware.smackx.muc.ParticipantStatusListener;
  * @author Wayne Merricks
  *
  */
-public class UserStatusPanel extends JPanel implements ParticipantStatusListener, PacketListener {
+public class UserStatusPanel extends JPanel implements ParticipantStatusListener, StanzaListener {
 
 	private HashMap<String, Integer> roomRoster = new HashMap<String, Integer>();
 	private I18NStrings xStrings; //Link to external string resources
@@ -69,11 +70,11 @@ public class UserStatusPanel extends JPanel implements ParticipantStatusListener
 		//Get current online list
 		if(chatRoom.getOccupantsCount() > 0){
 			
-			Iterator<String> users = chatRoom.getOccupants();
+			List<String> users = chatRoom.getOccupants();
 			
-			while(users.hasNext()){
+			for(int i = 0; i < users.size(); i++){
 				
-				String user = users.next();
+				String user = users.get(i);
 				String friendlyUser = user;
 				
 				if(friendlyUser.contains("/")) //$NON-NLS-1$
@@ -279,7 +280,7 @@ public class UserStatusPanel extends JPanel implements ParticipantStatusListener
 	/** END UNUSED ParticipantStatusListener methods **/
 
 	@Override
-	public void processPacket(Packet XMPPPacket) {
+	public void processPacket(Stanza XMPPPacket) {
 		
 		if(XMPPPacket instanceof Presence){
 			
