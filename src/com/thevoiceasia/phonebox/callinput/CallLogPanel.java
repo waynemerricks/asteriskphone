@@ -21,12 +21,13 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 
-import org.jivesoftware.smack.Chat;
-import org.jivesoftware.smack.ChatManagerListener;
+import org.jivesoftware.smack.chat.Chat;
+import org.jivesoftware.smack.chat.ChatManagerListener;
+import org.jivesoftware.smack.chat.ChatMessageListener;
 import org.jivesoftware.smack.MessageListener;
-import org.jivesoftware.smack.PacketListener;
+import org.jivesoftware.smack.StanzaListener;
 import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smack.packet.Packet;
+import org.jivesoftware.smack.packet.Stanza;
 
 import com.thevoiceasia.phonebox.chat.ChatManager;
 import com.thevoiceasia.phonebox.records.CallLog;
@@ -36,7 +37,7 @@ import com.thevoiceasia.phonebox.records.CallLog;
  * @author waynemerricks
  *
  */
-public class CallLogPanel implements PacketListener, ChatManagerListener, MessageListener {
+public class CallLogPanel implements StanzaListener, ChatManagerListener, ChatMessageListener,  MessageListener {
 
 	/* CLASS VARS */
 	private I18NStrings xStrings;
@@ -148,7 +149,10 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 		manager.getControlChatRoom().addMessageListener(this);
 		
 		//Add Private Chat Listener
-		manager.getConnection().getChatManager().addChatListener(this);
+		org.jivesoftware.smack.chat.ChatManager cm = 
+				org.jivesoftware.smack.chat.ChatManager.getInstanceFor(
+						manager.getConnection());
+		cm.addChatListener(this);
 		
 		
 	}
@@ -356,7 +360,7 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 	}
 
 	@Override
-	public void processPacket(Packet XMPPPacket) {
+	public void processPacket(Stanza XMPPPacket) {
 		
 		if(XMPPPacket instanceof Message){
 			
@@ -556,7 +560,15 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 				
 	}
 
-	/* MESSAGE LISTENER */
+	/* MESSAGE LISTENER & ChatMessageListener */
+	@Override
+	public void processMessage(Message message) {
+		
+		//This is the same as processMessage(Chat, Message)
+		processMessage(null, message);
+		
+	}
+	
 	@Override
 	public void processMessage(Chat chat, Message message) {
 		
