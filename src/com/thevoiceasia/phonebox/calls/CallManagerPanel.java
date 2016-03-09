@@ -5,6 +5,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.net.URL;
 import java.util.ArrayList;
+//import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,16 +24,14 @@ import javax.swing.SwingUtilities;
 import net.miginfocom.layout.LC;
 import net.miginfocom.swing.MigLayout;
 
-import org.jivesoftware.smack.chat.Chat;
-import org.jivesoftware.smack.chat.ChatManager;
-import org.jivesoftware.smack.chat.ChatManagerListener;
-import org.jivesoftware.smack.chat.ChatMessageListener;
+import org.jivesoftware.smack.Chat;
+import org.jivesoftware.smack.ChatManagerListener;
 import org.jivesoftware.smack.MessageListener;
-import org.jivesoftware.smack.StanzaListener;
-import org.jivesoftware.smack.SmackException.NotConnectedException;
+import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smack.packet.Stanza;
+import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 
 import com.thevoiceasia.misc.CountryCodes;
@@ -44,8 +43,8 @@ import com.thevoiceasia.phonebox.misc.PhoneRinger;
 import com.thevoiceasia.phonebox.records.Person;
 import com.thevoiceasia.phonebox.records.PhoneCall;
 
-public class CallManagerPanel extends JPanel implements StanzaListener, MouseListener, 
-									LastActionTimer, ChatManagerListener, MessageListener, ChatMessageListener,
+public class CallManagerPanel extends JPanel implements PacketListener, MouseListener, 
+									LastActionTimer, ChatManagerListener, MessageListener,
 									ManualHangupListener, DialListener {
 
 	/** STATICS */
@@ -108,7 +107,7 @@ public class CallManagerPanel extends JPanel implements StanzaListener, MouseLis
 		this.addMouseListener(this);
 		
 		//Add Private Chat Listener
-		ChatManager.getInstanceFor(connection).addChatListener(this);
+		connection.getChatManager().addChatListener(this);
 		
 		//Store a copy of all the system extensions so we can decide what calls we need
 		//to handle
@@ -176,7 +175,7 @@ public class CallManagerPanel extends JPanel implements StanzaListener, MouseLis
 		try {
 			controlRoom.sendMessage(xStrings.getString("CallManagerPanel.commandUpdate") +  //$NON-NLS-1$
 					"/" + settings.get("myExtension")); //$NON-NLS-1$ //$NON-NLS-2$
-		} catch (NotConnectedException e) {
+		} catch (XMPPException e) {
 			LOGGER.severe(xStrings.getString("CallManagerPanel.errorSendingUpdateCommand")); //$NON-NLS-1$
 			showWarning(xStrings.getString("CallManagerPanel.errorSendingUpdateCommand")); //$NON-NLS-1$
 		}
@@ -386,11 +385,11 @@ public class CallManagerPanel extends JPanel implements StanzaListener, MouseLis
 	}
 	
 	@Override
-	public void processPacket(Stanza stanza) {
+	public void processPacket(Packet XMPPPacket) {
 		
-		if(stanza instanceof Message){
+		if(XMPPPacket instanceof Message){
 			
-			Message message = (Message)stanza;
+			Message message = (Message)XMPPPacket;
 			
 			String from = message.getFrom();
 			
@@ -1725,7 +1724,7 @@ public class CallManagerPanel extends JPanel implements StanzaListener, MouseLis
 			try {
 				controlRoom.sendMessage(xStrings.getString("CallManagerPanel.commandDial") +  //$NON-NLS-1$
 						"/" + number + "/" + settings.get("myExtension")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-			} catch (NotConnectedException e) {
+			} catch (XMPPException e) {
 				LOGGER.severe(xStrings.getString("CallManagerPanel.errorSendingDialCommand")); //$NON-NLS-1$
 			}
 		
@@ -1779,18 +1778,9 @@ public class CallManagerPanel extends JPanel implements StanzaListener, MouseLis
 		
 	}
 
-	
-	/* MESSAGE LISTENER && CHATMESSAGELISTENER */
+	/* MESSAGE LISTENER */
 	@Override
 	public void processMessage(Chat chat, Message message) {
-	
-		// Pass to MessageListener
-		processMessage(message);
-		
-	}
-	
-	@Override
-	public void processMessage(Message message) {
 		
 		//Can pass this on to the processPacket method as part of normal message handling
 		LOGGER.info(xStrings.getString("CallManagerPanel.receivedPrivateMessage") //$NON-NLS-1$
