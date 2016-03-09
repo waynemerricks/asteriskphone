@@ -1,6 +1,5 @@
 package com.thevoiceasia.phonebox.chat;
 
-import java.io.IOException;
 import java.util.Date;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -8,28 +7,22 @@ import java.util.logging.Logger;
 
 import javax.swing.JOptionPane;
 
-import org.jivesoftware.smackx.iqregister.AccountManager;
-import org.jivesoftware.smack.AbstractXMPPConnection;
+import org.jivesoftware.smack.AccountManager;
+import org.jivesoftware.smack.Connection;
+import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.SmackConfiguration;
-import org.jivesoftware.smack.SmackException;
-import org.jivesoftware.smack.SmackException.NoResponseException;
-import org.jivesoftware.smack.SmackException.NotConnectedException;
-import org.jivesoftware.smack.StanzaListener;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Presence;
-import org.jivesoftware.smack.packet.Stanza;
-import org.jivesoftware.smack.tcp.XMPPTCPConnection;
-import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smackx.muc.DiscussionHistory;
 import org.jivesoftware.smackx.muc.MultiUserChat;
-import org.jivesoftware.smackx.muc.MultiUserChatManager;
 import org.jivesoftware.smackx.muc.UserStatusListener;
 
 import com.thevoiceasia.phonebox.misc.LastActionTimer;
 
-public class ChatManager implements UserStatusListener, StanzaListener {
+public class ChatManager implements UserStatusListener, PacketListener {
 
 	//XMPP Settings
 	private String XMPPUserName, XMPPPassword, XMPPNickName, XMPPServerHostName, XMPPRoomName,
@@ -37,7 +30,7 @@ public class ChatManager implements UserStatusListener, StanzaListener {
 	private int XMPPChatHistory, idleTimeout;
 	
 	//XMPP Connections/Rooms
-	private AbstractXMPPConnection XMPPServerConnection;
+	private Connection XMPPServerConnection;
 	private MultiUserChat phoneboxChat, controlChat;
 	
 	//ChatManager vars
@@ -160,25 +153,18 @@ public class ChatManager implements UserStatusListener, StanzaListener {
 		boolean created = false;
 		
 		LOGGER.info(xStrings.getString("ChatManager.logCreatingXMPPUser") + XMPPUserName); //$NON-NLS-1$
-		XMPPTCPConnectionConfiguration serverConfig = XMPPTCPConnectionConfiguration.builder().setServiceName(XMPPServerHostName).build();
-		XMPPTCPConnection setupConnection = new XMPPTCPConnection(serverConfig);
+		XMPPConnection setupConnection = new XMPPConnection(XMPPServerHostName);
 		
 		try {
 			setupConnection.connect();
 		} catch (XMPPException e) {
 			hasErrors = true;
 			showError(e, xStrings.getString("ChatManager.setupUserConnectionFailure")); //$NON-NLS-1$
-		} catch (SmackException e){
-			hasErrors = true;
-			showError(e, xStrings.getString("ChatManager.setupUserConnectionFailure")); //$NON-NLS-1$
-		} catch (IOException e){
-			hasErrors = true;
-			showError(e, xStrings.getString("ChatManager.setupUserConnectionFailure")); //$NON-NLS-1$
 		}
 		
 		if(!hasErrors){
 			
-			AccountManager XMPPAccounts = AccountManager.getInstance(setupConnection);
+			AccountManager XMPPAccounts = new AccountManager(setupConnection);
 			
 			try {
 				XMPPAccounts.createAccount(XMPPUserName.split("@")[0], XMPPPassword); //$NON-NLS-1$
@@ -186,12 +172,6 @@ public class ChatManager implements UserStatusListener, StanzaListener {
 				created = true;
 				setupConnection.disconnect();
 				LOGGER.info(xStrings.getString("ChatManager.logSetupDisconnected")); //$NON-NLS-1$
-			} catch (NotConnectedException e) {
-				showError(e, xStrings.getString("ChatManager.errorCreatingXMPPUser") + XMPPUserName); //$NON-NLS-1$
-				LOGGER.severe(xStrings.getString("ChatManager.errorCreatingXMPPUser") + XMPPUserName); //$NON-NLS-1$
-			} catch (NoResponseException e) {
-				showError(e, xStrings.getString("ChatManager.errorCreatingXMPPUser") + XMPPUserName); //$NON-NLS-1$
-				LOGGER.severe(xStrings.getString("ChatManager.errorCreatingXMPPUser") + XMPPUserName); //$NON-NLS-1$
 			} catch (XMPPException e) {
 				showError(e, xStrings.getString("ChatManager.errorCreatingXMPPUser") + XMPPUserName); //$NON-NLS-1$
 				LOGGER.severe(xStrings.getString("ChatManager.errorCreatingXMPPUser") + XMPPUserName); //$NON-NLS-1$
@@ -272,8 +252,7 @@ public class ChatManager implements UserStatusListener, StanzaListener {
 	 */
 	public void connect(){
 		
-		XMPPTCPConnectionConfiguration serverConfig = XMPPTCPConnectionConfiguration.builder().setServiceName(XMPPServerHostName).build();
-		XMPPServerConnection = new XMPPTCPConnection(serverConfig);
+		XMPPServerConnection = new XMPPConnection(XMPPServerHostName);
 		hasErrors = false;
 		
 		//Connect to Server
@@ -282,18 +261,6 @@ public class ChatManager implements UserStatusListener, StanzaListener {
 			XMPPServerConnection.connect();
 			LOGGER.info(xStrings.getString("ChatManager.logConnected")); //$NON-NLS-1$
 		}catch(XMPPException e){
-			
-			showError(e, xStrings.getString("ChatManager.connectError")); //$NON-NLS-1$
-			hasErrors = true;
-			disconnect();
-			
-		}catch(SmackException e){
-			
-			showError(e, xStrings.getString("ChatManager.connectError")); //$NON-NLS-1$
-			hasErrors = true;
-			disconnect();
-			
-		}catch(IOException e){
 			
 			showError(e, xStrings.getString("ChatManager.connectError")); //$NON-NLS-1$
 			hasErrors = true;
@@ -317,32 +284,17 @@ public class ChatManager implements UserStatusListener, StanzaListener {
 				hasErrors = true;
 				disconnect();
 				
-			}catch(SmackException e){
-				
-				showError(e, xStrings.getString("ChatManager.loginError")); //$NON-NLS-1$
-				hasErrors = true;
-				disconnect();
-				
-			}catch(IOException e){
-				
-				showError(e, xStrings.getString("ChatManager.loginError")); //$NON-NLS-1$
-				hasErrors = true;
-				disconnect();
-				
 			}
 			
 			//Join Group Chat Channel
 			if(!hasErrors){
 				
-				MultiUserChatManager mucm = MultiUserChatManager.getInstanceFor(XMPPServerConnection);
-				
 				if(XMPPRoomName != null){
-					
-					phoneboxChat = mucm.getMultiUserChat(XMPPRoomName);
+					phoneboxChat = new MultiUserChat(XMPPServerConnection, XMPPRoomName);
 					joinRoom(phoneboxChat);
 				}
 				
-				controlChat = mucm.getMultiUserChat(XMPPControlRoomName);
+				controlChat = new MultiUserChat(XMPPServerConnection, XMPPControlRoomName);
 				joinRoom(controlChat);
 				
 			}
@@ -366,23 +318,11 @@ public class ChatManager implements UserStatusListener, StanzaListener {
 		try{
 			LOGGER.info(xStrings.getString("ChatManager.logJoinRoom")); //$NON-NLS-1$
 			room.join(XMPPNickName, XMPPPassword, chatHistory, 
-					SmackConfiguration.getDefaultPacketReplyTimeout());
+					SmackConfiguration.getPacketReplyTimeout());
 			LOGGER.info(xStrings.getString("ChatManager.logJoinedRoom")); //$NON-NLS-1$
 			success = true;
 			
 		}catch(XMPPException e){
-			
-			showError(e, xStrings.getString("ChatManager.chatRoomError")); //$NON-NLS-1$
-			hasErrors = true;
-			disconnect();
-			
-		}catch(NotConnectedException e){
-			
-			showError(e, xStrings.getString("ChatManager.chatRoomError")); //$NON-NLS-1$
-			hasErrors = true;
-			disconnect();
-			
-		}catch(NoResponseException e){
 			
 			showError(e, xStrings.getString("ChatManager.chatRoomError")); //$NON-NLS-1$
 			hasErrors = true;
@@ -417,18 +357,9 @@ public class ChatManager implements UserStatusListener, StanzaListener {
 		if(phoneboxChat != null){
 			
 			LOGGER.info(xStrings.getString("ChatManager.logLeaveRoom")); //$NON-NLS-1$
-			
-			try{
-				
-				phoneboxChat.leave();
-				LOGGER.info(xStrings.getString("ChatManager.logLeftRoom")); //$NON-NLS-1$
-				phoneboxChat = null;
-				
-			}catch(NotConnectedException e){
-				
-				//Doesn't matter, we're trying to disconnect anyway
-				
-			}
+			phoneboxChat.leave();
+			LOGGER.info(xStrings.getString("ChatManager.logLeftRoom")); //$NON-NLS-1$
+			phoneboxChat = null;
 			
 		}
 			
@@ -472,7 +403,7 @@ public class ChatManager implements UserStatusListener, StanzaListener {
 			else
 				controlChat.sendMessage(msg);
 			
-		}catch(NotConnectedException e){
+		}catch(XMPPException e){
 			showWarning(e, xStrings.getString("ChatManager.chatRoomError")); //$NON-NLS-1$
 		}catch(IllegalStateException e){
 			showWarning(e, xStrings.getString("ChatManager.serverGoneError")); //$NON-NLS-1$
@@ -510,7 +441,7 @@ public class ChatManager implements UserStatusListener, StanzaListener {
 
 	/** PacketListener methods **/
 	@Override
-	public void processPacket(Stanza XMPPPacket) {
+	public void processPacket(Packet XMPPPacket) {
 		
 		if(XMPPPacket instanceof Message){
 			
@@ -554,17 +485,7 @@ public class ChatManager implements UserStatusListener, StanzaListener {
 		
 		LOGGER.info(xStrings.getString("ChatManager.logSendingPresence") +  //$NON-NLS-1$
 				presence.getFrom() + ": " + presence.getMode()); //$NON-NLS-1$
-		
-		try{
-			
-			XMPPServerConnection.sendStanza(presence);
-			
-		}catch(NotConnectedException e){
-			
-			LOGGER.warning(xStrings.getString("ChatManager.notConnectedError"));
-			showWarning(e, xStrings.getString("ChatManager.notConnectedError"));
-			
-	    }
+		XMPPServerConnection.sendPacket(presence);
 		
 	}
 	
@@ -597,17 +518,7 @@ public class ChatManager implements UserStatusListener, StanzaListener {
 		
 		LOGGER.info(xStrings.getString("ChatManager.logSendingPresence") +  //$NON-NLS-1$
 				presence.getFrom() + ": " + presence.getMode()); //$NON-NLS-1$
-		
-		try{
-			
-			XMPPServerConnection.sendStanza(presence);
-			
-		}catch(NotConnectedException e){
-			
-			LOGGER.warning(xStrings.getString("ChatManager.notConnectedError"));
-			showWarning(e, xStrings.getString("ChatManager.notConnectedError"));
-			
-	    }
+		XMPPServerConnection.sendPacket(presence);
 		
 	}
 	
