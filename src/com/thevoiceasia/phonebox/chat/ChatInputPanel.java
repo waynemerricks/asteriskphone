@@ -15,7 +15,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
-import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 
@@ -85,7 +84,7 @@ public class ChatInputPanel extends JPanel implements ActionListener, KeyListene
 					}
 				});
 				
-			}catch(NotConnectedException e){
+			}catch(XMPPException e){
 				showWarning(e, xStrings.getString("ChatInputPanel.chatRoomError")); //$NON-NLS-1$
 			}catch(IllegalStateException e){
 				showWarning(e, xStrings.getString("ChatInputPanel.ServerGoneError")); //$NON-NLS-1$
