@@ -14,8 +14,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JToggleButton;
 
-import org.jivesoftware.smack.SmackException.NoResponseException;
-import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 
@@ -172,7 +170,7 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 		try {
 			LOGGER.info(xStrings.getString("ChatShortcutBar.logSendRoomMessage") + message); //$NON-NLS-1$
 			chatRoom.sendMessage(message);
-		}catch(NotConnectedException e){
+		}catch(XMPPException e){
 			showWarning(e, xStrings.getString("ChatShortcutBar.chatRoomError")); //$NON-NLS-1$
 		}catch(IllegalStateException e){
 			showWarning(e, xStrings.getString("ChatShortcutBar.serverGoneError")); //$NON-NLS-1$
@@ -187,14 +185,8 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 	private void changeTopic(String topic){
 		
 		try {
-			
 			LOGGER.info(xStrings.getString("ChatShortcutBar.logChangeRoomTopic")); //$NON-NLS-1$
 			chatRoom.changeSubject(topic);
-			
-		}catch(NotConnectedException e){
-			showWarning(e, xStrings.getString("ChatShortcutBar.changeSubjectError")); //$NON-NLS-1$
-		}catch(NoResponseException e){
-			showWarning(e, xStrings.getString("ChatShortcutBar.changeSubjectError")); //$NON-NLS-1$
 		}catch(XMPPException e){
 			showWarning(e, xStrings.getString("ChatShortcutBar.changeSubjectError")); //$NON-NLS-1$
 		}catch(IllegalStateException e){
