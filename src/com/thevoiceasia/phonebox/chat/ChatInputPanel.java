@@ -16,6 +16,7 @@ import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
 import org.jivesoftware.smack.SmackException.NotConnectedException;
+import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 
 import com.thevoiceasia.phonebox.misc.LastActionTimer;
