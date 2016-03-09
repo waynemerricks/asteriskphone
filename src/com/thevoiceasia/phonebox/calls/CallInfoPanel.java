@@ -19,7 +19,7 @@ import javax.swing.UIManager;
 
 import net.miginfocom.swing.MigLayout;
 
-import org.jivesoftware.smack.SmackException.NotConnectedException;
+import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 
 import com.thevoiceasia.phonebox.callinput.CallerUpdater;
@@ -950,7 +950,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 			if(message != null)
 				try {
 					controlRoom.sendMessage(message);
-				} catch (NotConnectedException e){
+				} catch (XMPPException e) {
 					LOGGER.severe(xStrings.getString("CallInfoPanel.errorSendingControlMessage")); //$NON-NLS-1$
 				}
 			
@@ -1072,7 +1072,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		
 		try {
 			controlRoom.sendMessage(message);
-		} catch (NotConnectedException e) {
+		} catch (XMPPException e) {
 			LOGGER.severe(xStrings.getString("CallInfoPanel.errorSendingControlMessage")); //$NON-NLS-1$
 		}
 		
