@@ -21,13 +21,12 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 
-import org.jivesoftware.smack.chat.Chat;
-import org.jivesoftware.smack.chat.ChatManagerListener;
-import org.jivesoftware.smack.chat.ChatMessageListener;
+import org.jivesoftware.smack.Chat;
+import org.jivesoftware.smack.ChatManagerListener;
 import org.jivesoftware.smack.MessageListener;
-import org.jivesoftware.smack.StanzaListener;
+import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smack.packet.Stanza;
+import org.jivesoftware.smack.packet.Packet;
 
 import com.thevoiceasia.phonebox.chat.ChatManager;
 import com.thevoiceasia.phonebox.records.CallLog;
@@ -37,7 +36,7 @@ import com.thevoiceasia.phonebox.records.CallLog;
  * @author waynemerricks
  *
  */
-public class CallLogPanel implements StanzaListener, ChatManagerListener, ChatMessageListener,  MessageListener {
+public class CallLogPanel implements PacketListener, ChatManagerListener, MessageListener {
 
 	/* CLASS VARS */
 	private I18NStrings xStrings;
@@ -149,10 +148,7 @@ public class CallLogPanel implements StanzaListener, ChatManagerListener, ChatMe
 		manager.getControlChatRoom().addMessageListener(this);
 		
 		//Add Private Chat Listener
-		org.jivesoftware.smack.chat.ChatManager cm = 
-				org.jivesoftware.smack.chat.ChatManager.getInstanceFor(
-						manager.getConnection());
-		cm.addChatListener(this);
+		manager.getConnection().getChatManager().addChatListener(this);
 		
 		
 	}
@@ -360,7 +356,7 @@ public class CallLogPanel implements StanzaListener, ChatManagerListener, ChatMe
 	}
 
 	@Override
-	public void processPacket(Stanza XMPPPacket) {
+	public void processPacket(Packet XMPPPacket) {
 		
 		if(XMPPPacket instanceof Message){
 			
@@ -560,15 +556,7 @@ public class CallLogPanel implements StanzaListener, ChatManagerListener, ChatMe
 				
 	}
 
-	/* MESSAGE LISTENER & ChatMessageListener */
-	@Override
-	public void processMessage(Message message) {
-		
-		//This is the same as processMessage(Chat, Message)
-		processMessage(null, message);
-		
-	}
-	
+	/* MESSAGE LISTENER */
 	@Override
 	public void processMessage(Chat chat, Message message) {
 		
