@@ -36,18 +36,18 @@ public class Client extends JFrame implements WindowListener{
 	private Splash loadingSplash;
 	
 	//Statics
-	private static final Logger LOGGER = Logger.getLogger(Client.class.getName());//Logger
-	private static final Level LOG_LEVEL = Level.INFO;
-	private static final Logger CHAT_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.chat"); //$NON-NLS-1$
-	private static final Level CHAT_LOG_LEVEL = Level.INFO;
-	private static final Logger DATABASE_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.database"); //$NON-NLS-1$
-	private static final Level DATABASE_LOG_LEVEL = Level.INFO;
-	private static final Logger RECORDS_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.records"); //$NON-NLS-1$
-	private static final Level RECORDS_LOG_LEVEL = Level.INFO;
-	private static final Logger CALL_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.calls"); //$NON-NLS-1$
+	private static Logger LOGGER = Logger.getLogger(Client.class.getName());//Logger
+	private static final Level LOG_LEVEL = Level.WARNING;
+	private static Logger CHAT_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.chat"); //$NON-NLS-1$
+	private static final Level CHAT_LOG_LEVEL = Level.WARNING;
+	private static Logger DATABASE_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.database"); //$NON-NLS-1$
+	private static final Level DATABASE_LOG_LEVEL = Level.WARNING;
+	private static Logger RECORDS_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.records"); //$NON-NLS-1$
+	private static final Level RECORDS_LOG_LEVEL = Level.WARNING;
+	private static Logger CALL_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.calls"); //$NON-NLS-1$
 	private static final Level CALL_LOG_LEVEL = Level.INFO;
-	private static final Logger CALL_INPUT_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.callinput"); //$NON-NLS-1$
-	private static final Level CALL_INPUT_LEVEL = Level.INFO;
+	private static Logger CALL_INPUT_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.callinput"); //$NON-NLS-1$
+	private static final Level CALL_INPUT_LEVEL = Level.WARNING;
 	
 	private static I18NStrings xStrings;
 	
@@ -345,12 +345,12 @@ public class Client extends JFrame implements WindowListener{
 		LOGGER.info(xStrings.getString("Client.logSetupLogging")); //$NON-NLS-1$
 		
 		try{
-			LOGGER.addHandler(new FileHandler("clientLog.log")); //$NON-NLS-1$
-			CHAT_LOGGER.addHandler(new FileHandler("chatLog.log")); //$NON-NLS-1$
-			DATABASE_LOGGER.addHandler(new FileHandler("databaseLog.log")); //$NON-NLS-1$
-			RECORDS_LOGGER.addHandler(new FileHandler("recordsLog.log")); //$NON-NLS-1$
-			CALL_LOGGER.addHandler(new FileHandler("callLog.log")); //$NON-NLS-1$
-			CALL_INPUT_LOGGER.addHandler(new FileHandler("callInputLog.log")); //$NON-NLS-1$
+			LOGGER.addHandler(new FileHandler("tvapb.log")); //$NON-NLS-1$
+			CHAT_LOGGER = LOGGER;//.addHandler(new FileHandler("tvapb.log")); //$NON-NLS-1$
+			DATABASE_LOGGER = LOGGER;//.addHandler(new FileHandler("tvapb.log")); //$NON-NLS-1$
+			RECORDS_LOGGER = LOGGER;//.addHandler(new FileHandler("tvapb.log")); //$NON-NLS-1$
+			CALL_LOGGER = LOGGER;//.addHandler(new FileHandler("tvapb.log")); //$NON-NLS-1$
+			CALL_INPUT_LOGGER = LOGGER;//.addHandler(new FileHandler("tvapb.log")); //$NON-NLS-1$
 		}catch(IOException e){
 			
 			e.printStackTrace();
