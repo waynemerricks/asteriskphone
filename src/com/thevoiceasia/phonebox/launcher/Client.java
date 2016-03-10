@@ -34,7 +34,6 @@ public class Client extends JFrame implements WindowListener{
 	private boolean hasErrors = false;
 	private HashMap<String, String> userSettings;
 	private Splash loadingSplash;
-	private CallManagerPanel callManagerPanel = null;
 	
 	//Statics
 	private static Logger LOGGER = Logger.getLogger(Client.class.getName());//Logger
@@ -100,7 +99,7 @@ public class Client extends JFrame implements WindowListener{
 				LOGGER.info(xStrings.getString("Client.creatingCallManager")); //$NON-NLS-1$
 				loadingSplash.setStatus(xStrings.getString("Client.creatingCallManager")); //$NON-NLS-1$
 				
-				callManagerPanel = new CallManagerPanel(
+				CallManagerPanel callManagerPanel = new CallManagerPanel(
 						databaseManager.getUserSettings(),
 						chatManager.getControlChatRoom(), 
 						databaseManager, chatManager.getConnection()); 
@@ -126,6 +125,12 @@ public class Client extends JFrame implements WindowListener{
 						userSettings.get("onAirQueueNumber")); //$NON-NLS-1$
 				callManagerPanel.addAnswerListener(callInput);
 				
+				//Add CallManagerPanel ref to AddCall on callinputpanel
+				callInput.setCallManagerPanel(callManagerPanel);
+				
+				//Add Client ref to ChangePerson on callinputpanel
+				callInput.setClientWindow(this);
+				
 				JSplitPane chatSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, chat, callInput);
 				chatSplit.setOneTouchExpandable(true);
 				chatSplit.setContinuousLayout(true);
@@ -144,16 +149,6 @@ public class Client extends JFrame implements WindowListener{
 		
 	}
 
-	/**
-	 * Returns a reference to the CallManagerPanel of this client
-	 * @return
-	 */
-	public CallManagerPanel getCallManager(){
-		
-		return callManagerPanel;
-		
-	}
-	
 	/**
 	 * Gets the image from a relative path and creates an icon for use with buttons
 	 * @param path path where image resides

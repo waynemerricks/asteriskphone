@@ -1,6 +1,5 @@
 package com.thevoiceasia.phonebox.callinput;
 
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -26,6 +25,7 @@ import javax.swing.ScrollPaneConstants;
 
 import com.thevoiceasia.phonebox.calls.AnswerListener;
 import com.thevoiceasia.phonebox.calls.CallInfoPanel;
+import com.thevoiceasia.phonebox.calls.CallManagerPanel;
 import com.thevoiceasia.phonebox.chat.ChatManager;
 import com.thevoiceasia.phonebox.launcher.Client;
 import com.thevoiceasia.phonebox.records.Person;
@@ -47,6 +47,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 	private String incomingQueue = null, onairQueue = null;
 	private SearchPanel searchPanel = null;
 	private ChatManager chat = null;
+	private JButton changePerson = null, addCall = null;
 	
 	/** STATICS **/
 	private static final long serialVersionUID = 1L;
@@ -319,70 +320,12 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 						
 						//Button to change the person on the call usually for withheld numbers or
 						//one number in use by more than one person
-						JButton changePerson = new JButton(
+						changePerson = new JButton(
 								xStrings.getString("CallInputPanel.changePerson")); //$NON-NLS-1$
-						JButton addCall = new JButton(xStrings.getString("CallInputPanel.addCall"));
-						
-						Client owner = null;
-						
-						//Get the parent of this object and keep getting their parents until
-						//We get the Client Object which will be the window owner of this
-						//Dialog
-						Component parent = this.getParent();
-						
-						while(parent != null && !(parent instanceof Client))
-							parent = parent.getParent();
-						
-						if(parent != null)
-							owner = (Client)parent;
-						
-						final Client ownerFinal = owner;
-						final CallInputPanel cip = this;
-						
-						changePerson.addActionListener(new ActionListener(){
-							
-							public void actionPerformed(ActionEvent evt){
-								
-								if(currentPanel != null)
-									if(searchPanel == null){
-									
-										//Get the Parent JFrame so that SearchPanel can have that as the owner
-										searchPanel = new SearchPanel(ownerFinal, 
-												xStrings.getString("SearchPanel.title"),  //$NON-NLS-1$
-												language, country, 
-												databaseReadConnection, 
-												getPhoneNumber(currentPanel.getChannelID()));
-										
-										searchPanel.addPersonChangedListener(cip);
-										searchPanel.setVisible(true);
-										
-										
-									}else{
-										//Reuse existing panel but reset number and panel
-										//we need to notify when theres a change
-										searchPanel.setNumber(
-												getPhoneNumber(
-														currentPanel.getChannelID()));
-										searchPanel.addPersonChangedListener(cip);
-										searchPanel.setVisible(true);
-									}
-								
-							}
-
-						});
-						
 						tabHash.get(components.get(i).parent).add(changePerson);  //$NON-NLS-1$
 						
-						addCall.addActionListener(new ActionListener(){
-							
-							public void actionPerformed(ActionEvent evt){
-								
-								ownerFinal.getCallManager().addManualCall();
-								
-							}
-
-						});
-						
+						//Button to add a manual Call
+						addCall = new JButton(xStrings.getString("CallInputPanel.addCall"));
 						tabHash.get(components.get(i).parent).add(addCall, "wrap");  //$NON-NLS-1$
 						
 						components.get(i).addKeyListener(new KeyListener(){
@@ -499,6 +442,71 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 		}
 		
 		
+	}
+	
+	/**
+	 * Gives this input panel a client window to work with.  Used to attach
+	 * dialogs to the parent window
+	 * @param client
+	 */
+	public void setClientWindow(Client client){
+		
+		final Client ownerFinal = client;
+		final CallInputPanel cip = this;
+		
+		changePerson.addActionListener(new ActionListener(){
+			
+			public void actionPerformed(ActionEvent evt){
+				
+				if(currentPanel != null)
+					if(searchPanel == null){
+					
+						//Get the Parent JFrame so that SearchPanel can have that as the owner
+						searchPanel = new SearchPanel(ownerFinal, 
+								xStrings.getString("SearchPanel.title"),  //$NON-NLS-1$
+								language, country, 
+								databaseReadConnection, 
+								getPhoneNumber(currentPanel.getChannelID()));
+						
+						searchPanel.addPersonChangedListener(cip);
+						searchPanel.setVisible(true);
+						
+						
+					}else{
+						//Reuse existing panel but reset number and panel
+						//we need to notify when theres a change
+						searchPanel.setNumber(
+								getPhoneNumber(
+										currentPanel.getChannelID()));
+						searchPanel.addPersonChangedListener(cip);
+						searchPanel.setVisible(true);
+					}
+				
+			}
+
+		});
+		
+	}
+	
+	/**
+	 * Sets an active CallManagerPanel for this object
+	 * This is required by AddCall in order to create a call panel
+	 * There may be other uses in the future.
+	 * @param manager
+	 */
+	public void setCallManagerPanel(CallManagerPanel manager){
+		
+		final CallManagerPanel finalManager = manager;
+		
+		addCall.addActionListener(new ActionListener(){
+			
+			public void actionPerformed(ActionEvent evt){
+				
+				finalManager.addManualCall();
+				
+			}
+
+		});
 	}
 	
 	/**

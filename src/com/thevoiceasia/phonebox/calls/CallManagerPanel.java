@@ -136,7 +136,16 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	
 	public void addManualCall(){
 		
-		//TODO
+		//Create dummy channelID TODO
+		String manualID = "MANUAL_" + new Date().getTime();
+		
+		createSkeletonCallInfoPanel(xStrings.getString("CallManagerPanel.manualCall"), 
+				manualID, CallInfoPanel.MODE_ANSWERED_ME,
+				settings.get("nickName"), -1);
+		
+		CallInfoPanel manualCall = callPanels.get(manualID);
+		manualCall.setAnswered(false);
+		notifyListeners(manualCall);
 		
 	}
 	
@@ -861,6 +870,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 						//UPDATEFIELD/field mapping/channel id/field value
 						/*if(command[3].equals("<CLEAR>")) //$NON-NLS-1$
 							command[3] = ""; //$NON-NLS-1$*/
+						//TODO BUG panel can be gone when update happens, check for exists first
 						
 						if(command[1].equals("name")){ //$NON-NLS-1$
 							callPanels.get(command[2]).setPhoneCallField(command[1], 
