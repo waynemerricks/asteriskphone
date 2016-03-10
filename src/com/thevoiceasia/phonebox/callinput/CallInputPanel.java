@@ -315,12 +315,13 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 						
 						//Add the text field without the wrap and then add a button
 						tabHash.get(components.get(i).parent).add(components.get(i).getComponent(), 
-								"spanx, growx, split 2"); //$NON-NLS-1$
+								"spanx, growx, split 3"); //$NON-NLS-1$
 						
 						//Button to change the person on the call usually for withheld numbers or
 						//one number in use by more than one person
 						JButton changePerson = new JButton(
 								xStrings.getString("CallInputPanel.changePerson")); //$NON-NLS-1$
+						JButton addCall = new JButton(xStrings.getString("CallInputPanel.addCall"));
 						
 						Client owner = null;
 						
@@ -370,7 +371,19 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 
 						});
 						
-						tabHash.get(components.get(i).parent).add(changePerson, "wrap");  //$NON-NLS-1$
+						tabHash.get(components.get(i).parent).add(changePerson);  //$NON-NLS-1$
+						
+						addCall.addActionListener(new ActionListener(){
+							
+							public void actionPerformed(ActionEvent evt){
+								
+								ownerFinal.getCallManager().addManualCall();
+								
+							}
+
+						});
+						
+						tabHash.get(components.get(i).parent).add(addCall, "wrap");  //$NON-NLS-1$
 						
 						components.get(i).addKeyListener(new KeyListener(){
 

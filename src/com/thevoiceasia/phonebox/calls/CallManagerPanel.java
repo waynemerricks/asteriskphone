@@ -134,6 +134,12 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		
 	}
 	
+	public void addManualCall(){
+		
+		//TODO
+		
+	}
+	
 	/**
 	 * Alert our listeners that they can cancel the hang up mode
 	 * this occurs if we're initiating a hang up or if it is someone elses call

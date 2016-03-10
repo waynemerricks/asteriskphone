@@ -34,6 +34,7 @@ public class Client extends JFrame implements WindowListener{
 	private boolean hasErrors = false;
 	private HashMap<String, String> userSettings;
 	private Splash loadingSplash;
+	private CallManagerPanel callManagerPanel = null;
 	
 	//Statics
 	private static Logger LOGGER = Logger.getLogger(Client.class.getName());//Logger
@@ -99,7 +100,7 @@ public class Client extends JFrame implements WindowListener{
 				LOGGER.info(xStrings.getString("Client.creatingCallManager")); //$NON-NLS-1$
 				loadingSplash.setStatus(xStrings.getString("Client.creatingCallManager")); //$NON-NLS-1$
 				
-				CallManagerPanel callManagerPanel = new CallManagerPanel(
+				callManagerPanel = new CallManagerPanel(
 						databaseManager.getUserSettings(),
 						chatManager.getControlChatRoom(), 
 						databaseManager, chatManager.getConnection()); 
@@ -140,6 +141,16 @@ public class Client extends JFrame implements WindowListener{
 			}
 			
 		}
+		
+	}
+
+	/**
+	 * Returns a reference to the CallManagerPanel of this client
+	 * @return
+	 */
+	public CallManagerPanel getCallManager(){
+		
+		return callManagerPanel;
 		
 	}
 	
