@@ -138,11 +138,28 @@ public class PhoneCall implements Runnable{
 		
 	}
 	
+	/**
+	 * 
+	 * @param callerId
+	 * @param channel
+	 * @param mode
+	 * @param database
+	 */
+	public PhoneCall(String callerId, String channel, char mode, DatabaseManager database){
+		
+		//TODO Use this to have a manual call, need to edit callmanager.addmanual
+		
+	}
+	
+	/**
+	 * Used by the server to create skeleton for new calls (if necessary)
+	 * Usually here when calls are in the ringing state.
+	 * @param callerId Caller ID aka Number of the call (can be unknown)
+	 * @param channel Channel that the call has (used for tracking)
+	 * @param database Database link to use for queries
+	 */
 	public PhoneCall(String callerId, String channel, DatabaseManager database){
 		
-		/* Used by server to create skeleton for new calls (if necessary)
-		 * hits this when the calls are in the Ringing state 
-		 */
 		headless = true;
 		this.channelID = channel;
 		this.database = database;

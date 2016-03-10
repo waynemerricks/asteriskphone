@@ -78,7 +78,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	private TimerTask ringingTask;
 	private MultiUserChat controlRoom;
 	private String channelID, myExtension, myNickName, originator; 
-	private boolean hangupActive, canTakeCall, outgoing = false;
+	private boolean hangupActive, canTakeCall, outgoing = false, manualCall = false;
 	private PhoneCall phoneCallRecord = null;
 	private Vector<ManualHangupListener> hangupListeners = new Vector<ManualHangupListener>();
 	private CallerUpdater updateThread = null;
@@ -121,6 +121,12 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		defaultColour = this.getBackground();
 		ringingTimer = new Timer("ringingTimer:" + channelID); //$NON-NLS-1$
 		this.channelID = channelID;
+		
+		if(channelID.startsWith("MANUAL_")){
+			manualCall = true;
+			sendServerManualCall();			
+		}
+		
 		this.hangupActive = hangupActive;
 		this.canTakeCall = canTakeCall;
 		this.controlRoom = controlRoom;
@@ -179,6 +185,22 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		
 		this.setPreferredSize(new Dimension(350, 150));
 		this.setMinimumSize(new Dimension(350, 150));
+		
+	}
+	
+	/**
+	 * Tells the server to create a manual call message
+	 * MANUAL/CHANNELID/ANSWERED_BY_ME
+	 */
+	private void sendServerManualCall(){
+		
+		String message = xStrings.getString("calls.MANUAL") + "/" + channelID + "/" + myNickName;
+		
+		try {
+			controlRoom.sendMessage(message);
+		} catch (XMPPException e) {
+			LOGGER.severe(xStrings.getString("CallInfoPanel.errorSendingControlMessage")); //$NON-NLS-1$
+		}
 		
 	}
 	
@@ -482,6 +504,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	
 	/**
 	 * Sets the panel to answered mode
+	 * @param reset true if you want the stage timer to reset to 0
 	 */
 	public void setAnswered(boolean reset){
 		
@@ -899,7 +922,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 				
 			}else if(messageMode == MODE_ANSWERED || messageMode == MODE_ANSWERED_ME){
 				
-				if(hangupActive){//Hangup an ANSWERED call
+				if(hangupActive || manualCall){//Hangup an ANSWERED call or a manual call by clicking
 					
 					message = xStrings.getString("calls.hangup") + "/" + channelID; //$NON-NLS-1$ //$NON-NLS-2$
 					hangupActive = false;
@@ -1275,7 +1298,8 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		if(myExtension != null){
 			
 			//This will forward the clicks onto its parent if its a CallManagerPanel
-			if(this.getParent() != null && this.getParent() instanceof CallManagerPanel){
+			//If we are a manual call we don't want to do any click forwarding
+			if(!manualCall && this.getParent() != null && this.getParent() instanceof CallManagerPanel){
 				
 				CallManagerPanel cmp = (CallManagerPanel)this.getParent();
 				

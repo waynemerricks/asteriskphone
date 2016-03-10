@@ -136,7 +136,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	
 	public void addManualCall(){
 		
-		//Create dummy channelID TODO
+		//Create dummy channelID TODO send control message manual
 		String manualID = "MANUAL_" + new Date().getTime();
 		
 		createSkeletonCallInfoPanel(xStrings.getString("CallManagerPanel.manualCall"), 
@@ -401,7 +401,8 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	
 	@Override
 	public void processPacket(Packet XMPPPacket) {
-		
+		//TODO Break this out into own processing thread/class for readability
+		//TODO Encapsulate String.split into PhoneMessage class (getChannel etc)
 		if(XMPPPacket instanceof Message){
 			
 			Message message = (Message)XMPPPacket;
