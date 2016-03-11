@@ -139,15 +139,28 @@ public class PhoneCall implements Runnable{
 	}
 	
 	/**
+	 * Used by the server to create a skeleton of a call with a particular mode
+	 * At the moment only using it for manual calls (M mode)
 	 * 
-	 * @param callerId
-	 * @param channel
-	 * @param mode
-	 * @param database
+	 * @param callerId Caller ID to add to the manual call (probably UNKNOWN)
+	 * @param channel Channel to assign to manual call (this is a date.getTime variant as its not a real channel)
+	 * @param mode Mode to set (usually M)
+	 * @param database Reference to Database
 	 */
-	public PhoneCall(String callerId, String channel, char mode, DatabaseManager database){
+	public PhoneCall(String callerId, String channel, char mode, String operator, DatabaseManager database){
 		
 		//TODO Use this to have a manual call, need to edit callmanager.addmanual
+		headless = true;
+		this.channelID = channel;
+		this.database = database;
+		this.threadMode = mode;
+		this.threadOperator = operator;
+		
+		xStrings = new I18NStrings(database.getUserSettings().get("language"),  //$NON-NLS-1$
+				database.getUserSettings().get("country")); //$NON-NLS-1$
+		
+		/* BUG FIX CALLERID WITHHELD */
+		this.callerID =  checkNumberWithHeld(callerId);
 		
 	}
 	
@@ -1014,6 +1027,9 @@ public class PhoneCall implements Runnable{
 			trackHangup(threadOperator); 
 		}else if(threadMode == 'A'){
 			createCallSkeleton("A", threadOperator); //$NON-NLS-1$
+			//trackAnswered(threadOperator);
+		}else if(threadMode == 'M'){
+			createCallSkeleton("M", threadOperator); //$NON-NLS-1$
 			//trackAnswered(threadOperator);
 		}else if(threadMode == 'R')
 			createCallSkeleton("R", null); //$NON-NLS-1$
