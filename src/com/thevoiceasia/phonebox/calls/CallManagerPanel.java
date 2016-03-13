@@ -252,10 +252,14 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		 * created as a skeleton.  Just in case, we'll make sure we're not 
 		 * ringing if this happens
 		 */
-		if(mode == CallInfoPanel.MODE_RINGING)
-			startRinging(channelID);
-		else if(mode == CallInfoPanel.MODE_ANSWERED)
-			stopRinging(channelID);
+		if(ringer != null){
+			
+			if(mode == CallInfoPanel.MODE_RINGING)
+				startRinging(channelID);
+			else if(mode == CallInfoPanel.MODE_ANSWERED)
+				stopRinging(channelID);
+			
+		}
 					
 		String location = null;
 		LOGGER.info(xStrings.getString("CallManagerPanel.createSkeletonCallPanel") + //$NON-NLS-1$
@@ -628,7 +632,8 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 							xStrings.getString("CallManagerPanel.callConnected"))){ //$NON-NLS-1$
 						
 						//Turn off ringing for this channel
-						stopRinging(command[3]);
+						if(ringer != null)
+							stopRinging(command[3]);
 						
 						if(callPanels.get(command[3]) != null){
 							
@@ -944,7 +949,8 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									command[2]);
 					
 					//Turn off ringing for this channel (in case we get hang up with no answer)
-					stopRinging(command[2]);
+					if(ringer != null)
+						stopRinging(command[2]);
 					
 					//Check to see if we have the panel in the list and remove it
 					if(callPanels.get(command[2]) != null){
@@ -960,7 +966,8 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 					userExtensions.put(command[2], from);
 					
 					//Stop ringing it transferred to someone else
-					stopRinging(command[1]);
+					if(ringer != null)
+						stopRinging(command[1]);
 
 				}else if(command.length == 2 &&
 						command[0].equals(xStrings.getString("CallManagerPanel.callLocked"))){ //$NON-NLS-1$
@@ -1323,8 +1330,12 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		// Need to notify any listeners of this CallManagerPanel
 		
 		//Stop Ringing, we've answered a call, first remove from ringingChannels array
-		ringingChannels.remove(callInfoPanel.getChannelID());
-		stopRinging();
+		if(ringer != null){
+			
+			ringingChannels.remove(callInfoPanel.getChannelID());
+			stopRinging();
+			
+		}
 		
 		if(answerListeners.size() < 1){
 			
@@ -1500,7 +1511,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	 */
 	private void playRinging(){
 
-		if(!ringer.isRinging()){
+		if(ringer != null && !ringer.isRinging()){
 			
 			ringer.ring();
 			LOGGER.info(xStrings.getString("CallManagerPanel.ringingStarted"));
@@ -1515,17 +1526,21 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	 */
 	private void stopRinging(){
 
-		if(ringer.isRinging()){
+		if(ringer != null){
 			
-			ringer.stop();
-			LOGGER.info(xStrings.getString("CallManagerPanel.ringingStopped"));
-			
-		}else{
-			
-			//If we're not on a call and there are more ringing channels, play ringing
-			if(isOnCall() == null && ringingChannels.size() > 0)
-				playRinging();
+			if(ringer.isRinging()){
 				
+				ringer.stop();
+				LOGGER.info(xStrings.getString("CallManagerPanel.ringingStopped"));
+				
+			}else{
+				
+				//If we're not on a call and there are more ringing channels, play ringing
+				if(isOnCall() == null && ringingChannels.size() > 0)
+					playRinging();
+					
+				
+			}
 			
 		}
 
@@ -1538,9 +1553,12 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	 */
 	private void stopRinging(String channelID){
 		
-		ringingChannels.remove(channelID);
-		stopRinging();
-		
+		if(ringer != null){
+			
+			ringingChannels.remove(channelID);
+			stopRinging();
+			
+		}
 	}
 	
 	/**
@@ -1550,10 +1568,14 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	 */
 	private void startRinging(String channelID){
 		
-		ringingChannels.add(channelID);
-		
-		if(isOnCall() == null)
-			playRinging();
+		if(ringer != null){
+			
+			ringingChannels.add(channelID);
+			
+			if(isOnCall() == null)
+				playRinging();
+			
+		}
 		
 	}
 
