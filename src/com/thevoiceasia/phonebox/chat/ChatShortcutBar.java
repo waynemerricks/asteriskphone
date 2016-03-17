@@ -9,14 +9,19 @@ import java.util.logging.Logger;
 
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JToggleButton;
 
+import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 
+import com.thevoiceasia.phonebox.misc.AlertSounder;
 import com.thevoiceasia.phonebox.misc.LastActionTimer;
 
 /**
@@ -26,7 +31,7 @@ import com.thevoiceasia.phonebox.misc.LastActionTimer;
  * @author Wayne Merricks
  *
  */
-public class ChatShortcutBar extends JPanel implements ActionListener, LastActionTimer {
+public class ChatShortcutBar extends JPanel implements ActionListener, LastActionTimer, PacketListener {
 
 	/** STATICS **/
 	private static final Logger LOGGER = Logger.getLogger(ChatShortcutBar.class.getName());//Logger
@@ -35,10 +40,12 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 	/** CLASS VARS **/
 	private I18NStrings xStrings; //Link to external string resources
 	private JToggleButton callToggle, breakToggle, helpToggle;
+	private JButton alertButton;
 	private ButtonGroup shortCutGroup;
-	private MultiUserChat chatRoom;
+	private MultiUserChat chatRoom, controlRoom;
 	private boolean callPressed = false, breakPressed = false, helpPressed = false, isStudio;
 	private long lastActionTime;
+	private AlertSounder alert = null;
 	
 	/**
 	 * Shortcut bar for pre-canned phrases on the chat box
@@ -48,18 +55,28 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 	 * @param isStudio if true enables studio specific behaviour
 	 */
 	public ChatShortcutBar(String language, String country, MultiUserChat chatRoom, 
-			boolean isStudio, String currentTopic){
+			MultiUserChat controlRoom, boolean isStudio, String currentTopic){
 		
 		xStrings = new I18NStrings(language, country);
 		
 		this.chatRoom = chatRoom;
+		this.controlRoom = controlRoom;
 		this.isStudio = isStudio;
 		
-		this.setLayout(new GridLayout(1, 4, 5, 5));
+		this.setLayout(new GridLayout(1, 5, 5, 5));
+		
+		//Set up alert sounder
+		if(!isStudio){
+			
+			alert = new AlertSounder("audio/alert.wav");
+			this.controlRoom.addMessageListener(this);
+			
+		}
 		
 		/*
 		 * No Calls Please (Toggle)
 		 * Back soon (tea break Toggle)
+		 * Play Alert
 		 * Send Help
 		 */
 		callToggle = new JToggleButton(createImageIcon("images/nocalls.png", "nocalls"), false); //$NON-NLS-1$ //$NON-NLS-2$
@@ -98,6 +115,16 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 		//Spacer
 		this.add(new JLabel());
 		
+		//Alert
+		alertButton = new JButton(createImageIcon("images/buzz.png", "alert"));
+		alertButton.setToolTipText(xStrings.getString("ChatShortcutBar.buttonAlertToolTip"));
+		alertButton.setActionCommand("alert");
+		alertButton.addActionListener(this);
+		alertButton.setEnabled(isStudio);
+		
+		this.add(alertButton);
+		
+		//Help
 		helpToggle = new JToggleButton(createImageIcon("images/helpme.png", "help"));  //$NON-NLS-1$//$NON-NLS-2$
 		helpToggle.setToolTipText(xStrings.getString("ChatShortcutBar.buttonHelpToolTip")); //$NON-NLS-1$
 		helpToggle.setActionCommand("help"); //$NON-NLS-1$
@@ -165,11 +192,11 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 	 * Sends a message to the chat room
 	 * @param message
 	 */
-	private void sendMessage(String message){
+	private void sendMessage(String message, MultiUserChat room){
 		
 		try {
 			LOGGER.info(xStrings.getString("ChatShortcutBar.logSendRoomMessage") + message); //$NON-NLS-1$
-			chatRoom.sendMessage(message);
+			room.sendMessage(message);
 		}catch(XMPPException e){
 			showWarning(e, xStrings.getString("ChatShortcutBar.chatRoomError")); //$NON-NLS-1$
 		}catch(IllegalStateException e){
@@ -207,7 +234,7 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 			breakPressed = false;
 			helpPressed = false;
 			LOGGER.info(xStrings.getString("ChatShortcutBar.logSetNoCalls")); //$NON-NLS-1$
-			sendMessage(xStrings.getString("ChatShortcutBar.chatNoCalls")); //$NON-NLS-1$
+			sendMessage(xStrings.getString("ChatShortcutBar.chatNoCalls"), chatRoom); //$NON-NLS-1$
 			
 			if(isStudio)
 				changeTopic(xStrings.getString("ChatShortcutBar.subjectNoCalls")); //$NON-NLS-1$
@@ -218,7 +245,7 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 			shortCutGroup.clearSelection();
 			callToggle.setSelected(false);
 			LOGGER.info(xStrings.getString("ChatShortcutBar.logSetCalls")); //$NON-NLS-1$
-			sendMessage(xStrings.getString("ChatShortcutBar.chatResumeCalls")); //$NON-NLS-1$
+			sendMessage(xStrings.getString("ChatShortcutBar.chatResumeCalls"), chatRoom); //$NON-NLS-1$
 			
 			if(isStudio)
 				changeTopic(xStrings.getString("ChatShortcutBar.emptyTopic")); //$NON-NLS-1$
@@ -240,7 +267,7 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 			callPressed = false;
 			helpPressed = false;
 			LOGGER.info(xStrings.getString("ChatShortcutBar.logSetBackSoon")); //$NON-NLS-1$
-			sendMessage(xStrings.getString("ChatShortcutBar.chatBackSoon")); //$NON-NLS-1$
+			sendMessage(xStrings.getString("ChatShortcutBar.chatBackSoon"), chatRoom); //$NON-NLS-1$
 			
 			if(isStudio)
 				changeTopic(xStrings.getString("ChatShortcutBar.subjectBackSoon")); //$NON-NLS-1$
@@ -251,12 +278,23 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 			shortCutGroup.clearSelection();
 			breakToggle.setSelected(false);
 			LOGGER.info(xStrings.getString("ChatShortcutBar.logSetReturned")); //$NON-NLS-1$
-			sendMessage(xStrings.getString("ChatShortcutBar.chatReturned")); //$NON-NLS-1$
+			sendMessage(xStrings.getString("ChatShortcutBar.chatReturned"), chatRoom); //$NON-NLS-1$
 			
 			if(isStudio)
 				changeTopic(xStrings.getString("ChatShortcutBar.emptyTopic")); //$NON-NLS-1$
 			
 		}
+		
+	}
+	
+	/**
+	 * Sends alert command
+	 */
+	private void alertPressed(){
+		
+		LOGGER.info(xStrings.getString("ChatShortcutBar.logAlert"));
+		sendMessage(xStrings.getString("ChatShortcutBar.commandAlert"), controlRoom);
+		sendMessage(xStrings.getString("ChatShortcutBar.chatAlert"), chatRoom);
 		
 	}
 	
@@ -271,7 +309,7 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 			callPressed = false;
 			breakPressed = false;
 			LOGGER.info(xStrings.getString("ChatShortcutBar.logSetHelpMe")); //$NON-NLS-1$
-			sendMessage(xStrings.getString("ChatShortcutBar.chatHelpMe")); //$NON-NLS-1$
+			sendMessage(xStrings.getString("ChatShortcutBar.chatHelpMe"), chatRoom); //$NON-NLS-1$
 			
 			if(isStudio)
 				changeTopic(xStrings.getString("ChatShortcutBar.subjectHelp")); //$NON-NLS-1$
@@ -282,7 +320,7 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 			shortCutGroup.clearSelection();
 			helpToggle.setSelected(false);
 			LOGGER.info(xStrings.getString("ChatShortcutBar.logSetPanicOver")); //$NON-NLS-1$
-			sendMessage(xStrings.getString("ChatShortcutBar.chatCrisisOver")); //$NON-NLS-1$
+			sendMessage(xStrings.getString("ChatShortcutBar.chatCrisisOver"), chatRoom); //$NON-NLS-1$
 			
 			if(isStudio)
 				changeTopic(xStrings.getString("ChatShortcutBar.emptyTopic")); //$NON-NLS-1$
@@ -290,7 +328,7 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 		}
 		
 	}
-	
+		
 	@Override
 	/**
 	 * Standard actionListener entry for use with shortcut buttons
@@ -308,12 +346,44 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 			backSoonPressed();
 		else if(evt.getActionCommand().equals("help")) //$NON-NLS-1$
 			helpPressed();
+		else if(evt.getActionCommand().equals("alert"))
+			alertPressed();
 		
 	}
 
 	@Override
 	public long getLastActionTime() {
 		return lastActionTime;
+	}
+
+	@Override
+	public void processPacket(Packet XMPPPacket) {
+
+		/* As part of the chat alert process I want this to monitor for alerts
+		 * from other people.
+		 * 
+		 * Control Room: ALERT/ALERT = Play alert noise
+		 */
+		LOGGER.info(xStrings.getString("ChatMessagePanel.logReceivedMessage") + XMPPPacket); //$NON-NLS-1$
+		
+		if(XMPPPacket instanceof Message){
+		
+			Message message = (Message)XMPPPacket;
+			
+			String from = message.getFrom();
+			
+			if(from.contains("/")) //$NON-NLS-1$
+				from = from.split("/")[1]; //$NON-NLS-1$
+			
+			if(!from.equals(controlRoom.getNickname())){//If the message didn't come from me 
+			
+				if(message.getBody().equals(xStrings.getString("ChatShortcutBar.commandAlert")))
+						alert.play();
+			
+			}
+			
+		}
+		
 	}
 	
 }

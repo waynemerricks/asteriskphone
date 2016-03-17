@@ -72,7 +72,7 @@ public class ChatWindow extends JPanel implements MouseListener, LastActionTimer
 			
 			this.setLayout(new BorderLayout());
 			ChatShortcutBar shortcuts = new ChatShortcutBar(language, country, 
-					chatManager.getChatRoom(), studio, 
+					chatManager.getChatRoom(), chatManager.getControlChatRoom(), studio, 
 					chatManager.getChatRoom().getSubject());
 			chatManager.addActionTimeRecorder(shortcuts, shortcuts.getClass().getName());
 			this.add(shortcuts, BorderLayout.NORTH);
