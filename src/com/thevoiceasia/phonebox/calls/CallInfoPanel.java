@@ -122,16 +122,14 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		ringingTimer = new Timer("ringingTimer:" + channelID); //$NON-NLS-1$
 		this.channelID = channelID;
 		
-		if(channelID.startsWith("MANUAL_")){
-			manualCall = true;
-			sendServerManualCall();			
-		}
-		
 		this.hangupActive = hangupActive;
 		this.canTakeCall = canTakeCall;
 		this.controlRoom = controlRoom;
 		this.myExtension = myExtension;
 		this.myNickName = myNickName;
+		
+		if(channelID.startsWith("MANUAL_"))
+			manualCall = true;
 		
 		this.setLayout(new MigLayout("insets 0, gap 0, fillx")); //$NON-NLS-1$
 		
@@ -185,22 +183,6 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		
 		this.setPreferredSize(new Dimension(350, 150));
 		this.setMinimumSize(new Dimension(350, 150));
-		
-	}
-	
-	/**
-	 * Tells the server to create a manual call message
-	 * MANUAL/CHANNELID/ANSWERED_BY_ME
-	 */
-	private void sendServerManualCall(){
-		
-		String message = xStrings.getString("calls.MANUAL") + "/" + channelID + "/" + myNickName;
-		
-		try {
-			controlRoom.sendMessage(message);
-		} catch (XMPPException e) {
-			LOGGER.severe(xStrings.getString("CallInfoPanel.errorSendingControlMessage")); //$NON-NLS-1$
-		}
 		
 	}
 	
