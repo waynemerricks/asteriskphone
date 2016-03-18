@@ -134,18 +134,23 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		
 	}
 	
+	/**
+	 * Sends MANUAL call request to server
+	 */
 	public void addManualCall(){
 		
-		//Create dummy channelID TODO send control message manual
-		String manualID = "MANUAL_" + new Date().getTime();
-		
-		createSkeletonCallInfoPanel(xStrings.getString("CallManagerPanel.manualCall"), 
-				manualID, CallInfoPanel.MODE_ANSWERED_ME,
-				settings.get("nickName"), -1);
-		
-		CallInfoPanel manualCall = callPanels.get(manualID);
-		manualCall.setAnswered(false);
-		notifyListeners(manualCall);
+		try {
+			
+			controlRoom.sendMessage(xStrings.getString("calls.manual") + "/"
+					+ settings.get("nickName"));
+			
+		} catch (XMPPException e) {
+			
+			showWarning(xStrings.getString("CallManagerPanel.errorSendingManualCommand"));
+			LOGGER.severe(xStrings.getString("CallManagerPanel.errorSendingManualCommand"));
+			e.printStackTrace();
+			
+		}
 		
 	}
 	
