@@ -838,19 +838,25 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 							databaseManager.getWriteConnection(), command[2], 
 							command[1])); 
 					
-				}else if(command.length == 3 && command[0].equals(
+				}else if(command.length == 2 && command[0].equals(
 						xStrings.getString("AsteriskManager.commandManual"))){
 					
 					/* Someone wants to add a manual call entry (from a landline or whatever)
-					 * MANUAL/CHANNEL/Name of Person who answered e.g.
-					 * MANUAL/MANUAL_1234567890/Wayne
-					 * Channel is MANUAL_ + new Date().getTime()
+					 * MANUAL/Name of Person who answered e.g.
+					 * MANUAL/Wayne
+					 * Channel is M_ + new Date().getTime()
 					 * 
 					 * We will set the caller number to unknown
 					 * TODO find a way to set number later
 					 */
+					String manualChannel = "M_" + new Date().getTime();
+					
 					dbLookUpService.execute(new PhoneCall(xStrings.getString("AsteriskManager.withHeldNumber"), 
-							command[1], databaseManager));
+							manualChannel, 'M', from, databaseManager));
+					
+					//Send MANUAL/CHANNEL/ANSWERER back to clients
+					sendMessage(xStrings.getString("AsteriskManager.commandManual")
+							+ "/" + manualChannel + "/" + command[1]);
 					
 				}
 				
