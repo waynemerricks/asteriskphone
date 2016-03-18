@@ -63,6 +63,10 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 		this.controlRoom = controlRoom;
 		this.isStudio = isStudio;
 		
+		//Topic can be null, check for that
+		if(currentTopic == null)
+			currentTopic = xStrings.getString("ChatMessagePanel.emptyTopic");
+
 		this.setLayout(new GridLayout(1, 5, 5, 5));
 		
 		//Set up alert sounder
