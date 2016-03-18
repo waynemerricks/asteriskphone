@@ -1062,6 +1062,19 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 						
 					}
 					
+				}else if(command.length == 3 &&
+						command[0].equals(xStrings.getString(
+								"calls.manual"))){
+					
+					/* Manual Call Created
+					 * If [2] = our name this is manual for us
+					 * else manual for someone else just display answered by
+					 * them
+					 */
+					//TODO
+					//TODO
+					//TODO
+					
 				}
 				
 			}
