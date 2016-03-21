@@ -586,11 +586,11 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 							if(callPanels.get(command[3]) == null){
 								
 								/* Normal command array at this point looks like this:
-								 * QUEUE/4000/07886031657/1452171951.10
+								 * QUEUE/4000/012341523456/1452171951.10
 								 * 
 								 * In order for creation to lookup correctly we need to swap
 								 * to the CALL format which is this:
-								 * CALL/07886031657/441216554060/1452171951.10
+								 * CALL/012345123456/441211231234/1452171951.10
 								 */
 								String[] temp = new String[4];
 								temp[0] = xStrings.getString("CallManagerPanel.callRingingFrom"); //$NON-NLS-1$
@@ -1074,6 +1074,19 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 					//TODO
 					//TODO
 					//TODO
+					int mode = CallInfoPanel.MODE_ANSWERED_ELSEWHERE;
+					
+					if(command[2].equals(settings.get("nickName")))
+						mode = CallInfoPanel.MODE_ANSWERED_ME;
+					
+					//MANUAL/M_1458563910616/waynemerricks
+					//String phoneNumber, String channelID, int mode,
+					//String connectedTo, long creationTime
+					createSkeletonCallInfoPanel(
+							xStrings.getString("CallManagerPanel.callSystemUnknown"),
+							command[1], mode, command[2], new Date().getTime());
+						
+					callPanels.get(command[1]).setOriginator(command[2]);
 					
 				}
 				
