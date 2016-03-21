@@ -244,8 +244,8 @@ public class PhoneCall implements Runnable{
 		
 		try{
 			
-			String SQL = "SELECT type FROM callhistory WHERE callchannel = " + channel +  //$NON-NLS-1$
-					" AND type != 'NA' ORDER BY callhistory_id DESC LIMIT 1"; //$NON-NLS-1$
+			String SQL = "SELECT type FROM callhistory WHERE callchannel = \"" + channel +  //$NON-NLS-1$
+					"\" AND type != 'NA' ORDER BY callhistory_id DESC LIMIT 1"; //$NON-NLS-1$
 			
 			statement = database.getConnection().createStatement();
 		    resultSet = statement.executeQuery(SQL);
