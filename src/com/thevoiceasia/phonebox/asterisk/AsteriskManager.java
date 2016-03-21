@@ -3,6 +3,7 @@ package com.thevoiceasia.phonebox.asterisk;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -66,6 +67,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 
 	//CLASS VARS
 	private AsteriskServer asteriskServer;
+	private ArrayList<AsteriskServer> trunkServers = new ArrayList<AsteriskServer>();//Holds other servers for extension lookups
 	private HashMap<String, AsteriskChannel> activeChannels = new HashMap<String, AsteriskChannel>();
 	private HashMap<String, Long> lockedChannels = new HashMap<String, Long>();
 	private I18NStrings xStrings;
@@ -134,6 +136,24 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		asteriskServer = new DefaultAsteriskServer(settings.get("asteriskHost"),  //$NON-NLS-1$
 				settings.get("asteriskUser"), settings.get("asteriskPass"));  //$NON-NLS-1$//$NON-NLS-2$
 		
+		/* Connect to any trunk hosts we have so we can lookup extensions on 
+		 * other servers */
+		String trunkHost = "trunkHost";
+		int i = 1;
+		
+		while(settings.containsKey(trunkHost + i)){
+			
+			AsteriskServer trunkServer = new DefaultAsteriskServer(
+					settings.get("trunkHost" + i),
+					settings.get("trunkUser" + i),
+					settings.get("trunkPassword" + i));
+			
+			trunkServers.add(trunkServer);
+			
+			i++;
+			
+		}
+		
 		systemExtensions = databaseManager.getSystemExtensions();
 		
 	}
@@ -159,6 +179,10 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		asteriskServer.addAsteriskServerListener(this);
 		dbLookUpService = Executors.newFixedThreadPool(maxExecutorThreads);
 		
+		//Connect to any trunks we might have
+		for(int i = 0; i < trunkServers.size(); i++)
+			trunkServers.get(i).initialize();
+		
 		getChannels();
 		sendMessage(xStrings.getString("AsteriskManager.XMPPServerHello")); //$NON-NLS-1$
 		
@@ -170,6 +194,10 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	public void disconnect() {
 		
 		asteriskServer.shutdown();
+		
+		//Disconnect any trunks
+		for(int i = 0; i < trunkServers.size(); i++)
+			trunkServers.get(i).shutdown();
 		
 	}
 
@@ -389,6 +417,43 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 							settings.get("defaultContext"))); //$NON-NLS-1$
 			
 			online = response.getStatus();
+			
+			/* Call failed to transfer to us
+			 * FAILED/Channel/Failure Code
+			 * 0: Extension Online/Ready
+			 * 1: Extension On a call
+			 * 4: Extension Off line
+			 *-1: Extension does not exist
+			 */
+			int coreOnline = online;
+			
+			if( (online == 4 || online == -1) && trunkServers.size() > 0){
+				
+				//Check other trunk servers if we have any
+				int i = 0;
+				
+				while(online != 0 && online != 1 && i < trunkServers.size()){
+					
+					LOGGER.info(xStrings.getString("AsteriskManager.checkingTrunkServers")
+							+ extension + " (" + 
+							trunkServers.get(i).getManagerConnection().getHostname()
+							+ ")");
+					response = (ExtensionStateResponse)
+							trunkServers.get(i).getManagerConnection()
+							.sendAction(
+							new ExtensionStateAction(extension, 
+									settings.get("defaultContext"))); //$NON-NLS-1$
+					
+					online = response.getStatus();
+					
+					i++;
+					
+				}
+				
+			}
+			
+			if(online == -1 && coreOnline == 4)
+				online = 4;
 			
 		} catch (IllegalArgumentException | IllegalStateException | IOException
 				| TimeoutException e) {
