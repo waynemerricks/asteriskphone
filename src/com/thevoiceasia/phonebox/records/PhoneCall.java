@@ -704,8 +704,8 @@ public class PhoneCall implements Runnable{
 		Statement statement = null;
 		
 		String SQL = "INSERT INTO callhistory(phonenumber, state, operator, callchannel) VALUES("  //$NON-NLS-1$
-				+ "'" + callerID + "', 'H', '" + hangupBy + "'," //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-				+ channelID + ")"; //$NON-NLS-1$ 
+				+ "'" + callerID + "', 'H', '" + hangupBy + "', \"" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				+ channelID + "\")"; //$NON-NLS-1$ 
 		
 		try{
 			
@@ -956,10 +956,9 @@ public class PhoneCall implements Runnable{
 	    
 			while(resultSet.next()){
 				
-				double dbChannel = Double.parseDouble(resultSet.getString("channel")); //$NON-NLS-1$
-				double localChannel = Double.parseDouble(channelID);
+				String dbChannel = resultSet.getString("channel"); //$NON-NLS-1$
 				
-				if(dbChannel == localChannel){
+				if(dbChannel.equals(channelID)){
 					person.currentConversation = resultSet.getString("conversation"); //$NON-NLS-1$
 				}else{
 

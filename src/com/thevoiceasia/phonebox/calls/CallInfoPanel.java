@@ -114,10 +114,6 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	
 		xStrings = new I18NStrings(language, country);
 		
-		//Don't add a mouse listener if we have no extension, saves on some cpu time
-		if(myExtension != null && !myExtension.equals("null") && myExtension.length() > 0) //$NON-NLS-1$
-			this.addMouseListener(this);
-		
 		defaultColour = this.getBackground();
 		ringingTimer = new Timer("ringingTimer:" + channelID); //$NON-NLS-1$
 		this.channelID = channelID;
@@ -128,9 +124,20 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		this.myExtension = myExtension;
 		this.myNickName = myNickName;
 		
-		if(channelID.startsWith("MANUAL_"))
+		if(channelID.startsWith("M_"))
 			manualCall = true;
-		
+
+		//Don't add a mouse listener if we have no extension, saves on some cpu time
+		if(myExtension != null && !myExtension.equals("null") && 
+				myExtension.length() > 0){
+
+			//We also don't need a mouse listener if this is a manual call that
+			//is not our call because we can't hang up a call that doesn't exist
+			if(!(manualCall && mode == MODE_ANSWERED_ELSEWHERE))
+				this.addMouseListener(this);
+
+		}
+
 		this.setLayout(new MigLayout("insets 0, gap 0, fillx")); //$NON-NLS-1$
 		
 		//Alert Icon
@@ -276,6 +283,17 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		
 	}
 	
+	/**
+	 * Gets the mode of this panel before it was clicked
+	 * Useful to check what mode was before state was changed
+	 * @return mode before state change
+	 */
+	public int getModeWhenClicked(){
+
+		return modeWhenClicked;
+
+	}
+
 	/**
 	 * Gets the creation time for this call as a long (equiv to Date().getTime())
 	 * @return
@@ -596,6 +614,16 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		if(reset)
 			timeLabel.resetStageTime();
 		
+		setAnsweredElseWhere(answeredBy);
+
+	}
+
+	/**
+	 * Private method to set the answered elsewhere colour only
+	 * @param answeredBy Name to tag as answered by in panel
+	 */
+	private void setAnsweredElseWhere(String answeredBy){
+
 		final String answered = answeredBy;
 		
 		SwingUtilities.invokeLater(new Runnable(){
@@ -1293,9 +1321,12 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 			}
 			
 			if(mode != MODE_CLICKED){
+
 				int modeWhenClicked = new Integer(mode);
 				setClicked();
+
 				sendControlMessage(modeWhenClicked);
+
 			}
 			
 		}

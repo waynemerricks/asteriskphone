@@ -960,6 +960,12 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 					//Check to see if we have the panel in the list and remove it
 					if(callPanels.get(command[2]) != null){
 						
+						//If this is our manual call being ended re-enable the add call button
+						if(command[2].startsWith("M_") &&
+								callPanels.get(command[2]).getModeWhenClicked() ==
+								CallInfoPanel.MODE_ANSWERED)
+							notifyManualListeners();
+
 						removePanel(command[2]);
 						
 					}
@@ -1088,6 +1094,14 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 						
 					callPanels.get(command[1]).setOriginator(command[2]);
 					
+					//Set the panel to answered by us and notify listeners
+					if(mode == CallInfoPanel.MODE_ANSWERED_ME){
+
+						callPanels.get(command[1]).setAnswered(true);
+						notifyListeners(callPanels.get(command[1]));
+
+					}
+
 				}
 				
 			}
@@ -1351,6 +1365,17 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		
 	}
 	
+	/**
+	 * Notifies our answer listeners that they can re-enable manual call
+	 * functionality
+	 */
+	private void notifyManualListeners(){
+
+		for(int i = 0; i < answerListeners.size(); i++)
+			answerListeners.get(i).manualCallEnded();
+
+	}
+
 	/**
 	 * Notifies any object listening to this CallManagerPanel
 	 * Primarily used to notify call input panel we've answered something

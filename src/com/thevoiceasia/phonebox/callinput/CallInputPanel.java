@@ -504,6 +504,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 			public void actionPerformed(ActionEvent evt){
 				
 				finalManager.addManualCall();
+				addCall.setEnabled(false);
 				
 			}
 
@@ -668,6 +669,14 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 		
 	}
 
+	@Override
+	public void manualCallEnded() {
+		
+	  addCall.setEnabled(true);	
+		
+	}
+	
+	
 	@Override
 	public void callAnswered(CallInfoPanel call) {
 		

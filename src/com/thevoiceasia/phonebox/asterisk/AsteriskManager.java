@@ -640,6 +640,30 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 		
 	}
 	
+	/**
+	 * Finishes a manual call outside of the system.  Logs all normal DB entries
+	 * as it if it was a real call
+	 * @param channelID Manual Channel ID "M_????"
+	 * @param from user who requested hangup
+	 */
+	private void hangupManualCall(String channelID, String from){
+		
+		//Log to DB
+		String logCause = xStrings.getString("AsteriskManager.channelHangup"); 
+		String callerID = xStrings.getString("AsteriskManager.withHeldNumber");
+		
+		dbLookUpService.execute(new PhoneCall(databaseManager, 
+					callerID, channelID, this, 
+					'H', from)); //$NON-NLS-1$
+
+		//Send XMPP Message
+		String message = logCause + "/" + callerID + //$NON-NLS-1$
+				"/" + channelID;  //$NON-NLS-1$
+		LOGGER.info(message);
+		sendMessage(message);
+		
+	}
+	
 	
 	/** AsteriskServerListener **/
 	@Override
@@ -829,7 +853,13 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 				}else if(command.length == 2 && command[0].equals(
 						xStrings.getString("AsteriskManager.commandHangup"))){ //$NON-NLS-1$
 					
-					hangupCall(command[1], from);
+					if(command[1].startsWith("M_")){
+						
+						//Send hang up message and log in DB
+						hangupManualCall(command[1], from);
+						
+					}else //Real call so hang up
+						hangupCall(command[1], from);
 					
 				}else if(command.length == 3 && command[0].equals(
 						xStrings.getString("AsteriskManager.commandDial"))){ //$NON-NLS-1$
@@ -1127,7 +1157,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 							"/" + hangup.getId();  //$NON-NLS-1$
 					LOGGER.info(message);
 					sendMessage(message);
-					
+
 					if(ringingExternal.containsKey(hangup.getId())){
 						
 						ringingExternal.remove(hangup.getId());

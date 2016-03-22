@@ -157,7 +157,7 @@ public class RecordUpdater implements Runnable {
 		 * If it does change conversation to this.
 		 * Possible issue if operator A type blah and B adds more, B will overwrite?
 		 */
-		String SQL = "SELECT conversations_id FROM conversations WHERE channel = " + channel; //$NON-NLS-1$
+		String SQL = "SELECT conversations_id FROM conversations WHERE channel = \"" + channel + "\""; //$NON-NLS-1$
 		
 		Statement statement = null;
 		ResultSet results = null;
