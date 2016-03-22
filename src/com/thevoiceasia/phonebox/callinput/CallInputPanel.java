@@ -326,7 +326,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 						
 						//Button to add a manual Call
 						addCall = new JButton(xStrings.getString("CallInputPanel.addCall"));
-						addCall.setEnabled(false);
+						//addCall.setEnabled(false);
 						tabHash.get(components.get(i).parent).add(addCall, "wrap");  //$NON-NLS-1$
 						
 						components.get(i).addKeyListener(new KeyListener(){
