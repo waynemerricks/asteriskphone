@@ -259,8 +259,8 @@ public class RecordUpdater implements Runnable {
 		/*
 		 * Lookup callhistory for this channel, find activePerson and return
 		 */
-		String SQL = "SELECT activePerson FROM callhistory WHERE callchannel = " + channel //$NON-NLS-1$
-				+ " AND activePerson IS NOT NULL ORDER BY callhistory_id DESC LIMIT 1"; //$NON-NLS-1$
+		String SQL = "SELECT activePerson FROM callhistory WHERE callchannel = \"" + channel //$NON-NLS-1$
+				+ "\" AND activePerson IS NOT NULL ORDER BY callhistory_id DESC LIMIT 1"; //$NON-NLS-1$
 		
 		LOGGER.info(SQL);
 		
