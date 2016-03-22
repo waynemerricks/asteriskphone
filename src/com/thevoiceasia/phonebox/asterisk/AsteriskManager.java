@@ -1198,7 +1198,7 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 					
 					AsteriskChannel channel = (AsteriskChannel)evt.getSource();
 					
-					//Check this can't remember what significance no id had
+					//TODO Check this can't remember what significance no id had
 					if(channel.getCallerId().getNumber() != null && 
 							!channel.getCallerId().getNumber().equals("null")){ //$NON-NLS-1$ */
 						//Remove dial prefix if this was a call we dialled
