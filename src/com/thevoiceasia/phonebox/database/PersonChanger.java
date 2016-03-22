@@ -145,8 +145,8 @@ public class PersonChanger implements Runnable, MessageListener {
 			
 			/* Get number and operator from the DB */
 			SQL = "SELECT `phonenumber`, `operator` FROM `callhistory` " + //$NON-NLS-1$
-					"WHERE `state` = 'A' AND `callchannel` = " + channelID + //$NON-NLS-1$
-					" AND `operator` != 'NA' ORDER BY `time` DESC LIMIT 1";  //$NON-NLS-1$
+					"WHERE `state` = 'A' AND `callchannel` = \"" + channelID + //$NON-NLS-1$
+					"\" AND `operator` != 'NA' ORDER BY `time` DESC LIMIT 1";  //$NON-NLS-1$
 			
 			statement = readConnection.createStatement();
 		    results = statement.executeQuery(SQL);
