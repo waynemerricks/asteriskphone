@@ -1,7 +1,7 @@
 Asteriskphone
 =============
 
-Multi User Asterisk interface for radio use.
+Multi User and cross platform (tested under Linux and Windows, should work on a Mac too) Asterisk interface for radio use.
 
 **Requires:**
 * Asterisk
