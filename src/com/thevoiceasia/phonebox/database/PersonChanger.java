@@ -80,7 +80,9 @@ public class PersonChanger implements Runnable, MessageListener {
 		
 		//Create new person if we're -1
 		if(personID == -1)//Create New
-			personID = createNewPerson();
+			personID = createNewPerson();//TODO new person keep phone number?
+		else
+			phoneNumber = getPhoneNumber(personID);
 		
 		boolean success = false;
 		
@@ -145,7 +147,7 @@ public class PersonChanger implements Runnable, MessageListener {
 			
 			/* Get number and operator from the DB */
 			SQL = "SELECT `phonenumber`, `operator` FROM `callhistory` " + //$NON-NLS-1$
-					"WHERE `state` = 'A' AND `callchannel` = \"" + channelID + //$NON-NLS-1$
+					"WHERE (`state` = 'A' OR `state` = 'M') AND `callchannel` = \"" + channelID + //$NON-NLS-1$
 					"\" AND `operator` != 'NA' ORDER BY `time` DESC LIMIT 1";  //$NON-NLS-1$
 			
 			statement = readConnection.createStatement();
@@ -153,7 +155,12 @@ public class PersonChanger implements Runnable, MessageListener {
 		    
 			while(results.next()){
 			
-				phoneNumber = results.getString("phonenumber"); //$NON-NLS-1$
+				//Use the phone number from this result unless it is unknown
+				String temp = results.getString("phonenumber");
+				
+				if(!temp.equals("PersonChanger.unknown") && phoneNumber.equals("PersonChanger.unknown"))
+					phoneNumber = temp;
+					
 				operator = results.getString("operator"); //$NON-NLS-1$
 				success = true;
 				
@@ -181,6 +188,53 @@ public class PersonChanger implements Runnable, MessageListener {
 		}
 		
 		return success;
+		
+	}
+	
+	/**
+	 * Gets the phonenumber associated with the given person ID
+	 * @param personID ID of the person to lookup in the phonenumbers table
+	 * @return Phone Number of this record (can be unknown)
+	 */
+	private String getPhoneNumber(long personID){
+	
+		String phoneNumber = xStrings.getString("PersonChanger.unknown");
+		
+		Statement statement = null;
+		String SQL = null;
+		ResultSet results = null;
+		
+		try{
+			
+			/* Get number and operator from the DB */
+			SQL = "SELECT `phone_number` FROM `phonenumbers` WHERE `person_id` = " + personID;
+			
+			statement = readConnection.createStatement();
+		    results = statement.executeQuery(SQL);
+		    
+			while(results.next())
+				phoneNumber = results.getString("phone_number");
+				
+		}catch(SQLException e){
+		
+			showError(e, xStrings.getString("PersonChanger.errorGettingNumber") + //$NON-NLS-1$
+					channelID);
+			
+		}finally{
+			
+			if(statement != null)
+            	try{
+            		statement.close();
+            	}catch(Exception e){}
+			
+			if(results != null)
+				try{
+					results.close();
+				}catch(Exception e){}
+				
+		}
+		
+		return phoneNumber;
 		
 	}
 	

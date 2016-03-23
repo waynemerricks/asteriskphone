@@ -310,18 +310,6 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 	}
 	
 	/**
-	 * Updates the call log table with new data
-	 * @param log
-	 */
-	public void appendCallLog(CallLog log){
-		
-		records.put(log.getChannel(), log);
-		
-		tableModel.addRow(log);
-		
-	}
-	
-	/**
 	 * Gets the table encapsulated in this class
 	 * @return
 	 */
@@ -396,7 +384,7 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 							log.getChannel()); 
 					
 			    	records.put(log.getChannel(), log);
-			    	appendCallLog(log);
+			    	addCallLog(log);
 					
 				}
 				
@@ -448,7 +436,7 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 						log.getChannel()); 
 				
 		    	records.put(log.getChannel(), log);
-		    	appendCallLog(log);
+		    	addCallLog(log);
 		    		
 		    }else if(command.length == 4 && command[0].equals(
 		    		xStrings.getString("CallLogPanel.commandEndPoint"))){ //$NON-NLS-1$
@@ -491,6 +479,23 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 		    	changeCallLog(command[1], "name", person[0]); //$NON-NLS-1$
 		    	changeCallLog(command[1], "location", person[1]); //$NON-NLS-1$
 		    	
+			}else if(command.length == 3 && command[0].equals(
+					xStrings.getString("CallLogPanel.manual"))){
+				
+				//Add to call log table
+				LOGGER.info(xStrings.getString("CallLogPanel.logManual")); 
+				
+				CallLog log = new CallLog(language, country,
+		    			command[1],
+		    			readConnection, true);
+		    	
+				LOGGER.info(
+						xStrings.getString("CallLogPanel.addingChannelToLog") + //$NON-NLS-1$
+						log.getChannel()); 
+				
+		    	records.put(log.getChannel(), log);
+		    	addCallLog(log);
+				
 			}
 			
 		}	
@@ -519,7 +524,7 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 			LOGGER.severe("Swap Adding New Log: " + toChannel); //$NON-NLS-1$
 			records.put(toChannel, log);
 			
-			appendCallLog(log);
+			addCallLog(log);
 	    	
 		}else{
 			
@@ -581,7 +586,7 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 	    			readConnection, true);
 	    	
 	    	records.put(log.getChannel(), log);
-	    	appendCallLog(log);
+	    	addCallLog(log);
 			
 		}	
 		
