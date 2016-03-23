@@ -35,7 +35,7 @@ public class PersonChanger implements Runnable, MessageListener {
 	 */
 	public PersonChanger(String language, String country, Connection readConnection, 
 			Connection writeConnection, MultiUserChat controlRoom, int personID, 
-			String channelID) {
+			String phoneNumber, String channelID) {
 		
 		xStrings = new I18NStrings(language, country);
 		
@@ -44,6 +44,12 @@ public class PersonChanger implements Runnable, MessageListener {
 		this.personID = personID;
 		this.channelID = channelID;
 		this.controlRoom = controlRoom;
+		
+		//BUG FIX: Phone Number can't be null
+		if(phoneNumber == null || phoneNumber.trim().length() < 1)
+			phoneNumber = xStrings.getString("PersonChanger.unknown");
+		
+		this.phoneNumber = phoneNumber;
 		
 		LOGGER.info(xStrings.getString("PersonChanger.ChangingPerson") +  //$NON-NLS-1$
 				"\n\tChannel: " + channelID + "\n\tNew Person ID: " + personID); //$NON-NLS-1$ //$NON-NLS-2$
@@ -79,9 +85,12 @@ public class PersonChanger implements Runnable, MessageListener {
 	public void run() {
 		
 		//Create new person if we're -1
-		if(personID == -1)//Create New
-			personID = createNewPerson();//TODO new person keep phone number?
-		else
+		if(personID == -1){//Create New
+			
+			personID = createNewPerson();
+			createPhoneNumberRecord();
+			
+		}else
 			phoneNumber = getPhoneNumber(personID);
 		
 		boolean success = false;
@@ -408,6 +417,49 @@ public class PersonChanger implements Runnable, MessageListener {
 		
 		return insertID;
 		
+	}
+
+	/**
+	 * Creates a phone number record for the person associated with this object
+	 */
+	private void createPhoneNumberRecord() {
+		
+		PreparedStatement statement = null;
+		String SQL = null;
+		ResultSet results = null;
+		
+		try{
+			
+			SQL = "INSERT INTO `phonenumbers` (`phone_number`, `person_id`) VALUES(?, ?)";
+			
+			statement = writeConnection.prepareStatement(SQL);
+			statement.setString(1, phoneNumber);
+			statement.setLong(2, personID);
+			
+			if(statement.executeUpdate() == 0)
+				showError(new SQLException(
+					xStrings.getString("PersonChanger.errorInsertingNumber")),
+					xStrings.getString("PersonChanger.errorInsertingNumber"));
+			
+		}catch(SQLException e){
+			
+			showError(e, 
+					xStrings.getString("PersonChanger.errorInsertingNumber"));
+			
+		}finally{
+			
+			if(statement != null)
+            	try{
+            		statement.close();
+            	}catch(Exception e){}
+			
+			if(results != null)
+				try{
+					results.close();
+				}catch(Exception e){}
+			
+		}
+
 	}
 
 	/**

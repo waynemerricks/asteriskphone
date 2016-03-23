@@ -904,25 +904,27 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 							databaseManager.getWriteConnection(), command[1], 
 							command[2], command[3]));
 				
-				}else if(command.length == 2 && command[0].equals(
+				}else if(command.length == 3 && command[0].equals(
 						xStrings.getString("AsteriskManager.ChangeToNewPerson"))){ //$NON-NLS-1$
 					
 					//Make a new person, update call references and then send back 
+					//CHANGENEW/CHANNEL/NUMBER
 					//XMPP Reply so clients can update
 					dbLookUpService.execute(new PersonChanger(settings.get("language"),  //$NON-NLS-1$
 							settings.get("country"), databaseManager.getReadConnection(), //$NON-NLS-1$
 							databaseManager.getWriteConnection(), controlRoom, 
-							-1, command[1]));
+							-1, command[2], command[1])); 
 					
 				}else if(command.length == 3 && command[0].equals(
 						xStrings.getString("AsteriskManager.ChangeToExistingPerson"))){ //$NON-NLS-1$
 					
+					//CHANGEEXISTING/CHANNEL/PERSON
 					//Update call references and then send back XMPP Reply so
 					//clients can update
 					dbLookUpService.execute(new PersonChanger(settings.get("language"),  //$NON-NLS-1$
 							settings.get("country"), databaseManager.getReadConnection(), //$NON-NLS-1$
 							databaseManager.getWriteConnection(), controlRoom, 
-							Integer.parseInt(command[2]), command[1])); 
+							Integer.parseInt(command[2]), null, command[1])); 
 					
 				}else if(command.length == 3 && command[0].equals(
 						xStrings.getString("AsteriskManager.changeActive"))){ //$NON-NLS-1$

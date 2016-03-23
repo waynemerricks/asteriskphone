@@ -723,10 +723,11 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 		/* Send XMPP Requesting person change
 		 * null = new person otherwise change to existing
 		 */
-		if(changedTo == null)
+		
+		if(changedTo.isNewPerson())
 			chat.sendMessage(xStrings.getString("CallInputPanel.ChangeToNewPerson") + //$NON-NLS-1$
-					"/" + //$NON-NLS-1$
-					currentPanel.getChannelID(), true); 
+					"/" + currentPanel.getChannelID() + "/" + changedTo.number, 
+					true); 
 		else
 			chat.sendMessage(xStrings.getString("CallInputPanel.ChangeToExistingPerson") + //$NON-NLS-1$
 					"/" + currentPanel.getChannelID() + //$NON-NLS-1$

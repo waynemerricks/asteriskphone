@@ -320,9 +320,9 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
     	person.location = xStrings.getString("SearchPanel.newPersonLocation"); //$NON-NLS-1$
     	person.id = -1; //-1 signifies this should create a record
     	person.number = ""; //$NON-NLS-1$
-    	
+
     	records.add(person);
-		
+
 	}
 	
 	/**
@@ -434,11 +434,28 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 	 */
 	private void createNewPerson(){
 		
-		/* Its better to keep writes on the server side for remote offices
-		 * TODO Test how much of a delay there is with swapping the person
+		/* Not sending null as null numbers upset clients
+		 * Instead will add a "new" field to Person class and check that
+		 * 
+		 * If we can, use the number typed in here for the record as well
 		 */
+		//Get the number from the panel if they've typed one in
+		Person person = new Person(-1, language, country);
+    	person.name = xStrings.getString("SearchPanel.newPersonName"); //$NON-NLS-1$
+    	person.location = xStrings.getString("SearchPanel.newPersonLocation"); //$NON-NLS-1$
+    	person.id = -1; //-1 signifies this should create a record
+    	person.number = ""; //$NON-NLS-1$
+
+    	person.number = number.getText().trim();
+    	
+    	if(person.number.length() < 1)
+    		person.number = xStrings.getString("SearchPanel.unknown");
+    	
+    	person.setNewPerson(true);
+    	
+		/* All writes must happen server side */
 		for(int i = 0; i < notifyMe.size(); i++)
-			notifyMe.get(i).personChanged(null);
+			notifyMe.get(i).personChanged(person);
 		
 	}
 	

@@ -19,6 +19,7 @@ public class Person {
 		postCode, email, language, religion, currentConversation, journey, notes;
 	private Vector<Conversation> conversationHistory = new Vector<Conversation>();
 	private I18NStrings xStrings; //Link to external string resources
+	private boolean newPerson = false;
 	
 	
 	/** STATICS **/
@@ -416,6 +417,26 @@ public class Person {
 		e.printStackTrace();
 		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("Person.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
 		LOGGER.severe(friendlyErrorMessage);
+		
+	}
+	
+	/**
+	 * Sets the flag that indicates this is a new, non-existing person record
+	 * @param isNew true if new
+	 */
+	public void setNewPerson(boolean isNew){
+		
+		newPerson = isNew;
+		
+	}
+	
+	/**
+	 * Returns the is new record flag (one thats not in the db already)
+	 * @return true if not in the db
+	 */
+	public boolean isNewPerson(){
+		
+		return newPerson;
 		
 	}
 	
