@@ -300,7 +300,7 @@ public class CallLog {
 			
 			SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss"); //$NON-NLS-1$
 			tmpTime = sdf.format(new Date());
-			//System.out.println(channel);
+			time = tmpTime;
 					
 		}
 		
