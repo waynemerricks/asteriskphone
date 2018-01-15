@@ -10,14 +10,14 @@ Multi User and cross platform (tested under Linux and Windows, should work on a 
 
 See install docs for more info
 
-![Interface Example](http://www.thevoiceasia.com/phone.png)
+![Interface Example](https://github.com/waynemerricks/asteriskphone/blob/wip-work/phonebox.png)
 
 The system has two components, Server which hooks into Asterisk using the Manager API.  This listens for call events and passes
 them on all clients via XMPP messaging.
 
 The clients respond to these messages by showing calls as ringing etc.  
 
-###The system can currently do the following:
+### The system can currently do the following:
 * Direct calls to compatible phones (if they implement SIP Auto Answer messages they will work, I've tried it with Grandstream, Cisco and BareSIP).
 * Transfer calls between queues and phones
 * Transfer calls between phones
@@ -30,12 +30,12 @@ The clients respond to these messages by showing calls as ringing etc.
 * Work across multiple Asterisk servers as long as you have appropriate trunk and routing rules in place
 * Work across multiple slave databases for remote offices (speeds up record lookups immensely)
 
-###Things it can't do yet (apart from make coffee etc):
+### Things it can't do yet (apart from make coffee etc):
 * Customisable database fields that follow the call.  At the moment although the GUI is dynamic and read from the DB.  The underlying records aren't.  This is on the TODO list.
 * If you have an incoming DID trunk on a remote server, I'm not sure how the system will react to the incoming call.  It should work but it needs testing.
 * Need to make a web interface for managing settings and getting stats.  At the moment I just do this directly on the MySQL server.
 
-###Does this work?
+### Does this work?
 
 Yes but you will have to tweak the settings and I've only tested fully on Elastix PBX 2.4 and 2.5.  There are some quirks with the way calls are shown by some systems that might not be the way the program expects.  For the most part it should work fine but your mileage may vary.
 
