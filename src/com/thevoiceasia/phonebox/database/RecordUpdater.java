@@ -35,7 +35,7 @@ public class RecordUpdater implements Runnable {
 		this.writeConnection = writeConnection;
 		
 		//Parse out the ^^%%$$ to /
-		value = value.replaceAll("^^%%$$", "/");  //$NON-NLS-1$//$NON-NLS-2$
+		value = value.replaceAll("^^%%$$", "/");  
 		
 		
 		if(isImageMappedCombo(fieldMapping)){
@@ -50,16 +50,16 @@ public class RecordUpdater implements Runnable {
 			 * 
 			 * All we need is the Favourite part of that to save to the DB
 			 */
-			if(value.contains("@@")) //$NON-NLS-1$
-				value = value.split("@@")[0]; //$NON-NLS-1$
+			if(value.contains("@@")) 
+				value = value.split("@@")[0]; 
 				
 		}
 		
 		this.value = value;
 		
-		LOGGER.info(xStrings.getString("RecordUpdater.updatingRecord") +  //$NON-NLS-1$
-				"\n\tChannel: " + channelID + "\n\tField: " + fieldMapping +  //$NON-NLS-1$ //$NON-NLS-2$
-				"\n\tValue: " + value); //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("RecordUpdater.updatingRecord") +  
+				"\n\tChannel: " + channelID + "\n\tField: " + fieldMapping +   
+				"\n\tValue: " + value); 
 		
 	}
 
@@ -71,11 +71,11 @@ public class RecordUpdater implements Runnable {
 		
 		try{
 		
-			if(fieldMapping.equals("calltype")){ //$NON-NLS-1$
+			if(fieldMapping.equals("calltype")){ 
 				
 				//Update callhistory.type
-				SQL = "UPDATE callhistory SET type = ? WHERE callchannel = ? ORDER BY " //$NON-NLS-1$
-						+ "callhistory_id DESC LIMIT 1"; //$NON-NLS-1$
+				SQL = "UPDATE callhistory SET type = ? WHERE callchannel = ? ORDER BY " 
+						+ "callhistory_id DESC LIMIT 1"; 
 				
 				statement = writeConnection.prepareStatement(SQL);
 				statement.setString(1, value);
@@ -83,15 +83,15 @@ public class RecordUpdater implements Runnable {
 				
 				statement.executeUpdate();
 				
-			}else if(fieldMapping.equals("conversation")){ //$NON-NLS-1$
+			}else if(fieldMapping.equals("conversation")){ 
 				
 				//Special case for conversation
 				/*
 				 * If already exists update else insert
 				 */
 				if(conversationExists(channelID)){
-					SQL = "UPDATE conversations SET conversation = ?, person_id = ? "  //$NON-NLS-1$
-							+ "WHERE channel = ?"; //$NON-NLS-1$
+					SQL = "UPDATE conversations SET conversation = ?, person_id = ? "  
+							+ "WHERE channel = ?"; 
 					
 					statement = writeConnection.prepareStatement(SQL);
 					statement.setString(1, value);
@@ -99,8 +99,8 @@ public class RecordUpdater implements Runnable {
 					statement.setString(3, channelID);
 					
 				}else{
-					SQL = "INSERT INTO conversations (conversation, channel, person_id) VALUES " //$NON-NLS-1$
-							+ "(?, ?, ?)"; //$NON-NLS-1$
+					SQL = "INSERT INTO conversations (conversation, channel, person_id) VALUES " 
+							+ "(?, ?, ?)"; 
 					
 					statement = writeConnection.prepareStatement(SQL);
 					statement.setString(1, value);
@@ -114,10 +114,10 @@ public class RecordUpdater implements Runnable {
 			}else{
 				
 				//TODO Update field on person table still not sure how we'll do custom
-				if(fieldMapping.equals("gender") || fieldMapping.equals("alert")) //$NON-NLS-1$ //$NON-NLS-2$
+				if(fieldMapping.equals("gender") || fieldMapping.equals("alert"))  
 					value = value.substring(0, 1);
 				
-				SQL = "UPDATE person SET " + fieldMapping + " = ? WHERE person_id = ?"; //$NON-NLS-1$ //$NON-NLS-2$
+				SQL = "UPDATE person SET " + fieldMapping + " = ? WHERE person_id = ?";  
 				
 				statement = writeConnection.prepareStatement(SQL);
 				statement.setString(1, value);
@@ -129,8 +129,8 @@ public class RecordUpdater implements Runnable {
 		
 		}catch(SQLException e){
         	
-        	showError(e, xStrings.getString("RecordUpdater.errorUpdatingRecord") //$NON-NLS-1$ 
-        			+ fieldMapping + "/" + channelID + "/" + value); //$NON-NLS-1$ //$NON-NLS-2$
+        	showError(e, xStrings.getString("RecordUpdater.errorUpdatingRecord")  
+        			+ fieldMapping + "/" + channelID + "/" + value);  
         	
         }finally{
         	
@@ -157,7 +157,7 @@ public class RecordUpdater implements Runnable {
 		 * If it does change conversation to this.
 		 * Possible issue if operator A type blah and B adds more, B will overwrite?
 		 */
-		String SQL = "SELECT conversations_id FROM conversations WHERE channel = \"" + channel + "\""; //$NON-NLS-1$
+		String SQL = "SELECT conversations_id FROM conversations WHERE channel = \"" + channel + "\""; 
 		
 		Statement statement = null;
 		ResultSet results = null;
@@ -171,7 +171,7 @@ public class RecordUpdater implements Runnable {
 				exists = true;
 				
 		}catch (SQLException e){
-			showError(e, xStrings.getString("RecordUpdater.errorCheckingForConversation")); //$NON-NLS-1$
+			showError(e, xStrings.getString("RecordUpdater.errorCheckingForConversation")); 
 		}finally {
 			
 			if (results != null) {
@@ -207,8 +207,8 @@ public class RecordUpdater implements Runnable {
 		 * 
 		 * if both true then return true
 		 */
-		String SQL = "SELECT type, options FROM callinputfields WHERE mapping = '"  //$NON-NLS-1$
-				+ fieldMapping + "'"; //$NON-NLS-1$
+		String SQL = "SELECT type, options FROM callinputfields WHERE mapping = '"  
+				+ fieldMapping + "'"; 
 		
 		Statement statement = null;
 		ResultSet results = null;
@@ -219,12 +219,12 @@ public class RecordUpdater implements Runnable {
 		    results = statement.executeQuery(SQL);
 		    
 			while(results.next())
-				if(results.getString("type").equals("combo") &&  //$NON-NLS-1$ //$NON-NLS-2$
-						results.getString("options").contains("=>")) //$NON-NLS-1$ //$NON-NLS-2$
+				if(results.getString("type").equals("combo") &&   
+						results.getString("options").contains("=>"))  
 					mappedCombo = true;
 				
 		}catch (SQLException e){
-			showError(e, xStrings.getString("RecordUpdater.errorGettingActivePerson")); //$NON-NLS-1$
+			showError(e, xStrings.getString("RecordUpdater.errorGettingActivePerson")); 
 		}finally {
 			
 			if (results != null) {
@@ -259,8 +259,8 @@ public class RecordUpdater implements Runnable {
 		/*
 		 * Lookup callhistory for this channel, find activePerson and return
 		 */
-		String SQL = "SELECT activePerson FROM callhistory WHERE callchannel = \"" + channel //$NON-NLS-1$
-				+ "\" AND activePerson IS NOT NULL ORDER BY callhistory_id DESC LIMIT 1"; //$NON-NLS-1$
+		String SQL = "SELECT activePerson FROM callhistory WHERE callchannel = \"" + channel 
+				+ "\" AND activePerson IS NOT NULL ORDER BY callhistory_id DESC LIMIT 1"; 
 		
 		LOGGER.info(SQL);
 		
@@ -273,10 +273,10 @@ public class RecordUpdater implements Runnable {
 		    results = statement.executeQuery(SQL);
 		    
 			while(results.next())
-				id = results.getString("activePerson"); //$NON-NLS-1$
+				id = results.getString("activePerson"); 
 				
 		}catch (SQLException e){
-			showError(e, xStrings.getString("RecordUpdater.errorGettingActivePerson")); //$NON-NLS-1$
+			showError(e, xStrings.getString("RecordUpdater.errorGettingActivePerson")); 
 		}finally {
 			
 			if (results != null) {

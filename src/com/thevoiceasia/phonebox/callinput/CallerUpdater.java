@@ -45,13 +45,13 @@ public class CallerUpdater implements Runnable{
 	 */
 	public synchronized void addUpdate(String channelID, String field, String value){
 		
-		LOGGER.info(xStrings.getString("CallerUpdater.addingUpdateToQueue")); //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("CallerUpdater.addingUpdateToQueue")); 
 		lastUpdate = new Date().getTime();
 		
 		if( value == null || value.length() == 0)
-			value = " "; //$NON-NLS-1$
+			value = " "; 
 		
-		updateFields.put(field, channelID + "/" + value); //$NON-NLS-1$
+		updateFields.put(field, channelID + "/" + value); 
 		
 	}
 	
@@ -61,7 +61,7 @@ public class CallerUpdater implements Runnable{
 	 */
 	private void sendMessage(String message){
 		
-		LOGGER.info(xStrings.getString("CallerUpdater.sendingControlMessage") + " "  //$NON-NLS-1$ //$NON-NLS-2$
+		LOGGER.info(xStrings.getString("CallerUpdater.sendingControlMessage") + " "   
 				+ message); 
 		
 		if(controlRoom != null){
@@ -71,13 +71,13 @@ public class CallerUpdater implements Runnable{
 				controlRoom.sendMessage(message);
 				
 			}catch(XMPPException e){
-				LOGGER.severe(xStrings.getString("CallerUpdater.chatRoomError")); //$NON-NLS-1$
+				LOGGER.severe(xStrings.getString("CallerUpdater.chatRoomError")); 
 			}catch(IllegalStateException e){
-				LOGGER.severe(xStrings.getString("CallerUpdater.ServerGoneError")); //$NON-NLS-1$
+				LOGGER.severe(xStrings.getString("CallerUpdater.ServerGoneError")); 
 			}
 			
 		}else
-			LOGGER.severe(xStrings.getString("CallerUpdater.noControlRoomSet")); //$NON-NLS-1$
+			LOGGER.severe(xStrings.getString("CallerUpdater.noControlRoomSet")); 
 		
 	}
 	
@@ -86,7 +86,7 @@ public class CallerUpdater implements Runnable{
 	 */
 	public void run(){
 		
-		LOGGER.info(xStrings.getString("CallerUpdater.running")); //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("CallerUpdater.running")); 
 		
 		while(go){
 			
@@ -103,8 +103,8 @@ public class CallerUpdater implements Runnable{
 							
 							String field = keys.next();
 							
-							sendMessage(xStrings.getString("CallerUpdater.commandUpdateField") + "/" //$NON-NLS-1$ //$NON-NLS-2$
-									+ field + "/" + updateFields.get(field)); //$NON-NLS-1$
+							sendMessage(xStrings.getString("CallerUpdater.commandUpdateField") + "/"  
+									+ field + "/" + updateFields.get(field)); 
 							
 							updateFields.remove(field);
 							
@@ -127,7 +127,7 @@ public class CallerUpdater implements Runnable{
 			
 		}
 		
-		LOGGER.info(xStrings.getString("CallerUpdater.exiting")); //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("CallerUpdater.exiting")); 
 		
 	}
 

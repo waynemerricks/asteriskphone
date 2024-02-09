@@ -53,8 +53,8 @@ public class CallIconPanel extends JLayeredPane implements ComponentListener{
 		
 		super();
 		
-		setupPanel(createImageIcon(mainIconPath, "mainIcon"),  //$NON-NLS-1$
-				createImageIcon(badgeIconPath, "badgeIcon"), language, country); //$NON-NLS-1$
+		setupPanel(createImageIcon(mainIconPath, "mainIcon"),  
+				createImageIcon(badgeIconPath, "badgeIcon"), language, country); 
 		
 	}
 	
@@ -160,7 +160,7 @@ public class CallIconPanel extends JLayeredPane implements ComponentListener{
 			icon = new ImageIcon(imgURL, description);
 		else{
 			
-			LOGGER.warning(xStrings.getString("CallIconPanel.logLoadIconError")); //$NON-NLS-1$
+			LOGGER.warning(xStrings.getString("CallIconPanel.logLoadIconError")); 
 			
 		}
 		

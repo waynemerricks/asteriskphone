@@ -48,10 +48,10 @@ public class OutboundChannelUpdater implements Runnable{
 	
 	public String toString(){
 		
-		return "OutboundChannelUpdater:\n" + //$NON-NLS-1$
-				"\told: " + oldChannel +  //$NON-NLS-1$
-				"\tnew: " + newChannel + //$NON-NLS-1$
-				"\tno: " + phoneNumber; //$NON-NLS-1$
+		return "OutboundChannelUpdater:\n" + 
+				"\told: " + oldChannel +  
+				"\tnew: " + newChannel + 
+				"\tno: " + phoneNumber; 
 		
 	}
 	
@@ -63,12 +63,12 @@ public class OutboundChannelUpdater implements Runnable{
 		 */
 		if(getCallLogInfo() && updateCallLog() && updateConversation()){
 			LOGGER.info(xStrings.getString(
-					"OutboundChannelUpdater.updateSuccessful") + oldChannel +  //$NON-NLS-1$
-					"/" + newChannel); //$NON-NLS-1$
+					"OutboundChannelUpdater.updateSuccessful") + oldChannel +  
+					"/" + newChannel); 
 			server.sendPanelUpdate(newChannel);
 		}else
 			LOGGER.warning(xStrings.getString(
-					"OutboundChannelUpdater.errorUpdating") + oldChannel + "/" +  //$NON-NLS-1$//$NON-NLS-2$
+					"OutboundChannelUpdater.errorUpdating") + oldChannel + "/" +  
 					newChannel);
 		
 	}
@@ -89,17 +89,17 @@ public class OutboundChannelUpdater implements Runnable{
 		try{
 			
 			/* Get number and operator from the DB */
-			SQL = "SELECT `type`, `activePerson` FROM `callhistory` " + //$NON-NLS-1$
-					"WHERE `state` = 'A' AND `callchannel` = " + oldChannel + //$NON-NLS-1$
-					" ORDER BY `callhistory_id` DESC LIMIT 1";  //$NON-NLS-1$
+			SQL = "SELECT `type`, `activePerson` FROM `callhistory` " + 
+					"WHERE `state` = 'A' AND `callchannel` = " + oldChannel + 
+					" ORDER BY `callhistory_id` DESC LIMIT 1";  
 			
 			statement = read.createStatement();
 		    results = statement.executeQuery(SQL);
 		    
 			while(results.next()){
 			
-				type = results.getString("type"); //$NON-NLS-1$
-				activePerson = results.getInt("activePerson"); //$NON-NLS-1$
+				type = results.getString("type"); 
+				activePerson = results.getInt("activePerson"); 
 				success = true;
 				
 			}
@@ -107,7 +107,7 @@ public class OutboundChannelUpdater implements Runnable{
 		}catch(SQLException e){
 		
 			showError(e, xStrings.getString(
-					"OutboundChannelUpdater.errorGettingCallHistory") + //$NON-NLS-1$
+					"OutboundChannelUpdater.errorGettingCallHistory") + 
 					oldChannel);
 			
 			success = false;
@@ -142,14 +142,14 @@ public class OutboundChannelUpdater implements Runnable{
 		PreparedStatement statement = null;
 		
 		String error = xStrings.getString(
-				"OutboundChannelUpdater.errorUpdatingCallLog") + //$NON-NLS-1$
-				"\n\tChannel: " + oldChannel + "/" + newChannel; //$NON-NLS-1$ //$NON-NLS-2$
+				"OutboundChannelUpdater.errorUpdatingCallLog") + 
+				"\n\tChannel: " + oldChannel + "/" + newChannel;  
 
 		try{
 			
-			SQL = "INSERT INTO `callhistory` (`phonenumber`, `callchannel`, " + //$NON-NLS-1$
-					"`type`, `activePerson`) VALUES " + //$NON-NLS-1$
-					"(?, ?, ?, ?)"; //$NON-NLS-1$
+			SQL = "INSERT INTO `callhistory` (`phonenumber`, `callchannel`, " + 
+					"`type`, `activePerson`) VALUES " + 
+					"(?, ?, ?, ?)"; 
 			
 			statement = write.prepareStatement(SQL);
 			statement.setString(1, phoneNumber);
@@ -189,15 +189,15 @@ public class OutboundChannelUpdater implements Runnable{
 		//UPDATE `conversations` SET `channel` = entry.getChannel().getId() WHERE `channel` = 'expectedInQueue.get(CallerID)' 
 		boolean success = false;
 		String error = xStrings.getString(
-				"OutboundChannelUpdater.errorUpdatingConversation") + //$NON-NLS-1$
-				"\n\tChannel: " + oldChannel + "/" + newChannel;//$NON-NLS-1$ //$NON-NLS-2$
+				"OutboundChannelUpdater.errorUpdatingConversation") + 
+				"\n\tChannel: " + oldChannel + "/" + newChannel; 
 
 		PreparedStatement statement = null;
 		String SQL = null;
 		
 		try{
 			
-			SQL = "UPDATE `conversations` SET `channel` = ? WHERE `channel` = ?"; //$NON-NLS-1$
+			SQL = "UPDATE `conversations` SET `channel` = ? WHERE `channel` = ?"; 
 			
 			statement = write.prepareStatement(SQL);
 			statement.setString(1, newChannel);
@@ -208,8 +208,8 @@ public class OutboundChannelUpdater implements Runnable{
 				//If no conversation has been typed, there won't be anything to
 				//update, so we should expect 0 rows changed too
 				LOGGER.info(xStrings.getString(
-						"OutboundChannelUpdater.noConversationToUpdate") +  //$NON-NLS-1$
-						"\n\tChannel: " + oldChannel); //$NON-NLS-1$
+						"OutboundChannelUpdater.noConversationToUpdate") +  
+						"\n\tChannel: " + oldChannel); 
 				
 			}
 			

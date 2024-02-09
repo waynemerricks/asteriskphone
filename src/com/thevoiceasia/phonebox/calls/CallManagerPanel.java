@@ -84,8 +84,8 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 			DatabaseManager database, XMPPConnection connection){
 		
 		//Spawn a thread to update any callinfo panels in response to user input
-		updateCallerThread = new CallerUpdater(controlRoom, settings.get("language"), //$NON-NLS-1$
-					settings.get("country")); //$NON-NLS-1$
+		updateCallerThread = new CallerUpdater(controlRoom, settings.get("language"), 
+					settings.get("country")); 
 		new Thread(updateCallerThread).start();
 		
 		this.controlRoom = controlRoom;
@@ -93,11 +93,11 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		countries = new CountryCodes();
 		
 		this.settings = settings;
-		xStrings = new I18NStrings(settings.get("language"), settings.get("country")); //$NON-NLS-1$ //$NON-NLS-2$
-		this.language = settings.get("language"); //$NON-NLS-1$
-		this.country = settings.get("country"); //$NON-NLS-1$
+		xStrings = new I18NStrings(settings.get("language"), settings.get("country"));  
+		this.language = settings.get("language"); 
+		this.country = settings.get("country"); 
 		
-		maxExecutorThreads = Integer.parseInt(settings.get("threadPoolMax")); //$NON-NLS-1$
+		maxExecutorThreads = Integer.parseInt(settings.get("threadPoolMax")); 
 		dbLookUpService = Executors.newFixedThreadPool(maxExecutorThreads);
 		this.database = database;
 		
@@ -178,11 +178,11 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	/*private void sendSetActivePersonOnChannel(String channel, int activePerson){
 		
 		try {
-			controlRoom.sendMessage(xStrings.getString("CallManagerPanel.changeActive") +  //$NON-NLS-1$
-					"/" + channel + "/" + activePerson); //$NON-NLS-1$ //$NON-NLS-2$
+			controlRoom.sendMessage(xStrings.getString("CallManagerPanel.changeActive") +  
+					"/" + channel + "/" + activePerson);  
 		} catch (XMPPException e) {
-			LOGGER.severe(xStrings.getString("CallManagerPanel.errorSendingChangeActive")); //$NON-NLS-1$
-			showWarning(xStrings.getString("CallManagerPanel.errorSendingChangeActive")); //$NON-NLS-1$
+			LOGGER.severe(xStrings.getString("CallManagerPanel.errorSendingChangeActive")); 
+			showWarning(xStrings.getString("CallManagerPanel.errorSendingChangeActive")); 
 		}
 		
 	}*/
@@ -193,11 +193,11 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	public void sendUpdateRequest(){
 		
 		try {
-			controlRoom.sendMessage(xStrings.getString("CallManagerPanel.commandUpdate") +  //$NON-NLS-1$
-					"/" + settings.get("myExtension")); //$NON-NLS-1$ //$NON-NLS-2$
+			controlRoom.sendMessage(xStrings.getString("CallManagerPanel.commandUpdate") +  
+					"/" + settings.get("myExtension"));  
 		} catch (XMPPException e) {
-			LOGGER.severe(xStrings.getString("CallManagerPanel.errorSendingUpdateCommand")); //$NON-NLS-1$
-			showWarning(xStrings.getString("CallManagerPanel.errorSendingUpdateCommand")); //$NON-NLS-1$
+			LOGGER.severe(xStrings.getString("CallManagerPanel.errorSendingUpdateCommand")); 
+			showWarning(xStrings.getString("CallManagerPanel.errorSendingUpdateCommand")); 
 		}
 		
 	}
@@ -209,17 +209,17 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	private void populateStudioExtensions(){
 		
 		//Parse Studio Extensions
-		if(settings.get("studioExtensions") != null){ //$NON-NLS-1$
+		if(settings.get("studioExtensions") != null){ 
 			
-			if(settings.get("studioExtensions").contains(",")){  //$NON-NLS-1$//$NON-NLS-2$
+			if(settings.get("studioExtensions").contains(",")){  
 				
-				String[] studios = settings.get("studioExtensions").split(","); //$NON-NLS-1$ //$NON-NLS-2$
+				String[] studios = settings.get("studioExtensions").split(",");  
 				
 				for(int i = 0; i < studios.length; i++){
 				
-					if(studios[i].contains("=>")){ //$NON-NLS-1$
+					if(studios[i].contains("=>")){ 
 						
-						String[] temp = studios[i].split("=>"); //$NON-NLS-1$
+						String[] temp = studios[i].split("=>"); 
 						
 						if(temp.length == 2)
 							studioExtensions.put(temp[0], temp[1]);
@@ -228,9 +228,9 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 					
 				}
 				
-			}else if(settings.get("studioExtensions").contains("=>")){  //$NON-NLS-1$//$NON-NLS-2$
+			}else if(settings.get("studioExtensions").contains("=>")){  
 			
-				String[] temp = settings.get("studioExtensions").split("=>"); //$NON-NLS-1$ //$NON-NLS-2$
+				String[] temp = settings.get("studioExtensions").split("=>");  
 				
 				if(temp.length == 2)
 					studioExtensions.put(temp[0], temp[1]);
@@ -267,54 +267,54 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		}
 					
 		String location = null;
-		LOGGER.info(xStrings.getString("CallManagerPanel.createSkeletonCallPanel") + //$NON-NLS-1$
-				phoneNumber + "/" + channelID + "/" + mode); //$NON-NLS-1$ //$NON-NLS-2$
+		LOGGER.info(xStrings.getString("CallManagerPanel.createSkeletonCallPanel") + 
+				phoneNumber + "/" + channelID + "/" + mode);  
 		
-		if(phoneNumber.equals(xStrings.getString("CallManagerPanel.numberWithHeld"))) //$NON-NLS-1$
-			location = xStrings.getString("CallManagerPanel.locationUnknown"); //$NON-NLS-1$
+		if(phoneNumber.equals(xStrings.getString("CallManagerPanel.numberWithHeld"))) 
+			location = xStrings.getString("CallManagerPanel.locationUnknown"); 
 		else if(phoneNumber.length() < 6)
 			location = xStrings.getString(
-					"CallManagerPanel.callLocationInternal"); //$NON-NLS-1$
+					"CallManagerPanel.callLocationInternal"); 
 		else if(phoneNumber.length() < 8)
-			location = settings.get("callLocal"); //$NON-NLS-1$
+			location = settings.get("callLocal"); 
 		else if(phoneNumber.length() < 12)
-			location = settings.get("callNational"); //$NON-NLS-1$
+			location = settings.get("callNational"); 
 		else//Lookup by phone number
 			location = countries.getCountryNameByPhone(phoneNumber);
 		
 		if(location == null)
-			location = xStrings.getString("CallManagerPanel.locationUnknown"); //$NON-NLS-1$
+			location = xStrings.getString("CallManagerPanel.locationUnknown"); 
 		
 		//timeZoneOffset, required if the timezone is a part hour +/- from UTC so that 
 		//for example, the call panel timer starts at 00:30 rather than 00:00
 		int timezoneOffset = 0;
-		if(settings.get("timezoneHourOffset") != null) //$NON-NLS-1$
+		if(settings.get("timezoneHourOffset") != null) 
 			try{
-				timezoneOffset = Integer.parseInt(settings.get("timezoneHourOffset")); //$NON-NLS-1$
+				timezoneOffset = Integer.parseInt(settings.get("timezoneHourOffset")); 
 			}catch(NumberFormatException e){
 				LOGGER.warning(xStrings.getString(
-						"CallManagerPanel.logErrorParsingTimezoneOffset") + //$NON-NLS-1$
-						settings.get("timezoneHourOffset")); //$NON-NLS-1$
+						"CallManagerPanel.logErrorParsingTimezoneOffset") + 
+						settings.get("timezoneHourOffset")); 
 			}
 		
 		boolean canTake = false;
 		
-		if(settings.containsKey("canTakeCall") && settings.get("canTakeCall").equals("true"))  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
+		if(settings.containsKey("canTakeCall") && settings.get("canTakeCall").equals("true"))   
 			canTake = true;
 		
-		CallInfoPanel call = new CallInfoPanel(settings.get("language"),  //$NON-NLS-1$
-				settings.get("country"),  //$NON-NLS-1$
-				xStrings.getString("CallManagerPanel.callerUnknown"), //$NON-NLS-1$
-				location, "", CallInfoPanel.ALERT_OK, channelID,  //$NON-NLS-1$
-				dropMode, canTake, controlRoom, settings.get("myExtension"),//$NON-NLS-1$
-				settings.get("nickName"), timezoneOffset, null);//$NON-NLS-1$
+		CallInfoPanel call = new CallInfoPanel(settings.get("language"),  
+				settings.get("country"),  
+				xStrings.getString("CallManagerPanel.callerUnknown"), 
+				location, "", CallInfoPanel.ALERT_OK, channelID,  
+				dropMode, canTake, controlRoom, settings.get("myExtension"),
+				settings.get("nickName"), timezoneOffset, null);
 		
 		//Set the creation time as required
 		if(creationTime != -1)
 			call.setCallCreationTime(creationTime);
 		
 		//Lookup ConnectedTo if we have an entry in the userExtensions map swap to this name
-		String friendlyConnected = ""; //$NON-NLS-1$
+		String friendlyConnected = ""; 
 		
 		if(userExtensions.get(connectedTo) != null)
 			friendlyConnected = userExtensions.get(connectedTo);
@@ -361,7 +361,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 			
 			public void run(){
 				
-				add(addMe, "grow, wrap"); //$NON-NLS-1$
+				add(addMe, "grow, wrap"); 
 				
 			}
 			
@@ -418,16 +418,16 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 			
 			String from = message.getFrom();
 			
-			if(from.contains("/")) //$NON-NLS-1$
-				from = from.split("/")[1]; //$NON-NLS-1$
+			if(from.contains("/")) 
+				from = from.split("/")[1]; 
 			
 			if(!from.equals(controlRoom.getNickname())){//If the message didn't come from me 
 				
 				//React to commands thread all of this if performance is a problem
-				LOGGER.info(xStrings.getString("CallManager.receivedMessage") + //$NON-NLS-1$
+				LOGGER.info(xStrings.getString("CallManager.receivedMessage") + 
 						message.getBody()); 
 				
-				String[] command = message.getBody().split("/"); //$NON-NLS-1$
+				String[] command = message.getBody().split("/"); 
 				/*
 				 * Current Control Messages:
 				 * SEE Wiki
@@ -444,7 +444,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 					if(command.length == 5)
 						creationTime = getCreationTime(command[4]);
 					
-					if(command[0].equals(xStrings.getString("CallManagerPanel.callRingingFrom"))){//$NON-NLS-1$
+					if(command[0].equals(xStrings.getString("CallManagerPanel.callRingingFrom"))){
 						//CALL/FROM/TO/CHANNEL
 						//Create a CallInfoPanel with skeleton details
 						if(callPanels.get(command[3]) == null){
@@ -549,11 +549,11 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 									//Set Number and Queue Badge
 									callPanels.get(command[3]).setOriginator(command[1]);
 									
-									if(settings.get("queue_" + command[2] + "_icon") != null) //$NON-NLS-1$ //$NON-NLS-2$
-										callPanels.get(command[3]).getIconPanel().setBadgeIcon(settings.get("queue_" + command[2] + "_icon"));  //$NON-NLS-1$//$NON-NLS-2$
+									if(settings.get("queue_" + command[2] + "_icon") != null)  
+										callPanels.get(command[3]).getIconPanel().setBadgeIcon(settings.get("queue_" + command[2] + "_icon"));  
 									
 									
-								}else if(!command[1].equals(xStrings.getString("CallManagerPanel.callSystemUnknown"))){ //$NON-NLS-1$
+								}else if(!command[1].equals(xStrings.getString("CallManagerPanel.callSystemUnknown"))){ 
 									
 									//Outside call coming direct to a phone TODO wasn't this UNKNOWN removed from server?
 									createSkeletonCallInfoPanel(command[1], command[3], 
@@ -566,13 +566,13 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 							
 						}
 						
-					}else if(command[0].equals(xStrings.getString("CallManagerPanel.callQueued"))){ //$NON-NLS-1$
+					}else if(command[0].equals(xStrings.getString("CallManagerPanel.callQueued"))){ 
 					
 						//Call Added to QUEUE read queue number and act accordingly
-						if(command[1].equals(settings.get("incomingQueueNumber"))){ //$NON-NLS-1$
+						if(command[1].equals(settings.get("incomingQueueNumber"))){ 
 							
 							//IncomingQueue
-							LOGGER.info(xStrings.getString("CallManagerPanel.CallIncomingQueue")); //$NON-NLS-1$
+							LOGGER.info(xStrings.getString("CallManagerPanel.CallIncomingQueue")); 
 							
 							/* 
 							 * Normally handled by CALL however depending on the trunk a CALL may have the following format:
@@ -593,7 +593,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								 * CALL/012345123456/441211231234/1452171951.10
 								 */
 								String[] temp = new String[4];
-								temp[0] = xStrings.getString("CallManagerPanel.callRingingFrom"); //$NON-NLS-1$
+								temp[0] = xStrings.getString("CallManagerPanel.callRingingFrom"); 
 								temp[1] = command[2];
 								temp[2] = command[1];
 								temp[3] = command[3];
@@ -602,9 +602,9 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 
 							}
 							
-						}else if(command[1].equals(settings.get("onAirQueueNumber"))){ //$NON-NLS-1$
+						}else if(command[1].equals(settings.get("onAirQueueNumber"))){ 
 							
-							LOGGER.info(xStrings.getString("CallManagerPanel.CallOnAirQueue")); //$NON-NLS-1$
+							LOGGER.info(xStrings.getString("CallManagerPanel.CallOnAirQueue")); 
 							
 							//On Air Queue - This is a call going into the ready for on air / studio queue 4001
 							if(callPanels.get(command[3]) != null){
@@ -612,10 +612,10 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 								//Already in our list so update
 								if(isMyPhone(command[2])){
 									callPanels.get(command[3]).setQueuedMe(true);
-									LOGGER.info(xStrings.getString("CallManagerPanel.setQueueMeMode")); //$NON-NLS-1$
+									LOGGER.info(xStrings.getString("CallManagerPanel.setQueueMeMode")); 
 								}else{
 									callPanels.get(command[3]).setQueued(true);
-									LOGGER.info(xStrings.getString("CallManagerPanel.setQueueMode")); //$NON-NLS-1$
+									LOGGER.info(xStrings.getString("CallManagerPanel.setQueueMode")); 
 								}
 								
 							}else{
@@ -634,7 +634,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 						}	
 						
 					}else if(command[0].equals(
-							xStrings.getString("CallManagerPanel.callConnected"))){ //$NON-NLS-1$
+							xStrings.getString("CallManagerPanel.callConnected"))){ 
 						
 						//Turn off ringing for this channel
 						if(ringer != null)
@@ -876,66 +876,66 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 						}
 						//UPDATEFIELD
 					}else if(command[0].equals(xStrings.getString(
-							"CallManagerPanel.commandUpdateField"))){ //$NON-NLS-1$
+							"CallManagerPanel.commandUpdateField"))){ 
 						//		0			1			2			3
 						//UPDATEFIELD/field mapping/channel id/field value
-						/*if(command[3].equals("<CLEAR>")) //$NON-NLS-1$
-							command[3] = ""; //$NON-NLS-1$*/
+						/*if(command[3].equals("<CLEAR>")) 
+							command[3] = ""; */
 						//Panel can be gone when update happens, check for exists first
 						if(callPanels.get(command[2]) != null){
 							
-							if(command[1].equals("name")){ //$NON-NLS-1$
+							if(command[1].equals("name")){ 
 								callPanels.get(command[2]).setPhoneCallField(command[1], 
-										command[3].replace("^^%%$$", "/"),  //$NON-NLS-1$ //$NON-NLS-2$
+										command[3].replace("^^%%$$", "/"),   
 										false);
 								callPanels.get(command[2]).setCallerName(
-										command[3].replace("^^%%$$", "/"), false);  //$NON-NLS-1$//$NON-NLS-2$
-							}else if(command[1].equals("location")){ //$NON-NLS-1$
+										command[3].replace("^^%%$$", "/"), false);  
+							}else if(command[1].equals("location")){ 
 								callPanels.get(command[2]).setPhoneCallField(command[1], 
-										command[3].replace("^^%%$$", "/"),  //$NON-NLS-1$ //$NON-NLS-2$
+										command[3].replace("^^%%$$", "/"),   
 										false);
 								callPanels.get(command[2]).setCallerLocation(command[3], false);
-							}else if(command[1].equals("conversation")){ //$NON-NLS-1$
+							}else if(command[1].equals("conversation")){ 
 								callPanels.get(command[2]).setPhoneCallField(command[1], 
-										command[3].replace("^^%%$$", "/"),  //$NON-NLS-1$ //$NON-NLS-2$
+										command[3].replace("^^%%$$", "/"),   
 										false);
 								callPanels.get(command[2]).setConversation(command[3], false);
-							}else if(command[1].equals("alert")){ //$NON-NLS-1$
+							}else if(command[1].equals("alert")){ 
 								
-								String[] temp = command[3].split("@@"); //$NON-NLS-1$
+								String[] temp = command[3].split("@@"); 
 								
 								try{
 									int level = Integer.parseInt(temp[1]);
 									callPanels.get(command[2]).setAlertLevel(null, level, false);
 								}catch(NumberFormatException e){
 									callPanels.get(command[2]).setAlertLevel(null,
-											temp[1].replace("+", "/"), false);  //$NON-NLS-1$//$NON-NLS-2$
+											temp[1].replace("+", "/"), false);  
 								}
 								
-								callPanels.get(command[2]).setPhoneCallField("alert", //$NON-NLS-1$
+								callPanels.get(command[2]).setPhoneCallField("alert", 
 										temp[0], false);
 								
-							}else if(command[1].equals("calltype")){ //$NON-NLS-1$
+							}else if(command[1].equals("calltype")){ 
 								
 								//Split the image from the value:
-								String[] temp = command[3].replace("+", "/").split("@@");//$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
+								String[] temp = command[3].replace("+", "/").split("@@"); 
 								callPanels.get(command[2]).setBadgeIcon(null,
 											temp[1], false);  
 								//Set the record call type
-								callPanels.get(command[2]).setPhoneCallField("calltype",  //$NON-NLS-1$
+								callPanels.get(command[2]).setPhoneCallField("calltype",  
 										temp[0], false);
 							}else{
 								
 								//Custom Field
 								callPanels.get(command[2]).setPhoneCallField(command[1], 
-										command[3].replace("^^%%$$", "/"),  //$NON-NLS-1$ //$NON-NLS-2$
+										command[3].replace("^^%%$$", "/"),   
 										false);
 								
 							}
 						
 						}
 					}else if(command.length == 4 &&
-							command[0].equals(xStrings.getString("CallManagerPanel.endPoint"))){ //$NON-NLS-1$
+							command[0].equals(xStrings.getString("CallManagerPanel.endPoint"))){ 
 						
 						//Store endpoint and extension here then act on it in subsequent queue message
 						//ENDPOINT/1397214684.388/1397214684.391/9901234567890
@@ -946,11 +946,11 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 					}
 					
 				}else if(command.length == 3 && 
-						command[0].startsWith(xStrings.getString("CallManagerPanel.callHangup"))){ //$NON-NLS-1$
+						command[0].startsWith(xStrings.getString("CallManagerPanel.callHangup"))){ 
 					
 					//Call Hangup received
 					LOGGER.info(
-							xStrings.getString("CallManagerPanel.removingPanelHangupReceived") +  //$NON-NLS-1$
+							xStrings.getString("CallManagerPanel.removingPanelHangupReceived") +  
 									command[2]);
 					
 					//Turn off ringing for this channel (in case we get hang up with no answer)
@@ -971,7 +971,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 					}
 					
 				}else if(command.length == 3 &&
-						command[0].equals(xStrings.getString("CallManagerPanel.callTransfer"))){ //$NON-NLS-1$
+						command[0].equals(xStrings.getString("CallManagerPanel.callTransfer"))){ 
 					
 					//Transfer from another user, add their name to our extensions list
 					userExtensions.put(command[2], from);
@@ -981,7 +981,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 						stopRinging(command[1]);
 
 				}else if(command.length == 2 &&
-						command[0].equals(xStrings.getString("CallManagerPanel.callLocked"))){ //$NON-NLS-1$
+						command[0].equals(xStrings.getString("CallManagerPanel.callLocked"))){ 
 					
 					/* Notification that call was locked wait 3 seconds and if panel is 
 					 * still clicked reset it to normal mode
@@ -993,13 +993,13 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 					}//If it doesn't exist then ignore it, the call probably ended
 					
 				}else if(command.length == 2 && command[0].equals(
-						xStrings.getString("CallManagerPanel.changeFailed"))){ //$NON-NLS-1$
+						xStrings.getString("CallManagerPanel.changeFailed"))){ 
 				
 					showWarning(
-							xStrings.getString("CallManagerPanel.errorChangingPerson")); //$NON-NLS-1$
+							xStrings.getString("CallManagerPanel.errorChangingPerson")); 
 				
 				}else if(command.length == 3 && command[0].equals(
-						xStrings.getString("CallManagerPanel.changed"))){ //$NON-NLS-1$
+						xStrings.getString("CallManagerPanel.changed"))){ 
 					
 					//CHANGED
 					//Update CallInfoPanel, CallInputPanel.  CallLogPanel has its own listener
@@ -1017,7 +1017,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 					}
 					
 				}else if(command.length == 3 && command[0].equals(
-						xStrings.getString("CallManagerPanel.FAILED"))){ //$NON-NLS-1$
+						xStrings.getString("CallManagerPanel.FAILED"))){ 
 					
 					/* Call failed to transfer to us
 					 * FAILED/Channel/Failure Code
@@ -1027,10 +1027,10 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 					 *-1: Extension does not exist
 					 */
 					LOGGER.info(xStrings.getString(
-							"CallManagerPanel.clientPhoneError")); //$NON-NLS-1$
+							"CallManagerPanel.clientPhoneError")); 
 					
 					//Reset CallInfoPanel
-					if(!command[1].equals("NA") &&  //$NON-NLS-1$
+					if(!command[1].equals("NA") &&  
 							callPanels.get(command[1]) != null)
 						callPanels.get(command[1]).reset();
 					
@@ -1038,17 +1038,17 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 					
 					if(errorCode == 4)
 						showWarning(xStrings.getString(
-								"CallManagerPanel.errorExtensionOffline")); //$NON-NLS-1$
+								"CallManagerPanel.errorExtensionOffline")); 
 					else if(errorCode == -1)
 						showWarning(xStrings.getString(
-								"CallManagerPanel.errorExtensionDoesNotExist")); //$NON-NLS-1$
+								"CallManagerPanel.errorExtensionDoesNotExist")); 
 					else if(errorCode != 1)
 						showWarning(xStrings.getString(
-								"CallManagerPanel.errorExtension") + errorCode); //$NON-NLS-1$
+								"CallManagerPanel.errorExtension") + errorCode); 
 					
 				}else if(command.length == 2 && 
 						command[0].equals(xStrings.getString(
-								"CallManagerPanel.channelUpdate"))){ //$NON-NLS-1$
+								"CallManagerPanel.channelUpdate"))){ 
 					
 					//Update given panel looking for X in callhistory
 					//Then redo call answered if necessary
@@ -1148,11 +1148,11 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	 */
 	private void showWarning(String friendlyErrorMessage){
 		
-		System.err.println(xStrings.getString("CallManagerPanel.logErrorPrefix") //$NON-NLS-1$
+		System.err.println(xStrings.getString("CallManagerPanel.logErrorPrefix") 
 				+ friendlyErrorMessage); 
 		
 		JOptionPane.showMessageDialog(null, friendlyErrorMessage, 
-				xStrings.getString("CallManagerPanel.errorBoxTitle"), //$NON-NLS-1$
+				xStrings.getString("CallManagerPanel.errorBoxTitle"), 
 				JOptionPane.WARNING_MESSAGE); 
 		LOGGER.warning(friendlyErrorMessage);
 		
@@ -1173,7 +1173,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 			
 		}catch(NumberFormatException e){
 			
-			LOGGER.warning(xStrings.getString("CallManagerPanel.errorParsingCreationTime")); //$NON-NLS-1$
+			LOGGER.warning(xStrings.getString("CallManagerPanel.errorParsingCreationTime")); 
 			
 		}
 		
@@ -1304,7 +1304,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	
 		boolean isOnAir = false;
 		
-		if(settings.get("onAirQueueNumber").equals(number)) //$NON-NLS-1$
+		if(settings.get("onAirQueueNumber").equals(number)) 
 			isOnAir = true;
 		
 		return isOnAir;
@@ -1325,7 +1325,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 			audioURL = getClass().getResource(path);
 
 			if(audioURL == null)
-				LOGGER.warning(xStrings.getString("CallManagerPanel.logLoadAudioError") + path); //$NON-NLS-1$
+				LOGGER.warning(xStrings.getString("CallManagerPanel.logLoadAudioError") + path); 
 
 		}
 
@@ -1344,8 +1344,8 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 				CallInfoPanel.MODE_RINGING, null, creationTime);
 		callPanels.get(command[3]).setOriginator(command[1]);
 		
-		if(settings.get("queue_" + command[2] + "_icon") != null) //$NON-NLS-1$ //$NON-NLS-2$
-			callPanels.get(command[3]).getIconPanel().setBadgeIcon(settings.get("queue_" + command[2] + "_icon"));  //$NON-NLS-1$//$NON-NLS-2$
+		if(settings.get("queue_" + command[2] + "_icon") != null)  
+			callPanels.get(command[3]).getIconPanel().setBadgeIcon(settings.get("queue_" + command[2] + "_icon"));  
 
 	}
 	
@@ -1358,7 +1358,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	
 		boolean isIncoming = false;
 		
-		if(settings.get("incomingQueueNumber").equals(number)) //$NON-NLS-1$
+		if(settings.get("incomingQueueNumber").equals(number)) 
 			isIncoming = true;
 		
 		return isIncoming;
@@ -1399,12 +1399,12 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 			 * quite finished being created.  So we store this as something
 			 * we'll notify later
 			 */
-			LOGGER.info(xStrings.getString("CallManagerPanel.storeForNotifyListeners")); //$NON-NLS-1$
+			LOGGER.info(xStrings.getString("CallManagerPanel.storeForNotifyListeners")); 
 			storedAnsweredPanel = callInfoPanel;
 			
 		}else{
 			
-			LOGGER.info(xStrings.getString("CallManagerPanel.notifyListeners") + //$NON-NLS-1$
+			LOGGER.info(xStrings.getString("CallManagerPanel.notifyListeners") + 
 					callInfoPanel.getChannelID()); 
 			
 			/* When there is an outbound call that we've answered, we will be passing
@@ -1423,7 +1423,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 			while(record == null && waitForActivePerson < 3){
 				
 				LOGGER.info(xStrings.getString(
-						"CallManagerPanel.waitingForActivePerson") +  //$NON-NLS-1$
+						"CallManagerPanel.waitingForActivePerson") +  
 						waitForActivePerson);
 				try {
 					
@@ -1432,7 +1432,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 				} catch (InterruptedException e) {
 					
 					showWarning(xStrings.getString(
-							"CallManagerPanel.waitForActiveInterrupted")); //$NON-NLS-1$
+							"CallManagerPanel.waitForActiveInterrupted")); 
 					waitForActivePerson = 3;
 					e.printStackTrace();
 					
@@ -1460,7 +1460,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	 */
 	public void addAnswerListener(AnswerListener listener){
 		
-		LOGGER.info(xStrings.getString("CallManagerPanel.addAnswerListener")); //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("CallManagerPanel.addAnswerListener")); 
 		
 		//Deadlock somewhere in here and notify listeners
 		synchronized(answerListeners){
@@ -1508,8 +1508,8 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		
 		String oldestKey = null;
 		long oldestTime = 0;
-		boolean studio = (settings.get("isStudio") != null //$NON-NLS-1$
-				&& settings.get("isStudio").equals("true"));  //$NON-NLS-1$//$NON-NLS-2$
+		boolean studio = (settings.get("isStudio") != null 
+				&& settings.get("isStudio").equals("true"));  
 		
 		while(calls.hasNext()){
 			
@@ -1641,7 +1641,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	 */
 	public void answerNext() {
 		
-		if(!callPanels.isEmpty() && settings.get("myExtension") != null){ //$NON-NLS-1$
+		if(!callPanels.isEmpty() && settings.get("myExtension") != null){ 
 			
 			String onCall = isOnCall();
 			
@@ -1678,8 +1678,8 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		
 		boolean myPhone = false;
 		
-		if(settings.get("myExtension") != null && //$NON-NLS-1$
-				settings.get("myExtension").equals(extension)) //$NON-NLS-1$
+		if(settings.get("myExtension") != null && 
+				settings.get("myExtension").equals(extension)) 
 			myPhone = true;
 		
 		return myPhone;
@@ -1694,7 +1694,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		
 		boolean studio = false;
 		
-		if(settings.get("isStudio") != null && settings.get("isStudio").equals("true")){ //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		if(settings.get("isStudio") != null && settings.get("isStudio").equals("true")){   
 			
 			studio = true;
 			
@@ -1710,7 +1710,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	 */
 	public void answerRandom() {
 		
-		if(!callPanels.isEmpty() && settings.get("myExtension") != null){ //$NON-NLS-1$
+		if(!callPanels.isEmpty() && settings.get("myExtension") != null){ 
 			
 			String onCall = isOnCall();
 			
@@ -1748,8 +1748,8 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		Iterator<Entry<String, CallInfoPanel>> calls = callPanels.entrySet().iterator();
 		
 		Vector<String> validKeys = new Vector<String>();
-		boolean studio = (settings.get("isStudio") != null //$NON-NLS-1$
-				&& settings.get("isStudio").equals("true"));  //$NON-NLS-1$//$NON-NLS-2$
+		boolean studio = (settings.get("isStudio") != null 
+				&& settings.get("isStudio").equals("true"));  
 		
 		while(calls.hasNext()){
 			
@@ -1782,7 +1782,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	 */
 	public void dial() {
 		
-		if(dialler == null && settings.get("myExtension") != null){ //$NON-NLS-1$
+		if(dialler == null && settings.get("myExtension") != null){ 
 			
 			Component parent = this.getParent();
 			Client owner = null;
@@ -1793,8 +1793,8 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 			if(parent != null)
 				owner = (Client)parent;
 			
-			dialler = new DialPanel(owner, xStrings.getString("DialPanel.title"), //$NON-NLS-1$
-					settings.get("language"), settings.get("country"), settings.get("outsideCallPrefix"));  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
+			dialler = new DialPanel(owner, xStrings.getString("DialPanel.title"), 
+					settings.get("language"), settings.get("country"), settings.get("outsideCallPrefix"));   
 			dialler.addDialListener(this);
 			
 			dialler.setVisible(true);
@@ -1819,10 +1819,10 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	
 		if(number.length() > 0)
 			try {
-				controlRoom.sendMessage(xStrings.getString("CallManagerPanel.commandDial") +  //$NON-NLS-1$
-						"/" + number + "/" + settings.get("myExtension")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				controlRoom.sendMessage(xStrings.getString("CallManagerPanel.commandDial") +  
+						"/" + number + "/" + settings.get("myExtension"));   
 			} catch (XMPPException e) {
-				LOGGER.severe(xStrings.getString("CallManagerPanel.errorSendingDialCommand")); //$NON-NLS-1$
+				LOGGER.severe(xStrings.getString("CallManagerPanel.errorSendingDialCommand")); 
 			}
 		
 	}
@@ -1871,7 +1871,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		
 		//New chat initiated so add a message listener to it
 		chat.addMessageListener(this);
-		LOGGER.info(xStrings.getString("CallManagerPanel.receivedPrivateChatRequest")); //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("CallManagerPanel.receivedPrivateChatRequest")); 
 		
 	}
 
@@ -1880,7 +1880,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	public void processMessage(Chat chat, Message message) {
 		
 		//Can pass this on to the processPacket method as part of normal message handling
-		LOGGER.info(xStrings.getString("CallManagerPanel.receivedPrivateMessage") //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("CallManagerPanel.receivedPrivateMessage") 
 				+ message.getBody()); 
 		
 		/* We need to deal with connected here only when:
@@ -1902,10 +1902,10 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		 * 
 		 * CONNECTED/CALL ANSWERER/CALL ORIGINATOR/CHANNEL ??/CREATION TIME
 		 */
-		String[] command = message.getBody().split("/"); //$NON-NLS-1$
+		String[] command = message.getBody().split("/"); 
 		
 		if(command.length == 5 && command[0].equals(
-				xStrings.getString("CallManagerPanel.callConnected")) //$NON-NLS-1$
+				xStrings.getString("CallManagerPanel.callConnected")) 
 				&& callPanels.get(command[3]) != null
 				&& isMyPhone(command[1]) && !isMyPhone(command[2])){ 
 			

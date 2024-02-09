@@ -75,7 +75,7 @@ public class PasswordManager {
 			for(int i = 0; i < 10; i++)
 				System.out.println(hashPassword(args[0], Integer.parseInt(args[1])));
 			
-			System.out.println("Completed in: " + (System.currentTimeMillis() - start) + "ms"); //$NON-NLS-1$ //$NON-NLS-2$
+			System.out.println("Completed in: " + (System.currentTimeMillis() - start) + "ms");  
 			
 		}else if(args.length == 1){
 			
@@ -84,10 +84,10 @@ public class PasswordManager {
 			for(int i = 0; i < 10; i++)
 				System.out.println(hashPassword(args[0]));
 			
-			System.out.println("Completed in: " + (System.currentTimeMillis() - start) + "ms"); //$NON-NLS-1$ //$NON-NLS-2$
+			System.out.println("Completed in: " + (System.currentTimeMillis() - start) + "ms");  
 			
 		}else			
-			System.out.println("USAGE: password [rounds (optional)]"); //$NON-NLS-1$
+			System.out.println("USAGE: password [rounds (optional)]"); 
 		
 	}
 	

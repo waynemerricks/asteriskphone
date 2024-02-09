@@ -50,7 +50,7 @@ public class Splash extends JFrame implements SplashControl{
 		center.setBackground(Color.WHITE);
 		
 		TransparentLabel image = new TransparentLabel(
-				createImageIcon("images/splash.png", "splash")); //$NON-NLS-1$ //$NON-NLS-2$
+				createImageIcon("images/splash.png", "splash"));  
 		image.setBorder(null);
 		
 		center.add(image, BorderLayout.CENTER);
@@ -59,7 +59,7 @@ public class Splash extends JFrame implements SplashControl{
 		text.setBorder(new EmptyBorder(5, 5, 5, 5));
 		text.setOpaque(false);
 		
-		statusLabel = new TransparentLabel("Reticulating Splines", TransparentLabel.CENTER); //$NON-NLS-1$
+		statusLabel = new TransparentLabel("Reticulating Splines", TransparentLabel.CENTER); 
 		statusLabel.setBorder(null);
 		text.add(statusLabel);
 				

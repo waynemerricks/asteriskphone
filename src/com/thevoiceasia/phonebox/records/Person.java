@@ -49,7 +49,7 @@ public class Person {
 		this.id = id;
 		xStrings = new I18NStrings(language, country);
 		
-		String SQL = "SELECT * FROM `person` WHERE `person_id` = " + id; //$NON-NLS-1$
+		String SQL = "SELECT * FROM `person` WHERE `person_id` = " + id; 
 		
 		Statement statement = null;
 		ResultSet resultSet = null;
@@ -62,80 +62,80 @@ public class Person {
 		    while(resultSet.next()){
 		    	
 			    //Alert level e.g. person banned or warning because they're awkward
-	    		alert = resultSet.getString("alert"); //$NON-NLS-1$
+	    		alert = resultSet.getString("alert"); 
 	    		
-	    		if(alert.equals("N")) //$NON-NLS-1$
-	    			alert = xStrings.getString("PhoneCall.alertNormal"); //$NON-NLS-1$
-	    		else if(alert.equals("W")) //$NON-NLS-1$
-	    			alert = xStrings.getString("PhoneCall.alertWarning"); //$NON-NLS-1$
-	    		else if(alert.equals("B")) //$NON-NLS-1$
-	    			alert = xStrings.getString("PhoneCall.alertBanned"); //$NON-NLS-1$
-	    		else if(alert.equals("F")) //$NON-NLS-1$
-	    			alert = xStrings.getString("PhoneCall.alertFavourite"); //$NON-NLS-1$
+	    		if(alert.equals("N")) 
+	    			alert = xStrings.getString("PhoneCall.alertNormal"); 
+	    		else if(alert.equals("W")) 
+	    			alert = xStrings.getString("PhoneCall.alertWarning"); 
+	    		else if(alert.equals("B")) 
+	    			alert = xStrings.getString("PhoneCall.alertBanned"); 
+	    		else if(alert.equals("F")) 
+	    			alert = xStrings.getString("PhoneCall.alertFavourite"); 
 	    		
 	    		//Name
-	    		name = resultSet.getString("name"); //$NON-NLS-1$
+	    		name = resultSet.getString("name"); 
 	    		
-	    		if(name == null || name.equals("null")) //$NON-NLS-1$
-	    			name = xStrings.getString("PhoneCall.unknownCaller"); //$NON-NLS-1$
+	    		if(name == null || name.equals("null")) 
+	    			name = xStrings.getString("PhoneCall.unknownCaller"); 
 	    		
 	    		//Gender
-	    		gender = resultSet.getString("gender"); //$NON-NLS-1$
+	    		gender = resultSet.getString("gender"); 
 	    		
-	    		if(gender.equals("U")) //$NON-NLS-1$
-	    			gender = xStrings.getString("PhoneCall.genderUnknown"); //$NON-NLS-1$
-	    		else if(gender.equals("M")) //$NON-NLS-1$
-	    			gender = xStrings.getString("PhoneCall.genderMale"); //$NON-NLS-1$
-	    		else if(gender.equals("F")) //$NON-NLS-1$
-	    			gender = xStrings.getString("PhoneCall.genderFemale"); //$NON-NLS-1$
+	    		if(gender.equals("U")) 
+	    			gender = xStrings.getString("PhoneCall.genderUnknown"); 
+	    		else if(gender.equals("M")) 
+	    			gender = xStrings.getString("PhoneCall.genderMale"); 
+	    		else if(gender.equals("F")) 
+	    			gender = xStrings.getString("PhoneCall.genderFemale"); 
 	    		
 	    		//Location
-	    		location = resultSet.getString("location"); //$NON-NLS-1$
+	    		location = resultSet.getString("location"); 
 	    		
-	    		if(location == null || location.equals("null"))//$NON-NLS-1$
-	    			location = xStrings.getString("PhoneCall.locationUnknown"); //$NON-NLS-1$
+	    		if(location == null || location.equals("null"))
+	    			location = xStrings.getString("PhoneCall.locationUnknown"); 
 	    		
 	    		//Postal Address
-	    		postalAddress = resultSet.getString("address"); //$NON-NLS-1$
+	    		postalAddress = resultSet.getString("address"); 
 	    		
-	    		if(postalAddress == null || postalAddress.equals("null")) //$NON-NLS-1$
-	    			postalAddress = ""; //$NON-NLS-1$
+	    		if(postalAddress == null || postalAddress.equals("null")) 
+	    			postalAddress = ""; 
 	    		
 	    		//Post Code
-	    		postCode = resultSet.getString("postcode"); //$NON-NLS-1$
+	    		postCode = resultSet.getString("postcode"); 
 	    		
-	    		if(postCode == null || postCode.equals("null")) //$NON-NLS-1$
-	    			postCode = ""; //$NON-NLS-1$
+	    		if(postCode == null || postCode.equals("null")) 
+	    			postCode = ""; 
 	    		
 	    		//Email Address
-	    		email = resultSet.getString("email"); //$NON-NLS-1$
+	    		email = resultSet.getString("email"); 
 	    		
-	    		if(email == null || email.equals("null")) //$NON-NLS-1$
-	    			email = ""; //$NON-NLS-1$
+	    		if(email == null || email.equals("null")) 
+	    			email = ""; 
 	    		
 	    		//Language
-	    		language = resultSet.getString("language"); //$NON-NLS-1$
+	    		language = resultSet.getString("language"); 
 	    		
-	    		if(language == null || language.equals("null")) //$NON-NLS-1$
-	    			language = ""; //$NON-NLS-1$
+	    		if(language == null || language.equals("null")) 
+	    			language = ""; 
 	    		
 	    		//Religion
-	    		religion = resultSet.getString("religion"); //$NON-NLS-1$
+	    		religion = resultSet.getString("religion"); 
 	    		
-	    		if(religion == null || religion.equals("null")) //$NON-NLS-1$
-	    			religion = ""; //$NON-NLS-1$
+	    		if(religion == null || religion.equals("null")) 
+	    			religion = ""; 
 	    		
 	    		//Journey
-	    		journey = resultSet.getString("journey"); //$NON-NLS-1$
+	    		journey = resultSet.getString("journey"); 
 	    		
-	    		if(journey == null || journey.equals("null")) //$NON-NLS-1$
-	    			journey = ""; //$NON-NLS-1$
+	    		if(journey == null || journey.equals("null")) 
+	    			journey = ""; 
 	    		
 	    		//Notes
-	    		notes = resultSet.getString("notes"); //$NON-NLS-1$
+	    		notes = resultSet.getString("notes"); 
 	    		
-	    		if(notes == null || notes.equals("null")) //$NON-NLS-1$
-	    			notes = ""; //$NON-NLS-1$
+	    		if(notes == null || notes.equals("null")) 
+	    			notes = ""; 
 	    		
 	    		//Get the conversation history for this person
 	    		populateConversationHistory(readConnection);
@@ -143,7 +143,7 @@ public class Person {
 		    }
 		   
 		}catch (SQLException e){
-			showError(e, xStrings.getString("Person.databaseSQLError")); //$NON-NLS-1$
+			showError(e, xStrings.getString("Person.databaseSQLError")); 
 		}finally {
 			
 			if (resultSet != null) {
@@ -172,8 +172,8 @@ public class Person {
 		Statement statement = null;
 		ResultSet resultSet = null;
 		
-		String SQL = "SELECT time, channel, conversation FROM conversations " + //$NON-NLS-1$
-				"WHERE person_id = " + id;  //$NON-NLS-1$
+		String SQL = "SELECT time, channel, conversation FROM conversations " + 
+				"WHERE person_id = " + id;  
 		
 		try{
 			
@@ -182,15 +182,15 @@ public class Person {
 	    
 			while(resultSet.next()){
 				
-				Date time = resultSet.getTimestamp("time"); //$NON-NLS-1$
+				Date time = resultSet.getTimestamp("time"); 
 				addConversation(new Conversation(time, 
-							resultSet.getString("conversation"))); //$NON-NLS-1$
+							resultSet.getString("conversation"))); 
 				
 			}
 			
 		}catch(SQLException e){
 			
-			showError(e, xStrings.getString("PhoneCall.databaseSQLError")); //$NON-NLS-1$
+			showError(e, xStrings.getString("PhoneCall.databaseSQLError")); 
 			
 		}finally {
 			
@@ -220,11 +220,11 @@ public class Person {
 		
 		char shortAlert = 'N';
 		
-		if(alert.equals(xStrings.getString("PhoneCall.alertWarning"))) //$NON-NLS-1$
+		if(alert.equals(xStrings.getString("PhoneCall.alertWarning"))) 
 			shortAlert = 'W';
-		else if(alert.equals(xStrings.getString("PhoneCall.alertBanned"))) //$NON-NLS-1$
+		else if(alert.equals(xStrings.getString("PhoneCall.alertBanned"))) 
 			shortAlert = 'B';
-		else if(alert.equals(xStrings.getString("PhoneCall.alertFavourite"))) //$NON-NLS-1$
+		else if(alert.equals(xStrings.getString("PhoneCall.alertFavourite"))) 
 			shortAlert = 'F';
 		
 		return shortAlert;
@@ -238,9 +238,9 @@ public class Person {
 	private char getShortGender(){
 	
 		char shortGender = 'U';
-		if(gender.equals(xStrings.getString("PhoneCall.genderMale"))) //$NON-NLS-1$
+		if(gender.equals(xStrings.getString("PhoneCall.genderMale"))) 
 			shortGender = 'M';
-		else if(gender.equals(xStrings.getString("PhoneCall.genderFemale"))) //$NON-NLS-1$
+		else if(gender.equals(xStrings.getString("PhoneCall.genderFemale"))) 
 			shortGender = 'F';
 			
 		return shortGender;
@@ -253,7 +253,7 @@ public class Person {
 		
 		PreparedStatement statement = null;
 		
-		String SQL = "INSERT INTO conversations(person_id, conversation) VALUES (?, ?)"; //$NON-NLS-1$
+		String SQL = "INSERT INTO conversations(person_id, conversation) VALUES (?, ?)"; 
 		
 		try{
 			
@@ -266,7 +266,7 @@ public class Person {
 	        
 		}catch(SQLException e){
         	
-        	showError(e, xStrings.getString("Person.DBSQLError") + id); //$NON-NLS-1$ 
+        	showError(e, xStrings.getString("Person.DBSQLError") + id);  
         	
         }finally{
             if(statement != null)
@@ -291,17 +291,17 @@ public class Person {
 	
 		PreparedStatement statement = null;
 		
-		String SQL = "UPDATE person SET alert = ?, name = ?, gender = ?, location = ?, " + //$NON-NLS-1$
-				"address = ?, postcode = ?, email = ?, language = ?, " + //$NON-NLS-1$
-				"religion = ?, notes = ? WHERE person_id = ?";  //$NON-NLS-1$
+		String SQL = "UPDATE person SET alert = ?, name = ?, gender = ?, location = ?, " + 
+				"address = ?, postcode = ?, email = ?, language = ?, " + 
+				"religion = ?, notes = ? WHERE person_id = ?";  
 		
 		try{
 			
 			//Save Person
 			statement = dbConnection.prepareStatement(SQL);
-			statement.setString(1, "" + getShortAlertLevel()); //$NON-NLS-1$
+			statement.setString(1, "" + getShortAlertLevel()); 
 			statement.setString(2, name);
-			statement.setString(3, "" + getShortGender()); //$NON-NLS-1$
+			statement.setString(3, "" + getShortGender()); 
 			statement.setString(4, location);
 			statement.setString(5, postalAddress);
 			statement.setString(6, postCode);
@@ -318,7 +318,7 @@ public class Person {
 	        
 		}catch(SQLException e){
         	
-        	showError(e, xStrings.getString("Person.DBSQLError") + id); //$NON-NLS-1$ 
+        	showError(e, xStrings.getString("Person.DBSQLError") + id);  
         	
         }finally{
             if(statement != null)
@@ -377,7 +377,7 @@ public class Person {
 		Statement statement = null;
 		ResultSet rs = null;
 		
-		String SQL = "INSERT INTO person VALUES()";  //$NON-NLS-1$
+		String SQL = "INSERT INTO person VALUES()";  
 		
 		try{
 			
@@ -393,7 +393,7 @@ public class Person {
 			
 		}catch(SQLException e){
         	
-        	showError(e, xStrings.getString("Person.errorCreatingNewPerson")); //$NON-NLS-1$
+        	showError(e, xStrings.getString("Person.errorCreatingNewPerson")); 
         	
         }finally{
             if(statement != null)
@@ -413,9 +413,9 @@ public class Person {
 	 */
 	private void showError(Exception e, String friendlyErrorMessage){
 		
-		System.err.println(xStrings.getString("Person.logErrorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
+		System.err.println(xStrings.getString("Person.logErrorPrefix") + friendlyErrorMessage); 
 		e.printStackTrace();
-		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("Person.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
+		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("Person.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); 
 		LOGGER.severe(friendlyErrorMessage);
 		
 	}

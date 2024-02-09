@@ -33,8 +33,8 @@ public class ActivePersonChanger implements Runnable {
 		this.activePerson = Integer.parseInt(activePerson);
 		this.channelID = channelID;
 		
-		LOGGER.info(xStrings.getString("ActivePersonChanger.ChangingPerson") +  //$NON-NLS-1$
-				"\n\tChannel: " + channelID + "\n\tNew Person ID: " + activePerson); //$NON-NLS-1$ //$NON-NLS-2$
+		LOGGER.info(xStrings.getString("ActivePersonChanger.ChangingPerson") +  
+				"\n\tChannel: " + channelID + "\n\tNew Person ID: " + activePerson);
 		
 	}
 	
@@ -59,14 +59,14 @@ public class ActivePersonChanger implements Runnable {
 		PreparedStatement statement = null;
 		
 		String error = xStrings.getString(
-				"ActivePersonChanger.errorUpdatingCallLog") + //$NON-NLS-1$
-				"\n\tChannel: " + channelID + //$NON-NLS-1$
-				"\n\tPersonID: " + activePerson; //$NON-NLS-1$
+				"ActivePersonChanger.errorUpdatingCallLog") + 
+				"\n\tChannel: " + channelID + 
+				"\n\tPersonID: " + activePerson; 
 
 		try{
 				
-			SQL = "UPDATE `callhistory` SET `activePerson` = ? " + //$NON-NLS-1$
-					"WHERE callchannel = ?"; //$NON-NLS-1$
+			SQL = "UPDATE `callhistory` SET `activePerson` = ? " + 
+					"WHERE callchannel = ?"; 
 			
 			statement = writeConnection.prepareStatement(SQL);
 			statement.setLong(1, activePerson);

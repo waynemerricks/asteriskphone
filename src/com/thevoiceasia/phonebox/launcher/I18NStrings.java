@@ -6,7 +6,7 @@ import java.util.ResourceBundle;
 
 public class I18NStrings {
 	
-	private static final String BUNDLE_NAME = "com.thevoiceasia.phonebox.launcher.strings"; //$NON-NLS-1$
+	private static final String BUNDLE_NAME = "com.thevoiceasia.phonebox.launcher.strings";
 	private static ResourceBundle RESOURCE_BUNDLE;
 	
 	public I18NStrings(String language, String country){

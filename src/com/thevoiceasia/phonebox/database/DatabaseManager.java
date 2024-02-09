@@ -87,16 +87,16 @@ public class DatabaseManager {
 	 */
 	private void checkDBSettings(){
 		
-		if(database.getString("host").startsWith("!") || //$NON-NLS-1$ //$NON-NLS-2$
-				database.getString("user").startsWith("!") || //$NON-NLS-1$ //$NON-NLS-2$
-				database.getString("password").startsWith("!") || //$NON-NLS-1$ //$NON-NLS-2$
-				database.getString("database").startsWith("!")) //$NON-NLS-1$ //$NON-NLS-2$
+		if(database.getString("host").startsWith("!") ||  
+				database.getString("user").startsWith("!") ||  
+				database.getString("password").startsWith("!") ||  
+				database.getString("database").startsWith("!"))  
 			hasErrors = true;
 		
 		if(hasErrors)
-			LOGGER.severe(xStrings.getString("DatabaseManager.DBSetupError")); //$NON-NLS-1$
+			LOGGER.severe(xStrings.getString("DatabaseManager.DBSetupError")); 
 		else{
-			LOGGER.info(xStrings.getString("DatabaseManager.logDBSetupSuccess")); //$NON-NLS-1$
+			LOGGER.info(xStrings.getString("DatabaseManager.logDBSetupSuccess")); 
 		}
 		
 	}
@@ -118,21 +118,21 @@ public class DatabaseManager {
 		
 		try{
 			
-			String SQL = "SELECT option_name, option_value FROM clientsettings WHERE option_owner='"  //$NON-NLS-1$
-					+ owner + "'"; //$NON-NLS-1$
+			String SQL = "SELECT option_name, option_value FROM clientsettings WHERE option_owner='"  
+					+ owner + "'"; 
 			statement = databaseConnection.createStatement();
 		    resultSet = statement.executeQuery(SQL);
 		    
 		    while(resultSet.next()){
 		    	
-		    	settings.put(resultSet.getString("option_name"),  //$NON-NLS-1$
-		    			resultSet.getString("option_value")); //$NON-NLS-1$
+		    	settings.put(resultSet.getString("option_name"),  
+		    			resultSet.getString("option_value")); 
 		    	gotSettings = true;
 		    	
 		    }
 		    
 		}catch (SQLException e){
-			showError(e, xStrings.getString("DatabaseManager.getSettingsSQLError")); //$NON-NLS-1$
+			showError(e, xStrings.getString("DatabaseManager.getSettingsSQLError")); 
 		}finally {
 		    
 			if (resultSet != null) {
@@ -171,14 +171,14 @@ public class DatabaseManager {
 		
 		if(!hasErrors){
 			
-			settings.put("XMPPLogin", userName); //$NON-NLS-1$
-			settings.put("nickName", userName); //$NON-NLS-1$
+			settings.put("XMPPLogin", userName); 
+			settings.put("nickName", userName); 
 			
 			String password = generatePassword();
 			
-			if(password != null && password != ""){ //$NON-NLS-1$
+			if(password != null && password != ""){ 
 			
-				settings.put("password", password); //$NON-NLS-1$
+				settings.put("password", password); 
 				
 				success = addNewXMPPUser(userName, password);
 				
@@ -199,9 +199,9 @@ public class DatabaseManager {
 		
 		boolean updated = false;
 		
-		String[] tokens = updateStatement.split(" "); //$NON-NLS-1$
+		String[] tokens = updateStatement.split(" "); 
 		
-		if(tokens[0].equals("UPDATE") || tokens[0].equals("INSERT")){  //$NON-NLS-1$//$NON-NLS-2$
+		if(tokens[0].equals("UPDATE") || tokens[0].equals("INSERT")){  
 			
 			Statement query = null;
 			
@@ -216,7 +216,7 @@ public class DatabaseManager {
                 updated = true;
             }catch(SQLException e){
             	
-            	showError(e, xStrings.getString("DatabaseManager.errorUpdatingDB")); //$NON-NLS-1$
+            	showError(e, xStrings.getString("DatabaseManager.errorUpdatingDB")); 
             	
             }finally{
 	            if(query != null)
@@ -239,12 +239,12 @@ public class DatabaseManager {
 	 */
 	private boolean addNewXMPPUser(String userName, String password) {
 		
-		LOGGER.info(xStrings.getString("DatabaseManager.logAddNewXMPPUser")); //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("DatabaseManager.logAddNewXMPPUser")); 
 		
-		return executeUpdate("INSERT INTO clientsettings (option_owner, option_name, option_value)" + //$NON-NLS-1$
-				" VALUES ('" + userName +"', 'XMPPLogin', '" + userName + "'), " + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-						"('" + userName + "', 'password', '" + password + "'), " +  //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$
-						"('" + userName + "', 'nickName', '" + userName + "')");  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
+		return executeUpdate("INSERT INTO clientsettings (option_owner, option_name, option_value)" + 
+				" VALUES ('" + userName +"', 'XMPPLogin', '" + userName + "'), " +   
+						"('" + userName + "', 'password', '" + password + "'), " +   
+						"('" + userName + "', 'nickName', '" + userName + "')");   
 		
 	}
 
@@ -265,7 +265,7 @@ public class DatabaseManager {
 		 * the password can be decrypted before being sent to the XMPP server.
 		 */
 		SecureRandom random = new SecureRandom();
-		LOGGER.info(xStrings.getString("DatabaseManager.logGeneratingPassword")); //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("DatabaseManager.logGeneratingPassword")); 
 		
 		return new BigInteger(130, random).toString(32);
 		
@@ -278,31 +278,31 @@ public class DatabaseManager {
 	public boolean populateUserSettings(String userName){
 		
 		boolean gotUser = false;
-		LOGGER.info(xStrings.getString("DatabaseManager.logPopulatingUserSettings")); //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("DatabaseManager.logPopulatingUserSettings")); 
 		
 		try {
 			String machineName = InetAddress.getLocalHost().getHostName();
 			
 			if(userName == null)
-				userName = System.getProperty("user.name"); //$NON-NLS-1$
+				userName = System.getProperty("user.name"); 
 			
-			getSettingsFromDB("GLOBAL"); //$NON-NLS-1$
+			getSettingsFromDB("GLOBAL"); 
 			getSettingsFromDB(machineName);
 				
 			/* Check to see if we don't already have a user account tied to the machine name
 			 * If we do, use that, if we don't try and create a new account
 			 */
-			if(!getSettingsFromDB(userName) && settings.get("XMPPLogin") == null){//If this user has no settings in DB //$NON-NLS-1$
+			if(!getSettingsFromDB(userName) && settings.get("XMPPLogin") == null){//If this user has no settings in DB 
 				
 				if(!createUser(userName))//try and create a new user, if not error
-					showError(new Exception(xStrings.getString("DatabaseManager.errorCreatingUser")), //$NON-NLS-1$
-							xStrings.getString("DatabaseManager.errorCreatingUser")); //$NON-NLS-1$
+					showError(new Exception(xStrings.getString("DatabaseManager.errorCreatingUser")), 
+							xStrings.getString("DatabaseManager.errorCreatingUser")); 
 			}else
 				gotUser = true;
 			
 		} catch (UnknownHostException e) {
 
-			showError(e, xStrings.getString("DatabaseManager.errorGettingHostName")); //$NON-NLS-1$
+			showError(e, xStrings.getString("DatabaseManager.errorGettingHostName")); 
 			hasErrors = true;
 			
 		}
@@ -328,16 +328,16 @@ public class DatabaseManager {
 		
 		if(connected){
 			
-			LOGGER.info("DatabaseManager.logDisconnecting"); //$NON-NLS-1$
+			LOGGER.info("DatabaseManager.logDisconnecting"); 
 			try {
 				
 				databaseConnection.close();
-				LOGGER.info("DatabaseManager.logDisconnected"); //$NON-NLS-1$
+				LOGGER.info("DatabaseManager.logDisconnected"); 
 				
 				if(hasWriteConnection() && writeConnected){
 					
 					databaseWriteConnection.close();
-					LOGGER.info("DatabaseManager.logWriteDisconnected"); //$NON-NLS-1$
+					LOGGER.info("DatabaseManager.logWriteDisconnected"); 
 					writeConnected = false;
 					
 				}
@@ -346,11 +346,11 @@ public class DatabaseManager {
 				
 			} catch (SQLException e) {
 	
-				showWarning(e, xStrings.getString("DatabaseManager.errorDisconnecting")); //$NON-NLS-1$
+				showWarning(e, xStrings.getString("DatabaseManager.errorDisconnecting")); 
 				
 			}
 			
-			LOGGER.info(xStrings.getString("DatabaseManager.shutdownKeepAlive")); //$NON-NLS-1$
+			LOGGER.info(xStrings.getString("DatabaseManager.shutdownKeepAlive")); 
 			
 			if(keepAliveThread != null)
 				keepAliveThread.interrupt();
@@ -380,7 +380,7 @@ public class DatabaseManager {
 		} catch (SQLException e) {
 			
 			
-			LOGGER.severe(xStrings.getString("DatabaseManager.logErrorReconnecting")); //$NON-NLS-1$
+			LOGGER.severe(xStrings.getString("DatabaseManager.logErrorReconnecting")); 
 			hasErrors = true;
 			
 		}
@@ -434,7 +434,7 @@ public class DatabaseManager {
 		} catch (SQLException e) {
 			
 			
-			LOGGER.severe(xStrings.getString("DatabaseManager.logErrorReconnecting")); //$NON-NLS-1$
+			LOGGER.severe(xStrings.getString("DatabaseManager.logErrorReconnecting")); 
 			hasErrors = true;
 			
 		}
@@ -464,21 +464,21 @@ public class DatabaseManager {
 			
 			try{
 				//Connect to separate write DB too
-				databaseWriteConnection = DriverManager.getConnection("jdbc:mysql://" +  //$NON-NLS-1$
-						settings.get("writeDBHost") + "/" + settings.get("writeDBDatabase") + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-						"?user=" + settings.get("writeDBUser") +  //$NON-NLS-1$ //$NON-NLS-2$
-						"&password=" + settings.get("writeDBPass"));  //$NON-NLS-1$//$NON-NLS-2$
+				databaseWriteConnection = DriverManager.getConnection("jdbc:mysql://" +  
+						settings.get("writeDBHost") + "/" + settings.get("writeDBDatabase") +   
+						"?user=" + settings.get("writeDBUser") +   
+						"&password=" + settings.get("writeDBPass"));  
 				
 				writeConnected = true;
-				LOGGER.info(xStrings.getString("DatabaseManager.logWriteConnected")); //$NON-NLS-1$
+				LOGGER.info(xStrings.getString("DatabaseManager.logWriteConnected")); 
 			}catch(SQLException e){
 				
-				showError(e, xStrings.getString("DatabaseManager.mysqlConnectionError")); //$NON-NLS-1$
+				showError(e, xStrings.getString("DatabaseManager.mysqlConnectionError")); 
 				hasErrors = true;
 				
 			}catch(Exception e){
 				
-				showError(e, xStrings.getString("DatabaseManager.mysqlDriverException")); //$NON-NLS-1$
+				showError(e, xStrings.getString("DatabaseManager.mysqlDriverException")); 
 				hasErrors = true;
 				
 			}
@@ -495,35 +495,35 @@ public class DatabaseManager {
 		
 		if(!connected){
 			
-			LOGGER.info(xStrings.getString("DatabaseManager.logConnecting")); //$NON-NLS-1$
+			LOGGER.info(xStrings.getString("DatabaseManager.logConnecting")); 
 			
 			if(!hasErrors){
 				
 				try{
 					
-					Class.forName("com.mysql.jdbc.Driver").newInstance(); //$NON-NLS-1$
-					databaseConnection = DriverManager.getConnection("jdbc:mysql://" +  //$NON-NLS-1$
-							database.getString("host") + "/" + database.getString("database") + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-							"?user=" + database.getString("user") + "&password=" + database.getString("password"));  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+					Class.forName("com.mysql.jdbc.Driver").newInstance(); 
+					databaseConnection = DriverManager.getConnection("jdbc:mysql://" +  
+							database.getString("host") + "/" + database.getString("database") +   
+							"?user=" + database.getString("user") + "&password=" + database.getString("password"));
 					
-					LOGGER.info(xStrings.getString("DatabaseManager.logConnected")); //$NON-NLS-1$
+					LOGGER.info(xStrings.getString("DatabaseManager.logConnected")); 
 					
 					connected = true;
 					
 				}catch(SQLException e){
 					
-					showError(e, xStrings.getString("DatabaseManager.mysqlConnectionError")); //$NON-NLS-1$
+					showError(e, xStrings.getString("DatabaseManager.mysqlConnectionError")); 
 					hasErrors = true;
 					
 				}catch(Exception e){
 					
-					showError(e, xStrings.getString("DatabaseManager.mysqlDriverException")); //$NON-NLS-1$
+					showError(e, xStrings.getString("DatabaseManager.mysqlDriverException")); 
 					hasErrors = true;
 					
 				}
 				
 			}else
-				showError(new Exception(xStrings.getString("DatabaseManager.DBSetupError")), xStrings.getString("DatabaseManager.DBSetupError"));  //$NON-NLS-1$//$NON-NLS-2$
+				showError(new Exception(xStrings.getString("DatabaseManager.DBSetupError")), xStrings.getString("DatabaseManager.DBSetupError"));  
 		
 		}
 		
@@ -540,18 +540,18 @@ public class DatabaseManager {
 		
 		boolean writeConnection = false;
 		
-		if(settings.get("writeDBHost") != null && //$NON-NLS-1$
-				settings.get("writeDBUser") != null && //$NON-NLS-1$
-				settings.get("writeDBPass") != null && //$NON-NLS-1$
-				settings.get("writeDBDatabase") != null)  //$NON-NLS-1$
+		if(settings.get("writeDBHost") != null && 
+				settings.get("writeDBUser") != null && 
+				settings.get("writeDBPass") != null && 
+				settings.get("writeDBDatabase") != null)  
 			writeConnection = true;
 		
 		//Further check to see if we're not the same as read connection
 		if(writeConnection){
 			
-			if(settings.get("writeDBHost").equals(database.getString("host")) && //$NON-NLS-1$ //$NON-NLS-2$
-					settings.get("writeDBUser").equals(database.getString("user")) && //$NON-NLS-1$ //$NON-NLS-2$
-					settings.get("writeDBDatabase").equals(database.getString("database"))) //$NON-NLS-1$ //$NON-NLS-2$
+			if(settings.get("writeDBHost").equals(database.getString("host")) &&  
+					settings.get("writeDBUser").equals(database.getString("user")) &&  
+					settings.get("writeDBDatabase").equals(database.getString("database")))  
 				writeConnection = false;
 			
 		}
@@ -568,9 +568,9 @@ public class DatabaseManager {
 	 */
 	private void showError(Exception e, String friendlyErrorMessage){
 		
-		System.err.println(xStrings.getString("DatabaseManager.logErrorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
+		System.err.println(xStrings.getString("DatabaseManager.logErrorPrefix") + friendlyErrorMessage); 
 		e.printStackTrace();
-		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("DatabaseManager.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
+		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("DatabaseManager.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); 
 		LOGGER.severe(friendlyErrorMessage);
 		
 	}
@@ -582,9 +582,9 @@ public class DatabaseManager {
 	 */
 	private void showWarning(Exception e, String friendlyErrorMessage){
 		
-		System.err.println(xStrings.getString("DatabaseManager.logErrorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
+		System.err.println(xStrings.getString("DatabaseManager.logErrorPrefix") + friendlyErrorMessage); 
 		e.printStackTrace();
-		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("DatabaseManager.errorBoxTitle"), JOptionPane.WARNING_MESSAGE); //$NON-NLS-1$
+		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("DatabaseManager.errorBoxTitle"), JOptionPane.WARNING_MESSAGE); 
 		LOGGER.warning(friendlyErrorMessage);
 		
 	}
@@ -595,10 +595,10 @@ public class DatabaseManager {
 	 */
 	public HashSet<String> getSystemExtensions(){
 		
-		LOGGER.info(xStrings.getString("DatabaseManager.readingSystemExtensions")); //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("DatabaseManager.readingSystemExtensions")); 
 		
-		String SQL = "SELECT option_value FROM clientsettings WHERE option_name = 'myExtension' " + //$NON-NLS-1$
-				"OR option_name = 'incomingQueueNumber' OR option_name = 'onAirQueueNumber'"; //$NON-NLS-1$
+		String SQL = "SELECT option_value FROM clientsettings WHERE option_name = 'myExtension' " + 
+				"OR option_name = 'incomingQueueNumber' OR option_name = 'onAirQueueNumber'"; 
 		
 		HashSet<String> systemExtensions = new HashSet<String>();
 		Statement statement = null;
@@ -616,7 +616,7 @@ public class DatabaseManager {
 		    }
 
 		}catch (SQLException e){
-			LOGGER.severe(xStrings.getString("DatabaseManager.databaseSQLError") +  //$NON-NLS-1$
+			LOGGER.severe(xStrings.getString("DatabaseManager.databaseSQLError") +  
 					e.getMessage());
 		}finally {
 			

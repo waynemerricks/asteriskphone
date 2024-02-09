@@ -17,11 +17,11 @@ import javax.swing.SwingUtilities;
 public class CallInputField {
 
 	/** STATICS */
-	public static final String TYPE_LABEL = "label"; //$NON-NLS-1$
-	public static final String TYPE_TEXT_FIELD = "textfield"; //$NON-NLS-1$
-	public static final String TYPE_TEXT_AREA = "textarea"; //$NON-NLS-1$
-	public static final String TYPE_COMBO = "combo"; //$NON-NLS-1$
-	public static final String TYPE_TAB = "tab"; //$NON-NLS-1$
+	public static final String TYPE_LABEL = "label"; 
+	public static final String TYPE_TEXT_FIELD = "textfield"; 
+	public static final String TYPE_TEXT_AREA = "textarea"; 
+	public static final String TYPE_COMBO = "combo"; 
+	public static final String TYPE_TAB = "tab"; 
 	
 	/* CLASS VARS */
 	public String name, type, tooltip, options, mapping;
@@ -355,15 +355,15 @@ public class CallInputField {
 	 */
 	private void createCombo() {
 		
-		String[] itemsArray = options.split(","); //$NON-NLS-1$
+		String[] itemsArray = options.split(","); 
 		Vector<String> items = new Vector<String>(itemsArray.length);
 		HashMap<String, String> itemMapping = new HashMap<String, String>(itemsArray.length);
 		
 		for(int i = 0; i < itemsArray.length; i++){
 			
-			if(itemsArray[i].contains("=>")){ //$NON-NLS-1$
+			if(itemsArray[i].contains("=>")){ 
 				
-				String[] maps = itemsArray[i].split("=>"); //$NON-NLS-1$
+				String[] maps = itemsArray[i].split("=>"); 
 				items.add(maps[0]);
 				itemMapping.put(maps[0], maps[1]);
 				

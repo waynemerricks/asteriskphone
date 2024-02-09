@@ -74,7 +74,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 		}catch(NumberFormatException e){
 
 			this.maxRecordAge = 360000L;
-			LOGGER.warning(xStrings.getString("CallInputPanel.maxRecordAgeInvalid")); //$NON-NLS-1$
+			LOGGER.warning(xStrings.getString("CallInputPanel.maxRecordAgeInvalid")); 
 			
 		}
 		
@@ -119,7 +119,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 			if(components.get(i).isTab()){
 				
 				TabPanel tab = new TabPanel(components.get(i).id, components.get(i).name, 
-						new MigLayout("fillx"), components.get(i).mapping); //$NON-NLS-1$
+						new MigLayout("fillx"), components.get(i).mapping); 
 				tab.setPreferredSize(new Dimension(400, 350));
 				tab.setMinimumSize(new Dimension(200, 350));
 				tab.setMaximumSize(new Dimension(400, 350));
@@ -139,7 +139,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 				if(components.get(i).isLabel()){
 					
 					tabHash.get(components.get(i).parent).add(components.get(i).getComponent(),
-							"growx, spanx, wrap"); //$NON-NLS-1$
+							"growx, spanx, wrap"); 
 					
 				}else if(components.get(i).isCombo()){// || components.get(i).isTextField()
 					
@@ -147,11 +147,11 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 						tabHash.get(components.get(i).parent).add(components.get(i).getLabel());
 					
 					tabHash.get(components.get(i).parent).add(components.get(i).getComponent(),
-							"growx, spanx, wrap"); //$NON-NLS-1$
+							"growx, spanx, wrap"); 
 					
 					//Checks for special components e.g. alert box updater etc
 					if(components.get(i).mapping != null &&
-							components.get(i).mapping.equals("alert")){ //$NON-NLS-1$
+							components.get(i).mapping.equals("alert")){ 
 						
 						//Add a Listener to update the alert levels
 						components.get(i).addItemListener(new ItemListener(){
@@ -188,7 +188,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 						});
 					//Call Type e.g. On Air/Off Air
 					}else if(components.get(i).mapping != null && 
-							components.get(i).mapping.equals("calltype")){ //$NON-NLS-1$
+							components.get(i).mapping.equals("calltype")){ 
 					
 						//Add a Listener to update the alert levels
 						components.get(i).addItemListener(new ItemListener(){
@@ -226,7 +226,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 									
 									currentPanel.setPhoneCallField(
 											field.getFieldMapping(), 
-											((String)evt.getItem()).replace("/", "^^%%$$"),  //$NON-NLS-1$ //$NON-NLS-2$, 
+											((String)evt.getItem()).replace("/", "^^%%$$"), 
 											true);
 									
 								}
@@ -243,10 +243,10 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 						tabHash.get(components.get(i).parent).add(components.get(i).getLabel());
 					
 					tabHash.get(components.get(i).parent).add(components.get(i).getComponent(),
-							"growx, spanx, wrap"); //$NON-NLS-1$
+							"growx, spanx, wrap"); 
 					//Conversation
 					if(components.get(i).mapping != null &&
-							components.get(i).mapping.equals("conversation")){ //$NON-NLS-1$
+							components.get(i).mapping.equals("conversation")){ 
 						
 						components.get(i).addKeyListener(new KeyListener(){
 
@@ -285,7 +285,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 									
 									currentPanel.setPhoneCallField(
 											txt.getFieldMapping(), 
-											txt.getText().replace("/", "^^%%$$"),  //$NON-NLS-1$ //$NON-NLS-2$, 
+											txt.getText().replace("/", "^^%%$$"), 
 											true);
 									
 								}
@@ -306,28 +306,28 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 					if(components.get(i).getLabel() != null)
 						tabHash.get(components.get(i).parent).add(components.get(i).getLabel());
 					
-					if(components.get(i).mapping != null && !components.get(i).mapping.equals("name")) //$NON-NLS-1$
+					if(components.get(i).mapping != null && !components.get(i).mapping.equals("name")) 
 						tabHash.get(components.get(i).parent).add(components.get(i).getComponent(),
-							"growx, spanx, wrap"); //$NON-NLS-1$
+							"growx, spanx, wrap"); 
 					
 					//Name Field
 					if(components.get(i).mapping != null && 
-							components.get(i).mapping.equals("name")){ //$NON-NLS-1$
+							components.get(i).mapping.equals("name")){ 
 						
 						//Add the text field without the wrap and then add a button
 						tabHash.get(components.get(i).parent).add(components.get(i).getComponent(), 
-								"spanx, growx, split 3"); //$NON-NLS-1$
+								"spanx, growx, split 3"); 
 						
 						//Button to change the person on the call usually for withheld numbers or
 						//one number in use by more than one person
 						changePerson = new JButton(
-								xStrings.getString("CallInputPanel.changePerson")); //$NON-NLS-1$
-						tabHash.get(components.get(i).parent).add(changePerson);  //$NON-NLS-1$
+								xStrings.getString("CallInputPanel.changePerson")); 
+						tabHash.get(components.get(i).parent).add(changePerson);  
 						
 						//Button to add a manual Call
 						addCall = new JButton(xStrings.getString("CallInputPanel.addCall"));
 						//addCall.setEnabled(false);
-						tabHash.get(components.get(i).parent).add(addCall, "wrap");  //$NON-NLS-1$
+						tabHash.get(components.get(i).parent).add(addCall, "wrap");  
 						
 						components.get(i).addKeyListener(new KeyListener(){
 
@@ -352,7 +352,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 						});
 						
 					}else if(components.get(i).mapping != null && 
-							components.get(i).mapping.equals("location")){ //$NON-NLS-1$
+							components.get(i).mapping.equals("location")){ 
 						
 						components.get(i).addKeyListener(new KeyListener(){
 
@@ -390,7 +390,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 									TextField txt = (TextField)evt.getSource();
 									currentPanel.setPhoneCallField(
 											txt.getFieldMapping(), 
-											txt.getText().replace("/", "^^%%$$"),  //$NON-NLS-1$ //$NON-NLS-2$
+											txt.getText().replace("/", "^^%%$$"),   
 											true);
 									
 								}
@@ -418,21 +418,21 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 			
 			TabPanel tab = tabs.get(i);
 			
-			if(tab.mapping != null && tab.mapping.equals("history")){ //$NON-NLS-1$
+			if(tab.mapping != null && tab.mapping.equals("history")){ 
 				
 				//Special case for the history tab so create caller history here
 				historyPanel = new CallerHistoryPanel(language, country);
-				tab.add(historyPanel.getTable().getTableHeader(), "growx, spanx, wrap"); //$NON-NLS-1$
-				tab.add(historyPanel.getTable(), "growx, spanx, wrap"); //$NON-NLS-1$
+				tab.add(historyPanel.getTable().getTableHeader(), "growx, spanx, wrap"); 
+				tab.add(historyPanel.getTable(), "growx, spanx, wrap"); 
 				
-			}else if(tab.mapping != null && tab.mapping.equals("calllog")){ //$NON-NLS-1$
+			}else if(tab.mapping != null && tab.mapping.equals("calllog")){ 
 				
-				LOGGER.info(xStrings.getString("CallInputPanel.creatingCallLogPanel")); //$NON-NLS-1$
+				LOGGER.info(xStrings.getString("CallInputPanel.creatingCallLogPanel")); 
 				//Special case for the call log tab
 				callLogPanel = new CallLogPanel(databaseReadConnection, 
 						this.maxRecordAge, language, country, manager, incomingQueue, onairQueue);
-				tab.add(callLogPanel.getTable().getTableHeader(), "growx, spanx, wrap"); //$NON-NLS-1$
-				tab.add(callLogPanel.getTable(), "growx, spanx, wrap"); //$NON-NLS-1$
+				tab.add(callLogPanel.getTable().getTableHeader(), "growx, spanx, wrap"); 
+				tab.add(callLogPanel.getTable(), "growx, spanx, wrap"); 
 				
 			}
 			
@@ -464,7 +464,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 					
 						//Get the Parent JFrame so that SearchPanel can have that as the owner
 						searchPanel = new SearchPanel(ownerFinal, 
-								xStrings.getString("SearchPanel.title"),  //$NON-NLS-1$
+								xStrings.getString("SearchPanel.title"),  
 								language, country, 
 								databaseReadConnection, 
 								getPhoneNumber(currentPanel.getChannelID()));
@@ -524,15 +524,15 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 		
 		try{
 			
-			String SQL = "SELECT phonenumber FROM callhistory WHERE callchannel = '" + channelID + "' LIMIT 1"; //$NON-NLS-1$ //$NON-NLS-2$
+			String SQL = "SELECT phonenumber FROM callhistory WHERE callchannel = '" + channelID + "' LIMIT 1";  
 			statement = databaseReadConnection.createStatement();
 			resultSet = statement.executeQuery(SQL);
 			
 			while(resultSet.next())
-				number = resultSet.getString("phonenumber"); //$NON-NLS-1$
+				number = resultSet.getString("phonenumber"); 
 			
 		}catch(SQLException e){
-			showError(e, xStrings.getString("CallInputPanel.getNumberSQLError")); //$NON-NLS-1$
+			showError(e, xStrings.getString("CallInputPanel.getNumberSQLError")); 
 		}finally {
 		    
 			if (resultSet != null) {
@@ -568,8 +568,8 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 		
 		try{
 			
-			String SQL = "SELECT * FROM callinputfields WHERE language = '" + language +  //$NON-NLS-1$
-					"," + country + "' ORDER BY `order` ASC"; //$NON-NLS-1$ //$NON-NLS-2$
+			String SQL = "SELECT * FROM callinputfields WHERE language = '" + language +  
+					"," + country + "' ORDER BY `order` ASC";  
 			
 			statement = databaseReadConnection.createStatement();
 		    resultSet = statement.executeQuery(SQL);
@@ -578,21 +578,21 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 		    	
 		    	//int id, String name, String type, String tooltip, int order, 
 				//int parent, String options
-		    	components.add(new CallInputField(resultSet.getInt("id"), //$NON-NLS-1$
-		    			resultSet.getString("name"), //$NON-NLS-1$
-		    			resultSet.getString("type"), //$NON-NLS-1$
-		    			resultSet.getString("tooltip"), //$NON-NLS-1$
-		    			resultSet.getInt("order"), //$NON-NLS-1$
-		    			resultSet.getInt("parent"), //$NON-NLS-1$
-		    			resultSet.getString("options"), //$NON-NLS-1$
-		    			resultSet.getString("mapping"))); //$NON-NLS-1$
+		    	components.add(new CallInputField(resultSet.getInt("id"), 
+		    			resultSet.getString("name"), 
+		    			resultSet.getString("type"), 
+		    			resultSet.getString("tooltip"), 
+		    			resultSet.getInt("order"), 
+		    			resultSet.getInt("parent"), 
+		    			resultSet.getString("options"), 
+		    			resultSet.getString("mapping"))); 
 		    	
 		    }
 		    
 		    gotSettings = true;
 		    
 		}catch (SQLException e){
-			showError(e, xStrings.getString("CallInputPanel.getComponentsSQLError")); //$NON-NLS-1$
+			showError(e, xStrings.getString("CallInputPanel.getComponentsSQLError")); 
 		}finally {
 		    
 			if (resultSet != null) {
@@ -622,11 +622,11 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 	 */
 	private void showError(Exception e, String friendlyErrorMessage){
 		
-		System.err.println(xStrings.getString("CallInputPanel.logErrorPrefix") + //$NON-NLS-1$
+		System.err.println(xStrings.getString("CallInputPanel.logErrorPrefix") + 
 				friendlyErrorMessage); 
 		e.printStackTrace();
 		JOptionPane.showMessageDialog(null, friendlyErrorMessage, 
-				xStrings.getString("CallInputPanel.errorBoxTitle"), //$NON-NLS-1$
+				xStrings.getString("CallInputPanel.errorBoxTitle"), 
 				JOptionPane.ERROR_MESSAGE); 
 		LOGGER.severe(friendlyErrorMessage);
 		
@@ -680,7 +680,7 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 	@Override
 	public void callAnswered(CallInfoPanel call) {
 		
-		LOGGER.info(xStrings.getString("CallInputPanel.answeredCall") + ": " + //$NON-NLS-1$ //$NON-NLS-2$
+		LOGGER.info(xStrings.getString("CallInputPanel.answeredCall") + ": " +  
 				call.getPhoneCallRecord().getActivePerson().name); 
 		
 		/* This panel has been answered so we need to update the fields as necessary */
@@ -688,21 +688,21 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 			
 			currentPanel = null; //Set to null so update listeners won't activate on an 
 			//old panel
-			setFieldValue("alert", call.getPhoneCallRecord().getActivePerson().alert); //$NON-NLS-1$
-			setFieldValue("calltype", call.getPhoneCallRecord().getCallType()); //$NON-NLS-1$
-			setFieldValue("gender", call.getPhoneCallRecord().getActivePerson().gender); //$NON-NLS-1$
-			setFieldValue("name", call.getPhoneCallRecord().getActivePerson().name); //$NON-NLS-1$
-			setFieldValue("location", call.getPhoneCallRecord().getActivePerson().location); //$NON-NLS-1$
-			setFieldValue("address", //$NON-NLS-1$
+			setFieldValue("alert", call.getPhoneCallRecord().getActivePerson().alert); 
+			setFieldValue("calltype", call.getPhoneCallRecord().getCallType()); 
+			setFieldValue("gender", call.getPhoneCallRecord().getActivePerson().gender); 
+			setFieldValue("name", call.getPhoneCallRecord().getActivePerson().name); 
+			setFieldValue("location", call.getPhoneCallRecord().getActivePerson().location); 
+			setFieldValue("address", 
 					call.getPhoneCallRecord().getActivePerson().postalAddress); 
-			setFieldValue("postcode", call.getPhoneCallRecord().getActivePerson().postCode); //$NON-NLS-1$
-			setFieldValue("email", call.getPhoneCallRecord().getActivePerson().email); //$NON-NLS-1$
-			setFieldValue("language", call.getPhoneCallRecord().getActivePerson().language); //$NON-NLS-1$
-			setFieldValue("religion", call.getPhoneCallRecord().getActivePerson().religion); //$NON-NLS-1$
-			setFieldValue("journey", call.getPhoneCallRecord().getActivePerson().journey); //$NON-NLS-1$
-			setFieldValue("conversation", //$NON-NLS-1$
+			setFieldValue("postcode", call.getPhoneCallRecord().getActivePerson().postCode); 
+			setFieldValue("email", call.getPhoneCallRecord().getActivePerson().email); 
+			setFieldValue("language", call.getPhoneCallRecord().getActivePerson().language); 
+			setFieldValue("religion", call.getPhoneCallRecord().getActivePerson().religion); 
+			setFieldValue("journey", call.getPhoneCallRecord().getActivePerson().journey); 
+			setFieldValue("conversation", 
 					call.getPhoneCallRecord().getActivePerson().currentConversation); 
-			setFieldValue("notes", call.getPhoneCallRecord().getActivePerson().notes); //$NON-NLS-1$
+			setFieldValue("notes", call.getPhoneCallRecord().getActivePerson().notes); 
 			
 			//TODO Custom Fields
 			
@@ -725,13 +725,13 @@ public class CallInputPanel extends JTabbedPane implements AnswerListener, Perso
 		 */
 		
 		if(changedTo.isNewPerson())
-			chat.sendMessage(xStrings.getString("CallInputPanel.ChangeToNewPerson") + //$NON-NLS-1$
+			chat.sendMessage(xStrings.getString("CallInputPanel.ChangeToNewPerson") + 
 					"/" + currentPanel.getChannelID() + "/" + changedTo.number, 
 					true); 
 		else
-			chat.sendMessage(xStrings.getString("CallInputPanel.ChangeToExistingPerson") + //$NON-NLS-1$
-					"/" + currentPanel.getChannelID() + //$NON-NLS-1$
-					"/" + changedTo.id, true); //$NON-NLS-1$
+			chat.sendMessage(xStrings.getString("CallInputPanel.ChangeToExistingPerson") + 
+					"/" + currentPanel.getChannelID() + 
+					"/" + changedTo.id, true); 
 		
 	}
 

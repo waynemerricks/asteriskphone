@@ -23,7 +23,6 @@ public class DialPanel extends JDialog implements ActionListener, KeyListener{
 	/** STATICS **/
 	private static final Logger LOGGER = Logger.getLogger(DialPanel.class.getName());//Logger
 	private static final long serialVersionUID = 1L;
-	@SuppressWarnings("nls")
 	private static final String[] buttons = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "*",  
 		"0" ,"#"};
 	
@@ -67,7 +66,7 @@ public class DialPanel extends JDialog implements ActionListener, KeyListener{
 			
 			JButton button = new JButton(buttons[i]);
 			button.setActionCommand(buttons[i]);
-			button.setToolTipText(xStrings.getString("DialPanel.dialToolTip") + " "   //$NON-NLS-1$//$NON-NLS-2$
+			button.setToolTipText(xStrings.getString("DialPanel.dialToolTip") + " "   
 					+ buttons[i]);
 			button.addActionListener(this);
 			numberGrid.add(button);
@@ -77,15 +76,15 @@ public class DialPanel extends JDialog implements ActionListener, KeyListener{
 		this.add(numberGrid, BorderLayout.CENTER);
 		
 		JPanel south = new JPanel(new GridLayout(1, 2, 5, 5));
-		JButton button = new JButton(createImageIcon("images/answer.png", "dial"));  //$NON-NLS-1$//$NON-NLS-2$
-		button.setActionCommand("dial"); //$NON-NLS-1$
-		button.setToolTipText(xStrings.getString("DialPanel.dialButtonToolTip")); //$NON-NLS-1$
+		JButton button = new JButton(createImageIcon("images/answer.png", "dial"));  
+		button.setActionCommand("dial"); 
+		button.setToolTipText(xStrings.getString("DialPanel.dialButtonToolTip")); 
 		button.addActionListener(this);
 		south.add(button);
 		
-		button = new JButton(createImageIcon("images/drop.png", "clear"));  //$NON-NLS-1$//$NON-NLS-2$
-		button.setActionCommand("clear"); //$NON-NLS-1$
-		button.setToolTipText(xStrings.getString("DialPanel.clearButtonToolTip")); //$NON-NLS-1$
+		button = new JButton(createImageIcon("images/drop.png", "clear"));  
+		button.setActionCommand("clear"); 
+		button.setToolTipText(xStrings.getString("DialPanel.clearButtonToolTip")); 
 		button.addActionListener(this);
 		south.add(button);
 		
@@ -129,7 +128,7 @@ public class DialPanel extends JDialog implements ActionListener, KeyListener{
 			icon = new ImageIcon(imgURL, description);
 		else{
 			
-			LOGGER.warning(xStrings.getString("CallShortcutBar.logLoadIconError")); //$NON-NLS-1$
+			LOGGER.warning(xStrings.getString("CallShortcutBar.logLoadIconError")); 
 			
 		}
 		
@@ -158,12 +157,12 @@ public class DialPanel extends JDialog implements ActionListener, KeyListener{
 	@Override
 	public void actionPerformed(ActionEvent evt) {
 		
-		if(evt.getActionCommand().equals("dial")){ //$NON-NLS-1$
+		if(evt.getActionCommand().equals("dial")){ 
 			dial();
-		}else if(evt.getActionCommand().equals("clear")){ //$NON-NLS-1$
+		}else if(evt.getActionCommand().equals("clear")){ 
 			
 			if(number.getText().length() > 0)
-				number.setText(""); //$NON-NLS-1$
+				number.setText(""); 
 			else{
 				
 				this.setVisible(false);

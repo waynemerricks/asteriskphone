@@ -29,11 +29,11 @@ public class TrackDial implements Runnable {
 	@Override
 	public void run() {
 		
-		LOGGER.info(xStrings.getString("TrackDial.trackDialEvent") +  //$NON-NLS-1$
-				phoneNumber + "/"  + operator); //$NON-NLS-1$
-		String SQL = "INSERT INTO `callhistory` (`phonenumber`, `state`, " + //$NON-NLS-1$
-				"`operator`, `callchannel`) VALUES ('" + phoneNumber + "', 'D'," + //$NON-NLS-1$ //$NON-NLS-2$
-						" '" + operator + "', 0)";  //$NON-NLS-1$//$NON-NLS-2$
+		LOGGER.info(xStrings.getString("TrackDial.trackDialEvent") +  
+				phoneNumber + "/"  + operator); 
+		String SQL = "INSERT INTO `callhistory` (`phonenumber`, `state`, " + 
+				"`operator`, `callchannel`) VALUES ('" + phoneNumber + "', 'D'," +  
+						" '" + operator + "', 0)";  
 		Statement statement = null;
 		
 		try{
@@ -43,8 +43,8 @@ public class TrackDial implements Runnable {
 			
 		}catch(SQLException e){
         	
-        	showError(e, xStrings.getString("TrackDial.errorTrackingDialEvent") //$NON-NLS-1$ 
-        			+ phoneNumber + ":" + operator); //$NON-NLS-1$
+        	showError(e, xStrings.getString("TrackDial.errorTrackingDialEvent")  
+        			+ phoneNumber + ":" + operator); 
         	
         }finally{
             if(statement != null)
@@ -63,7 +63,7 @@ public class TrackDial implements Runnable {
 	 */
 	private void showError(Exception e, String friendlyErrorMessage){
 		
-		System.err.println(xStrings.getString("TrackDial.logErrorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
+		System.err.println(xStrings.getString("TrackDial.logErrorPrefix") + friendlyErrorMessage); 
 		e.printStackTrace();
 		LOGGER.severe(friendlyErrorMessage);
 		

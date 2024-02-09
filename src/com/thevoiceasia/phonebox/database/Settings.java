@@ -10,7 +10,7 @@ import java.util.ResourceBundle;
  */
 public class Settings {
 	
-	private static final String BUNDLE_NAME = "com.thevoiceasia.phonebox.database.settings"; //$NON-NLS-1$
+	private static final String BUNDLE_NAME = "com.thevoiceasia.phonebox.database.settings";
 	private ResourceBundle RESOURCE_BUNDLE;
 	
 	public Settings(){

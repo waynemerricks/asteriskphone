@@ -71,33 +71,33 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 		this.setSize(400, 320);
 		this.setTitle(title);
 		
-		LOGGER.info(xStrings.getString("SearchPanel.gettingPeopleFromNumber") + " " + numberToSearch); //$NON-NLS-1$ //$NON-NLS-2$
+		LOGGER.info(xStrings.getString("SearchPanel.gettingPeopleFromNumber") + " " + numberToSearch);  
 		addNewPersonRecord();
 		getPeopleFromNumber(numberToSearch, false);
 		
-		LOGGER.info(xStrings.getString("SearchPanel.creatingSearchPanel")); //$NON-NLS-1$
-		this.setLayout(new MigLayout("fillx, insets 0 5 0 5")); //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("SearchPanel.creatingSearchPanel")); 
+		this.setLayout(new MigLayout("fillx, insets 0 5 0 5")); 
 		
 		//** NAME FIELD **//
-		name = new JTextField(""); //$NON-NLS-1$
-		name.setToolTipText(xStrings.getString("SearchPanel.searchByName")); //$NON-NLS-1$
+		name = new JTextField(""); 
+		name.setToolTipText(xStrings.getString("SearchPanel.searchByName")); 
 		name.addKeyListener(this);
 		
-		JLabel lbl = new JLabel(xStrings.getString("SearchPanel.nameField")); //$NON-NLS-1$
+		JLabel lbl = new JLabel(xStrings.getString("SearchPanel.nameField")); 
 		lbl.setLabelFor(name);
 		
 		this.add(lbl);
-		this.add(name, "growx, pushx, wrap"); //$NON-NLS-1$
+		this.add(name, "growx, pushx, wrap"); 
 		
-		number = new JTextField(""); //$NON-NLS-1$
-		number.setToolTipText(xStrings.getString("SearchPanel.searchByNumber")); //$NON-NLS-1$
+		number = new JTextField(""); 
+		number.setToolTipText(xStrings.getString("SearchPanel.searchByNumber")); 
 		number.addKeyListener(this);
 		
-		lbl = new JLabel(xStrings.getString("SearchPanel.numberField")); //$NON-NLS-1$
+		lbl = new JLabel(xStrings.getString("SearchPanel.numberField")); 
 		lbl.setLabelFor(number);
 		
 		this.add(lbl);
-		this.add(number, "growx, pushx, wrap"); //$NON-NLS-1$
+		this.add(number, "growx, pushx, wrap"); 
 		
 		//Create the Table
 		buildTableColumns();
@@ -140,27 +140,27 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 		people.setRowSelectionAllowed(true);
 		people.setAutoCreateRowSorter(true);
 		
-		this.add(people.getTableHeader(), "growx, span, wrap"); //$NON-NLS-1$
-		this.add(new JScrollPane(people), "grow, pushy, span, wrap"); //$NON-NLS-1$
+		this.add(people.getTableHeader(), "growx, span, wrap"); 
+		this.add(new JScrollPane(people), "grow, pushy, span, wrap"); 
 		
-		this.add(new JLabel(" "), "push, growx");//blanking label to fill space  //$NON-NLS-1$//$NON-NLS-2$
+		this.add(new JLabel(" "), "push, growx");//blanking label to fill space  
 		
 		//Buttons
-		JButton button = new JButton(xStrings.getString("SearchPanel.cancelButton")); //$NON-NLS-1$
-		button.setMnemonic(xStrings.getString("SearchPanel.cancelButton").charAt(0)); //$NON-NLS-1$
-		button.setToolTipText(xStrings.getString("SearchPanel.cancelToolTip")); //$NON-NLS-1$
-		button.setActionCommand("cancel"); //$NON-NLS-1$
+		JButton button = new JButton(xStrings.getString("SearchPanel.cancelButton")); 
+		button.setMnemonic(xStrings.getString("SearchPanel.cancelButton").charAt(0)); 
+		button.setToolTipText(xStrings.getString("SearchPanel.cancelToolTip")); 
+		button.setActionCommand("cancel"); 
 		button.addActionListener(this);
 		
 		this.add(button);
 		
-		button = new JButton(xStrings.getString("SearchPanel.okButton")); //$NON-NLS-1$
-		button.setMnemonic(xStrings.getString("SearchPanel.okButton").charAt(0)); //$NON-NLS-1$
-		button.setToolTipText(xStrings.getString("SearchPanel.okToolTip")); //$NON-NLS-1$
-		button.setActionCommand("ok"); //$NON-NLS-1$
+		button = new JButton(xStrings.getString("SearchPanel.okButton")); 
+		button.setMnemonic(xStrings.getString("SearchPanel.okButton").charAt(0)); 
+		button.setToolTipText(xStrings.getString("SearchPanel.okToolTip")); 
+		button.setActionCommand("ok"); 
 		button.addActionListener(this);
 		
-		this.add(button, "wrap"); //$NON-NLS-1$
+		this.add(button, "wrap"); 
 		
 		//Spawn search thread
 		searchPersonThread = new SearchPersonThread(this);
@@ -177,21 +177,21 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 		
 		//TODO Rework for custom fields (one day)
 		//Get the records cross referenced from person and phonenumbers
-		String SQL = "SELECT phone_number, person.* FROM phonenumbers INNER JOIN person ON " + //$NON-NLS-1$
-				"phonenumbers.person_id = person.person_id " + //$NON-NLS-1$
-				"WHERE phone_number "; //$NON-NLS-1$
+		String SQL = "SELECT phone_number, person.* FROM phonenumbers INNER JOIN person ON " + 
+				"phonenumbers.person_id = person.person_id " + 
+				"WHERE phone_number "; 
 		
 		if(partialMatch)
-			SQL += "LIKE '" + number + "%' ";  //$NON-NLS-1$//$NON-NLS-2$
+			SQL += "LIKE '" + number + "%' ";  
 		else
-			SQL += "= '" + number + "' ";  //$NON-NLS-1$//$NON-NLS-2$
+			SQL += "= '" + number + "' ";  
 		
-		SQL += "ORDER BY person.name ASC"; //$NON-NLS-1$
+		SQL += "ORDER BY person.name ASC"; 
 		
 		Statement statement = null;
 		ResultSet resultSet = null;
 		
-		LOGGER.info(xStrings.getString("SearchPanel.lookingUpNumber")); //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("SearchPanel.lookingUpNumber")); 
 		
 		try{
 			statement = readConnection.createStatement();
@@ -199,26 +199,26 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 		    
 		    while(resultSet.next()){
 		    	
-		    	Person person = new Person(resultSet.getInt("person_id"), language, country); //$NON-NLS-1$
-		    	person.alert = resultSet.getString("alert"); //$NON-NLS-1$
-		    	person.name = resultSet.getString("name"); //$NON-NLS-1$
-		    	person.gender = resultSet.getString("gender"); //$NON-NLS-1$
-		    	person.location = resultSet.getString("location"); //$NON-NLS-1$
-		    	person.postalAddress = resultSet.getString("address"); //$NON-NLS-1$
-		    	person.postCode = resultSet.getString("postcode"); //$NON-NLS-1$
-		    	person.email = resultSet.getString("email"); //$NON-NLS-1$
-		    	person.language = resultSet.getString("language"); //$NON-NLS-1$
-		    	person.religion = resultSet.getString("religion"); //$NON-NLS-1$
-		    	person.journey = resultSet.getString("journey"); //$NON-NLS-1$
-		    	person.notes = resultSet.getString("notes"); //$NON-NLS-1$
-		    	person.number = resultSet.getString("phone_number"); //$NON-NLS-1$
+		    	Person person = new Person(resultSet.getInt("person_id"), language, country); 
+		    	person.alert = resultSet.getString("alert"); 
+		    	person.name = resultSet.getString("name"); 
+		    	person.gender = resultSet.getString("gender"); 
+		    	person.location = resultSet.getString("location"); 
+		    	person.postalAddress = resultSet.getString("address"); 
+		    	person.postCode = resultSet.getString("postcode"); 
+		    	person.email = resultSet.getString("email"); 
+		    	person.language = resultSet.getString("language"); 
+		    	person.religion = resultSet.getString("religion"); 
+		    	person.journey = resultSet.getString("journey"); 
+		    	person.notes = resultSet.getString("notes"); 
+		    	person.number = resultSet.getString("phone_number"); 
 		    	
 		    	records.add(person);
 
 		    }
 		    
 		}catch (SQLException e){
-			showError(e, xStrings.getString("SearchPanel.getLogSQLError")); //$NON-NLS-1$
+			showError(e, xStrings.getString("SearchPanel.getLogSQLError")); 
 		}finally {
 		    
 			if (resultSet != null) {
@@ -248,21 +248,21 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 		
 		//TODO Rework for custom fields (one day)
 		//Get the records cross referenced from person and phonenumbers
-		String SQL = "SELECT person.*, phonenumbers.phone_number FROM person INNER JOIN phonenumbers ON " + //$NON-NLS-1$
-				"person.person_id = phonenumbers.person_id " + //$NON-NLS-1$
-				"WHERE person.name "; //$NON-NLS-1$
+		String SQL = "SELECT person.*, phonenumbers.phone_number FROM person INNER JOIN phonenumbers ON " + 
+				"person.person_id = phonenumbers.person_id " + 
+				"WHERE person.name "; 
 		
 		if(partialMatch)
-			SQL += "LIKE '" + name + "%' ";  //$NON-NLS-1$//$NON-NLS-2$
+			SQL += "LIKE '" + name + "%' ";  
 		else
-			SQL += "= '" + name + "' ";  //$NON-NLS-1$//$NON-NLS-2$
+			SQL += "= '" + name + "' ";  
 		
-		SQL += "ORDER BY person.name ASC LIMIT 10"; //$NON-NLS-1$
+		SQL += "ORDER BY person.name ASC LIMIT 10"; 
 		
 		Statement statement = null;
 		ResultSet resultSet = null;
 		
-		LOGGER.info(xStrings.getString("SearchPanel.lookingUpName")); //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("SearchPanel.lookingUpName")); 
 		
 		try{
 			statement = readConnection.createStatement();
@@ -270,26 +270,26 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 		    
 		    while(resultSet.next()){
 		    	
-		    	Person person = new Person(resultSet.getInt("person_id"), language, country); //$NON-NLS-1$
-		    	person.alert = resultSet.getString("alert"); //$NON-NLS-1$
-		    	person.name = resultSet.getString("name"); //$NON-NLS-1$
-		    	person.gender = resultSet.getString("gender"); //$NON-NLS-1$
-		    	person.location = resultSet.getString("location"); //$NON-NLS-1$
-		    	person.postalAddress = resultSet.getString("address"); //$NON-NLS-1$
-		    	person.postCode = resultSet.getString("postcode"); //$NON-NLS-1$
-		    	person.email = resultSet.getString("email"); //$NON-NLS-1$
-		    	person.language = resultSet.getString("language"); //$NON-NLS-1$
-		    	person.religion = resultSet.getString("religion"); //$NON-NLS-1$
-		    	person.journey = resultSet.getString("journey"); //$NON-NLS-1$
-		    	person.notes = resultSet.getString("notes"); //$NON-NLS-1$
-		    	person.number = resultSet.getString("phone_number"); //$NON-NLS-1$
+		    	Person person = new Person(resultSet.getInt("person_id"), language, country); 
+		    	person.alert = resultSet.getString("alert"); 
+		    	person.name = resultSet.getString("name"); 
+		    	person.gender = resultSet.getString("gender"); 
+		    	person.location = resultSet.getString("location"); 
+		    	person.postalAddress = resultSet.getString("address"); 
+		    	person.postCode = resultSet.getString("postcode"); 
+		    	person.email = resultSet.getString("email"); 
+		    	person.language = resultSet.getString("language"); 
+		    	person.religion = resultSet.getString("religion"); 
+		    	person.journey = resultSet.getString("journey"); 
+		    	person.notes = resultSet.getString("notes"); 
+		    	person.number = resultSet.getString("phone_number"); 
 		    	
 		    	records.add(person);
 
 		    }
 		    
 		}catch (SQLException e){
-			showError(e, xStrings.getString("SearchPanel.getLogSQLError")); //$NON-NLS-1$
+			showError(e, xStrings.getString("SearchPanel.getLogSQLError")); 
 		}finally {
 		    
 			if (resultSet != null) {
@@ -316,10 +316,10 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 	private void addNewPersonRecord(){
 		
 		Person person = new Person(-1, language, country);
-    	person.name = xStrings.getString("SearchPanel.newPersonName"); //$NON-NLS-1$
-    	person.location = xStrings.getString("SearchPanel.newPersonLocation"); //$NON-NLS-1$
+    	person.name = xStrings.getString("SearchPanel.newPersonName"); 
+    	person.location = xStrings.getString("SearchPanel.newPersonLocation"); 
     	person.id = -1; //-1 signifies this should create a record
-    	person.number = ""; //$NON-NLS-1$
+    	person.number = ""; 
 
     	records.add(person);
 
@@ -332,9 +332,9 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 	 */
 	private void showError(Exception e, String friendlyErrorMessage){
 		
-		System.err.println(xStrings.getString("DatabaseManager.logErrorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
+		System.err.println(xStrings.getString("DatabaseManager.logErrorPrefix") + friendlyErrorMessage); 
 		e.printStackTrace();
-		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("DatabaseManager.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
+		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("DatabaseManager.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); 
 		LOGGER.severe(friendlyErrorMessage);
 		
 	}
@@ -344,9 +344,9 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 		//TODO read this from db instead of hard coding
 		columnNames = new String[3];
 		
-		columnNames[0] = xStrings.getString("SearchPanel.nameField"); //$NON-NLS-1$
-		columnNames[1] = xStrings.getString("SearchPanel.locationField"); //$NON-NLS-1$
-		columnNames[2] = xStrings.getString("SearchPanel.numberField"); //$NON-NLS-1$
+		columnNames[0] = xStrings.getString("SearchPanel.nameField"); 
+		columnNames[1] = xStrings.getString("SearchPanel.locationField"); 
+		columnNames[2] = xStrings.getString("SearchPanel.numberField"); 
 		
 	}
 	
@@ -393,14 +393,14 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 		//Query DB if there is a search term to use
 		if(searchTerm != null && searchTerm.getSearchTerm() != null){
 			
-			LOGGER.info(xStrings.getString("SearchPanel.dataUpdating")); //$NON-NLS-1$
+			LOGGER.info(xStrings.getString("SearchPanel.dataUpdating")); 
 			searchTerm.setLocked(true);
 			
 			updateData(searchTerm.isNumber(), searchTerm.getSearchTerm());
 			searchTerm.clear();
 			
 			searchTerm.setLocked(false);
-			LOGGER.info(xStrings.getString("SearchPanel.dataUpdated")); //$NON-NLS-1$
+			LOGGER.info(xStrings.getString("SearchPanel.dataUpdated")); 
 			
 		}
 		
@@ -441,10 +441,10 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 		 */
 		//Get the number from the panel if they've typed one in
 		Person person = new Person(-1, language, country);
-    	person.name = xStrings.getString("SearchPanel.newPersonName"); //$NON-NLS-1$
-    	person.location = xStrings.getString("SearchPanel.newPersonLocation"); //$NON-NLS-1$
+    	person.name = xStrings.getString("SearchPanel.newPersonName"); 
+    	person.location = xStrings.getString("SearchPanel.newPersonLocation"); 
     	person.id = -1; //-1 signifies this should create a record
-    	person.number = ""; //$NON-NLS-1$
+    	person.number = ""; 
 
     	person.number = number.getText().trim();
     	
@@ -507,7 +507,7 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 	private void ok(){
 		
 		//OK button pressed, get selected person and update as necessary
-		LOGGER.info(xStrings.getString("SearchPanel.okPressed")); //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("SearchPanel.okPressed")); 
 		
 		if(people.getSelectedRow() != -1){
 			
@@ -529,8 +529,8 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 			
 			//Prompt user about not selecting a person?
 			int confirm = JOptionPane.showConfirmDialog(this,
-					xStrings.getString("SearchPanel.noPersonSelected"), //$NON-NLS-1$
-					xStrings.getString("SearchPanel.noPersonSelectedTitle"), //$NON-NLS-1$
+					xStrings.getString("SearchPanel.noPersonSelected"), 
+					xStrings.getString("SearchPanel.noPersonSelectedTitle"), 
 					JOptionPane.QUESTION_MESSAGE,
 					JOptionPane.YES_NO_OPTION); 
 			
@@ -549,7 +549,7 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 	private void cancel(){
 		
 		//Cancel button pressed
-		LOGGER.info(xStrings.getString("SearchPanel.cancelPressed")); //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("SearchPanel.cancelPressed")); 
 		this.setVisible(false);
 		
 	}
@@ -561,9 +561,9 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		
-		if(e.getActionCommand().equals("ok")) //$NON-NLS-1$
+		if(e.getActionCommand().equals("ok")) 
 			ok();
-		else if(e.getActionCommand().equals("cancel")) //$NON-NLS-1$
+		else if(e.getActionCommand().equals("cancel")) 
 			cancel();
 		
 	}
@@ -577,7 +577,7 @@ public class SearchPanel extends JDialog implements ActionListener, KeyListener 
 	public void keyReleased(KeyEvent e) {
 		
 		//Get the term and flag whether this is a number or name search
-		String search = ""; //$NON-NLS-1$
+		String search = ""; 
 		boolean isNumber = false;
 		
 		if(e.getSource() instanceof JTextField)

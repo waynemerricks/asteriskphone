@@ -21,7 +21,7 @@ public class Server extends Thread{
 	private ChatManager chatManager;
 	
 	/** STATICS **/
-	private static final Logger LOGGER = Logger.getLogger("com.thevoiceasia.phonebox");//Logger //$NON-NLS-1$
+	private static final Logger LOGGER = Logger.getLogger("com.thevoiceasia.phonebox");//Logger
 	private static final Level LOG_LEVEL = Level.INFO;
 	private static final long STARTUP_DELAY = 1000L;
 	private static I18NStrings xStrings;
@@ -39,20 +39,20 @@ public class Server extends Thread{
 			
 			if(databaseManager.connect()){
 				
-				boolean createUser = !databaseManager.populateUserSettings("server"); //$NON-NLS-1$
+				boolean createUser = !databaseManager.populateUserSettings("server"); 
 				
 				chatManager = new ChatManager(databaseManager.getUserSettings()
-						.get("XMPPLogin") + "@" +  //$NON-NLS-1$ //$NON-NLS-2$
-					databaseManager.getUserSettings().get("XMPPDomain"), //$NON-NLS-1$ 
-					databaseManager.getUserSettings().get("password"), //$NON-NLS-1$
-					databaseManager.getUserSettings().get("nickName"), //$NON-NLS-1$
-					databaseManager.getUserSettings().get("XMPPServer"), //$NON-NLS-1$
+						.get("XMPPLogin") + "@" +   
+					databaseManager.getUserSettings().get("XMPPDomain"),  
+					databaseManager.getUserSettings().get("password"), 
+					databaseManager.getUserSettings().get("nickName"), 
+					databaseManager.getUserSettings().get("XMPPServer"), 
 					null,
-					databaseManager.getUserSettings().get("XMPPControlRoom"), //$NON-NLS-1$
-					databaseManager.getUserSettings().get("language"), //$NON-NLS-1$
-					databaseManager.getUserSettings().get("country"), //$NON-NLS-1$
+					databaseManager.getUserSettings().get("XMPPControlRoom"), 
+					databaseManager.getUserSettings().get("language"), 
+					databaseManager.getUserSettings().get("country"), 
 					Integer.parseInt(databaseManager.getUserSettings()
-							.get("idleTimeout"))); //$NON-NLS-1$
+							.get("idleTimeout"))); 
 				
 				if(createUser){
 					
@@ -69,15 +69,15 @@ public class Server extends Thread{
 					else{
 							
 						//Create and Connect to Asterisk
-						LOGGER.info(xStrings.getString("Server.creatingAsteriskManager")); //$NON-NLS-1$
+						LOGGER.info(xStrings.getString("Server.creatingAsteriskManager")); 
 						asteriskManager = new AsteriskManager(databaseManager,
 								chatManager.getControlChatRoom());
 						
-						LOGGER.info(xStrings.getString("Server.asteriskConnecting")); //$NON-NLS-1$
+						LOGGER.info(xStrings.getString("Server.asteriskConnecting")); 
 					
 						try{
 							asteriskManager.connect();
-							LOGGER.info(xStrings.getString("Server.asteriskConnected")); //$NON-NLS-1$
+							LOGGER.info(xStrings.getString("Server.asteriskConnected")); 
 						
 							hasErrors = false; //Reset flag as everything is working
 							
@@ -89,14 +89,14 @@ public class Server extends Thread{
 								
 							} catch (InterruptedException e) {
 								//We were interrupted flag error and shut down
-								showError(e, xStrings.getString("Server.startupInterruptedError")); //$NON-NLS-1$
+								showError(e, xStrings.getString("Server.startupInterruptedError")); 
 								e.printStackTrace();
 							}
 							
 							
 						}catch(ManagerCommunicationException e){
 						
-							showError(e, xStrings.getString("Server.asteriskConnectionError")); //$NON-NLS-1$
+							showError(e, xStrings.getString("Server.asteriskConnectionError")); 
 							hasErrors = true;
 						
 						}
@@ -119,14 +119,14 @@ public class Server extends Thread{
 		
 		LOGGER.setLevel(LOG_LEVEL);
 		
-		LOGGER.info(xStrings.getString("Server.logSetupLogging")); //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("Server.logSetupLogging")); 
 		
 		try{
-			LOGGER.addHandler(new FileHandler("serverLog.log")); //$NON-NLS-1$
+			LOGGER.addHandler(new FileHandler("serverLog.log")); 
 		}catch(IOException e){
 			
 			e.printStackTrace();
-			showWarning(e, xStrings.getString("Server.loggerCreateError")); //$NON-NLS-1$
+			showWarning(e, xStrings.getString("Server.loggerCreateError")); 
 			
 		}
 		
@@ -139,7 +139,7 @@ public class Server extends Thread{
 	 */
 	private void showWarning(Exception e, String friendlyErrorMessage){
 		
-		System.err.println(xStrings.getString("Server.logErrorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
+		System.err.println(xStrings.getString("Server.logErrorPrefix") + friendlyErrorMessage); 
 		e.printStackTrace();
 		LOGGER.warning(friendlyErrorMessage);
 		
@@ -152,7 +152,7 @@ public class Server extends Thread{
 	 */
 	private void showError(Exception e, String friendlyErrorMessage){
 		
-		System.err.println(xStrings.getString("Server.logErrorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
+		System.err.println(xStrings.getString("Server.logErrorPrefix") + friendlyErrorMessage); 
 		e.printStackTrace();
 		LOGGER.severe(friendlyErrorMessage);
 		
@@ -175,7 +175,7 @@ public class Server extends Thread{
 		if(args.length == 2)
 			srv = new Server(args[0], args[1]);
 		else
-			srv = new Server("en", "GB"); //$NON-NLS-1$ //$NON-NLS-2$
+			srv = new Server("en", "GB");  
 		
 		srv.start();
 		

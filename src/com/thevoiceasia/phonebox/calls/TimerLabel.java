@@ -14,7 +14,7 @@ public class TimerLabel extends TransparentLabel {
 
 	/** CLASS VARS **/
 	private long creationTimer, stageTimer, hourOffset;
-	private Timer timeUpdateTimer = new Timer("time updater"); //$NON-NLS-1$
+	private Timer timeUpdateTimer = new Timer("time updater"); 
 	
 	public TimerLabel() {
 		
@@ -126,9 +126,9 @@ public class TimerLabel extends TransparentLabel {
 				Date createTime = new Date(now - creationTimer - hourOffset);
 				Date stageTime = new Date(now - stageTimer - hourOffset);
 				
-				SimpleDateFormat sdf = new SimpleDateFormat("mm:ss"); //$NON-NLS-1$
+				SimpleDateFormat sdf = new SimpleDateFormat("mm:ss"); 
 				
-				String labelText = sdf.format(createTime) + " / " + sdf.format(stageTime); //$NON-NLS-1$
+				String labelText = sdf.format(createTime) + " / " + sdf.format(stageTime); 
 				setText(labelText);
 				
 			}

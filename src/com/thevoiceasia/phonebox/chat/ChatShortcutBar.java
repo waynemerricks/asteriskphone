@@ -83,14 +83,14 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 		 * Play Alert
 		 * Send Help
 		 */
-		callToggle = new JToggleButton(createImageIcon("images/nocalls.png", "nocalls"), false); //$NON-NLS-1$ //$NON-NLS-2$
-		callToggle.setToolTipText(xStrings.getString("ChatShortcutBar.buttonNoCallsToolTip")); //$NON-NLS-1$
-		callToggle.setActionCommand("nocalls"); //$NON-NLS-1$
+		callToggle = new JToggleButton(createImageIcon("images/nocalls.png", "nocalls"), false);  
+		callToggle.setToolTipText(xStrings.getString("ChatShortcutBar.buttonNoCallsToolTip")); 
+		callToggle.setActionCommand("nocalls"); 
 		callToggle.addActionListener(this);
 		callToggle.setEnabled(isStudio);
 		
 		if(isStudio && currentTopic.equals(xStrings.getString(
-				"ChatShortcutBar.subjectNoCalls"))){ //$NON-NLS-1$
+				"ChatShortcutBar.subjectNoCalls"))){ 
 			callToggle.setSelected(true);
 			callPressed = true;
 			breakPressed = false;
@@ -99,15 +99,15 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 		
 		this.add(callToggle);
 		
-		breakToggle = new JToggleButton(createImageIcon("images/backsoon.png", "backsoon"), //$NON-NLS-1$//$NON-NLS-2$
+		breakToggle = new JToggleButton(createImageIcon("images/backsoon.png", "backsoon"), 
 				false); 
 		breakToggle.setToolTipText(xStrings.getString(
-				"ChatShortcutBar.buttonBackSoonToolTip")); //$NON-NLS-1$
-		breakToggle.setActionCommand("backsoon"); //$NON-NLS-1$
+				"ChatShortcutBar.buttonBackSoonToolTip")); 
+		breakToggle.setActionCommand("backsoon"); 
 		breakToggle.addActionListener(this);
 		
 		if(isStudio && currentTopic.equals(xStrings.getString(
-				"ChatShortcutBar.subjectBackSoon"))){ //$NON-NLS-1$
+				"ChatShortcutBar.subjectBackSoon"))){ 
 			breakToggle.setSelected(true);
 			callPressed = false;
 			breakPressed = true;
@@ -129,13 +129,13 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 		this.add(alertButton);
 		
 		//Help
-		helpToggle = new JToggleButton(createImageIcon("images/helpme.png", "help"));  //$NON-NLS-1$//$NON-NLS-2$
-		helpToggle.setToolTipText(xStrings.getString("ChatShortcutBar.buttonHelpToolTip")); //$NON-NLS-1$
-		helpToggle.setActionCommand("help"); //$NON-NLS-1$
+		helpToggle = new JToggleButton(createImageIcon("images/helpme.png", "help"));  
+		helpToggle.setToolTipText(xStrings.getString("ChatShortcutBar.buttonHelpToolTip")); 
+		helpToggle.setActionCommand("help"); 
 		helpToggle.addActionListener(this);
 		
 		if(isStudio && currentTopic.equals(xStrings.getString(
-				"ChatShortcutBar.subjectHelp"))){ //$NON-NLS-1$
+				"ChatShortcutBar.subjectHelp"))){ 
 			helpToggle.setSelected(true);
 			callPressed = false;
 			breakPressed = false;
@@ -161,9 +161,9 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 	 */
 	private void showWarning(Exception e, String friendlyErrorMessage){
 		
-		System.err.println(xStrings.getString("ChatShortcutBar.logErrorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
+		System.err.println(xStrings.getString("ChatShortcutBar.logErrorPrefix") + friendlyErrorMessage); 
 		e.printStackTrace();
-		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("ChatShortcutBar.errorBoxTitle"), JOptionPane.WARNING_MESSAGE); //$NON-NLS-1$
+		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("ChatShortcutBar.errorBoxTitle"), JOptionPane.WARNING_MESSAGE); 
 		LOGGER.warning(friendlyErrorMessage);
 		
 	}
@@ -184,7 +184,7 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 			icon = new ImageIcon(imgURL, description);
 		else{
 			
-			LOGGER.warning(xStrings.getString("ChatShortcutBar.logLoadIconError")); //$NON-NLS-1$
+			LOGGER.warning(xStrings.getString("ChatShortcutBar.logLoadIconError")); 
 			
 		}
 		
@@ -199,12 +199,12 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 	private void sendMessage(String message, MultiUserChat room){
 		
 		try {
-			LOGGER.info(xStrings.getString("ChatShortcutBar.logSendRoomMessage") + message); //$NON-NLS-1$
+			LOGGER.info(xStrings.getString("ChatShortcutBar.logSendRoomMessage") + message); 
 			room.sendMessage(message);
 		}catch(XMPPException e){
-			showWarning(e, xStrings.getString("ChatShortcutBar.chatRoomError")); //$NON-NLS-1$
+			showWarning(e, xStrings.getString("ChatShortcutBar.chatRoomError")); 
 		}catch(IllegalStateException e){
-			showWarning(e, xStrings.getString("ChatShortcutBar.serverGoneError")); //$NON-NLS-1$
+			showWarning(e, xStrings.getString("ChatShortcutBar.serverGoneError")); 
 		}
 		
 	}
@@ -216,12 +216,12 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 	private void changeTopic(String topic){
 		
 		try {
-			LOGGER.info(xStrings.getString("ChatShortcutBar.logChangeRoomTopic")); //$NON-NLS-1$
+			LOGGER.info(xStrings.getString("ChatShortcutBar.logChangeRoomTopic")); 
 			chatRoom.changeSubject(topic);
 		}catch(XMPPException e){
-			showWarning(e, xStrings.getString("ChatShortcutBar.changeSubjectError")); //$NON-NLS-1$
+			showWarning(e, xStrings.getString("ChatShortcutBar.changeSubjectError")); 
 		}catch(IllegalStateException e){
-			showWarning(e, xStrings.getString("ChatShortcutBar.serverGoneError")); //$NON-NLS-1$
+			showWarning(e, xStrings.getString("ChatShortcutBar.serverGoneError")); 
 		}
 		
 	}
@@ -237,22 +237,22 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 			callPressed = true;
 			breakPressed = false;
 			helpPressed = false;
-			LOGGER.info(xStrings.getString("ChatShortcutBar.logSetNoCalls")); //$NON-NLS-1$
-			sendMessage(xStrings.getString("ChatShortcutBar.chatNoCalls"), chatRoom); //$NON-NLS-1$
+			LOGGER.info(xStrings.getString("ChatShortcutBar.logSetNoCalls")); 
+			sendMessage(xStrings.getString("ChatShortcutBar.chatNoCalls"), chatRoom); 
 			
 			if(isStudio)
-				changeTopic(xStrings.getString("ChatShortcutBar.subjectNoCalls")); //$NON-NLS-1$
+				changeTopic(xStrings.getString("ChatShortcutBar.subjectNoCalls")); 
 			
 		}else if(callPressed){
 			
 			callPressed = false;
 			shortCutGroup.clearSelection();
 			callToggle.setSelected(false);
-			LOGGER.info(xStrings.getString("ChatShortcutBar.logSetCalls")); //$NON-NLS-1$
-			sendMessage(xStrings.getString("ChatShortcutBar.chatResumeCalls"), chatRoom); //$NON-NLS-1$
+			LOGGER.info(xStrings.getString("ChatShortcutBar.logSetCalls")); 
+			sendMessage(xStrings.getString("ChatShortcutBar.chatResumeCalls"), chatRoom); 
 			
 			if(isStudio)
-				changeTopic(xStrings.getString("ChatShortcutBar.emptyTopic")); //$NON-NLS-1$
+				changeTopic(xStrings.getString("ChatShortcutBar.emptyTopic")); 
 			
 		}
 			
@@ -270,22 +270,22 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 			breakPressed = true;
 			callPressed = false;
 			helpPressed = false;
-			LOGGER.info(xStrings.getString("ChatShortcutBar.logSetBackSoon")); //$NON-NLS-1$
-			sendMessage(xStrings.getString("ChatShortcutBar.chatBackSoon"), chatRoom); //$NON-NLS-1$
+			LOGGER.info(xStrings.getString("ChatShortcutBar.logSetBackSoon")); 
+			sendMessage(xStrings.getString("ChatShortcutBar.chatBackSoon"), chatRoom); 
 			
 			if(isStudio)
-				changeTopic(xStrings.getString("ChatShortcutBar.subjectBackSoon")); //$NON-NLS-1$
+				changeTopic(xStrings.getString("ChatShortcutBar.subjectBackSoon")); 
 			
 		}else if(breakPressed){
 			
 			breakPressed = false;
 			shortCutGroup.clearSelection();
 			breakToggle.setSelected(false);
-			LOGGER.info(xStrings.getString("ChatShortcutBar.logSetReturned")); //$NON-NLS-1$
-			sendMessage(xStrings.getString("ChatShortcutBar.chatReturned"), chatRoom); //$NON-NLS-1$
+			LOGGER.info(xStrings.getString("ChatShortcutBar.logSetReturned")); 
+			sendMessage(xStrings.getString("ChatShortcutBar.chatReturned"), chatRoom); 
 			
 			if(isStudio)
-				changeTopic(xStrings.getString("ChatShortcutBar.emptyTopic")); //$NON-NLS-1$
+				changeTopic(xStrings.getString("ChatShortcutBar.emptyTopic")); 
 			
 		}
 		
@@ -312,22 +312,22 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 			helpPressed = true;
 			callPressed = false;
 			breakPressed = false;
-			LOGGER.info(xStrings.getString("ChatShortcutBar.logSetHelpMe")); //$NON-NLS-1$
-			sendMessage(xStrings.getString("ChatShortcutBar.chatHelpMe"), chatRoom); //$NON-NLS-1$
+			LOGGER.info(xStrings.getString("ChatShortcutBar.logSetHelpMe")); 
+			sendMessage(xStrings.getString("ChatShortcutBar.chatHelpMe"), chatRoom); 
 			
 			if(isStudio)
-				changeTopic(xStrings.getString("ChatShortcutBar.subjectHelp")); //$NON-NLS-1$
+				changeTopic(xStrings.getString("ChatShortcutBar.subjectHelp")); 
 			
 		}else if(helpPressed){
 			
 			helpPressed = false;
 			shortCutGroup.clearSelection();
 			helpToggle.setSelected(false);
-			LOGGER.info(xStrings.getString("ChatShortcutBar.logSetPanicOver")); //$NON-NLS-1$
-			sendMessage(xStrings.getString("ChatShortcutBar.chatCrisisOver"), chatRoom); //$NON-NLS-1$
+			LOGGER.info(xStrings.getString("ChatShortcutBar.logSetPanicOver")); 
+			sendMessage(xStrings.getString("ChatShortcutBar.chatCrisisOver"), chatRoom); 
 			
 			if(isStudio)
-				changeTopic(xStrings.getString("ChatShortcutBar.emptyTopic")); //$NON-NLS-1$
+				changeTopic(xStrings.getString("ChatShortcutBar.emptyTopic")); 
 			
 		}
 		
@@ -341,14 +341,14 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 	public void actionPerformed(ActionEvent evt) {
 		
 		//Don't interfere with idle check if we've set ourselves away
-		if(!evt.getActionCommand().equals("backsoon")) //$NON-NLS-1$
+		if(!evt.getActionCommand().equals("backsoon")) 
 			lastActionTime = new Date().getTime();
 		
-		if(evt.getActionCommand().equals("nocalls")) //$NON-NLS-1$
+		if(evt.getActionCommand().equals("nocalls")) 
 			noCallsPressed();
-		else if(evt.getActionCommand().equals("backsoon")) //$NON-NLS-1$
+		else if(evt.getActionCommand().equals("backsoon")) 
 			backSoonPressed();
-		else if(evt.getActionCommand().equals("help")) //$NON-NLS-1$
+		else if(evt.getActionCommand().equals("help")) 
 			helpPressed();
 		else if(evt.getActionCommand().equals("alert"))
 			alertPressed();
@@ -368,7 +368,7 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 		 * 
 		 * Control Room: ALERT/ALERT = Play alert noise
 		 */
-		LOGGER.info(xStrings.getString("ChatMessagePanel.logReceivedMessage") + XMPPPacket); //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("ChatMessagePanel.logReceivedMessage") + XMPPPacket); 
 		
 		if(XMPPPacket instanceof Message){
 		
@@ -376,8 +376,8 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 			
 			String from = message.getFrom();
 			
-			if(from.contains("/")) //$NON-NLS-1$
-				from = from.split("/")[1]; //$NON-NLS-1$
+			if(from.contains("/")) 
+				from = from.split("/")[1]; 
 			
 			if(!from.equals(controlRoom.getNickname())){//If the message didn't come from me 
 			

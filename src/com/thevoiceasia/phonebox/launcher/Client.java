@@ -38,15 +38,15 @@ public class Client extends JFrame implements WindowListener{
 	//Statics
 	private static Logger LOGGER = Logger.getLogger(Client.class.getName());//Logger
 	private static final Level LOG_LEVEL = Level.WARNING;
-	private static Logger CHAT_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.chat"); //$NON-NLS-1$
+	private static Logger CHAT_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.chat"); 
 	private static final Level CHAT_LOG_LEVEL = Level.WARNING;
-	private static Logger DATABASE_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.database"); //$NON-NLS-1$
+	private static Logger DATABASE_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.database"); 
 	private static final Level DATABASE_LOG_LEVEL = Level.WARNING;
-	private static Logger RECORDS_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.records"); //$NON-NLS-1$
+	private static Logger RECORDS_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.records"); 
 	private static final Level RECORDS_LOG_LEVEL = Level.WARNING;
-	private static Logger CALL_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.calls"); //$NON-NLS-1$
+	private static Logger CALL_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.calls"); 
 	private static final Level CALL_LOG_LEVEL = Level.INFO;
-	private static Logger CALL_INPUT_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.callinput"); //$NON-NLS-1$
+	private static Logger CALL_INPUT_LOGGER = Logger.getLogger("com.thevoiceasia.phonebox.callinput"); 
 	private static final Level CALL_INPUT_LEVEL = Level.WARNING;
 	
 	private static I18NStrings xStrings;
@@ -61,33 +61,33 @@ public class Client extends JFrame implements WindowListener{
 		
 		/** Initialise component daemons **/
 		xStrings = new I18NStrings(this.language, this.country);
-		this.setIconImage(createImage("images/app.png")); //$NON-NLS-1$
+		this.setIconImage(createImage("images/app.png")); 
 		setupLogging();
 		
-		loadingSplash = new Splash(""); //$NON-NLS-1$
+		loadingSplash = new Splash(""); 
 		loadingSplash.setVisible(true);
-		loadingSplash.setStatus(xStrings.getString("Client.loading")); //$NON-NLS-1$
+		loadingSplash.setStatus(xStrings.getString("Client.loading")); 
 		
 		setupManagementObjects();
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		if(!hasErrors){
 			
-			LOGGER.info(xStrings.getString("Client.buildingGUI")); //$NON-NLS-1$
+			LOGGER.info(xStrings.getString("Client.buildingGUI")); 
 			
 			/** Build GUI **/
 			setLookandFeel();
 			this.setSize(1024, 768);
 			this.setLayout(new BorderLayout());
-			this.setTitle(xStrings.getString("Client.appTitle")); //$NON-NLS-1$
+			this.setTitle(xStrings.getString("Client.appTitle")); 
 			this.addWindowListener(this);
 			
-			LOGGER.info(xStrings.getString("Client.loadingChatModule")); //$NON-NLS-1$
-			loadingSplash.setStatus(xStrings.getString("Client.loadingChatModule")); //$NON-NLS-1$
+			LOGGER.info(xStrings.getString("Client.loadingChatModule")); 
+			loadingSplash.setStatus(xStrings.getString("Client.loadingChatModule")); 
 			
 			//Chat Module
-			ChatWindow chat = new ChatWindow(chatManager, this.language, this.country, userSettings.get("nickName"), //$NON-NLS-1$
-					userSettings.get("isStudio")); //$NON-NLS-1$
+			ChatWindow chat = new ChatWindow(chatManager, this.language, this.country, userSettings.get("nickName"), 
+					userSettings.get("isStudio")); 
 			
 			if(chatManager.hasErrors())
 				hasErrors = true;
@@ -96,8 +96,8 @@ public class Client extends JFrame implements WindowListener{
 				
 				//GUI For Call Queue
 				//CallManager interacts with control room
-				LOGGER.info(xStrings.getString("Client.creatingCallManager")); //$NON-NLS-1$
-				loadingSplash.setStatus(xStrings.getString("Client.creatingCallManager")); //$NON-NLS-1$
+				LOGGER.info(xStrings.getString("Client.creatingCallManager")); 
+				loadingSplash.setStatus(xStrings.getString("Client.creatingCallManager")); 
 				
 				CallManagerPanel callManagerPanel = new CallManagerPanel(
 						databaseManager.getUserSettings(),
@@ -120,9 +120,9 @@ public class Client extends JFrame implements WindowListener{
 				
 				CallInputPanel callInput = new CallInputPanel(
 						databaseManager.getReadConnection(), 
-						userSettings.get("maxRecordAge"), this.language, this.country, chatManager,  //$NON-NLS-1$
-						userSettings.get("incomingQueueNumber"), //$NON-NLS-1$
-						userSettings.get("onAirQueueNumber")); //$NON-NLS-1$
+						userSettings.get("maxRecordAge"), this.language, this.country, chatManager,  
+						userSettings.get("incomingQueueNumber"), 
+						userSettings.get("onAirQueueNumber")); 
 				callManagerPanel.addAnswerListener(callInput);
 				
 				//Add CallManagerPanel ref to AddCall on callinputpanel
@@ -141,7 +141,7 @@ public class Client extends JFrame implements WindowListener{
 				split.setOneTouchExpandable(true);
 		        split.setContinuousLayout(true);
 				this.add(split, BorderLayout.CENTER);
-				loadingSplash.setStatus(xStrings.getString("Client.loadingComplete")); //$NON-NLS-1$
+				loadingSplash.setStatus(xStrings.getString("Client.loadingComplete")); 
 				
 			}
 			
@@ -164,7 +164,7 @@ public class Client extends JFrame implements WindowListener{
 			icon = Toolkit.getDefaultToolkit().createImage(imgURL);
 		else{
 			
-			LOGGER.warning(xStrings.getString("Client.logLoadIconError")); //$NON-NLS-1$
+			LOGGER.warning(xStrings.getString("Client.logLoadIconError")); 
 			
 		}
 		
@@ -194,8 +194,8 @@ public class Client extends JFrame implements WindowListener{
 			hasErrors = true;
 		else{
 			
-			LOGGER.info(xStrings.getString("Client.connectingToDatabase")); //$NON-NLS-1$
-			loadingSplash.setStatus(xStrings.getString("Client.connectingToDatabase")); //$NON-NLS-1$
+			LOGGER.info(xStrings.getString("Client.connectingToDatabase")); 
+			loadingSplash.setStatus(xStrings.getString("Client.connectingToDatabase")); 
 
 			if(databaseManager.connect()){
 				
@@ -203,8 +203,8 @@ public class Client extends JFrame implements WindowListener{
 				userSettings = databaseManager.getUserSettings();
 				
 				//BUG FIX rely on DB for locale info where possible
-				language = userSettings.get("language"); //$NON-NLS-1$
-				country = userSettings.get("country"); //$NON-NLS-1$
+				language = userSettings.get("language"); 
+				country = userSettings.get("country"); 
 				xStrings = new I18NStrings(language, country);//reset language to user settings
 				databaseManager.setNewLocale(language, country);//Set db manager language to above
 				
@@ -212,16 +212,16 @@ public class Client extends JFrame implements WindowListener{
 				databaseManager.spawnKeepAlive(language, country);
 				
 				//Chat Connection Manager
-				chatManager = new ChatManager(userSettings.get("XMPPLogin") + "@" +  //$NON-NLS-1$ //$NON-NLS-2$
-						userSettings.get("XMPPDomain"), //$NON-NLS-1$ 
-						userSettings.get("password"), //$NON-NLS-1$
-						userSettings.get("nickName"), //$NON-NLS-1$
-						userSettings.get("XMPPServer"), //$NON-NLS-1$
-						userSettings.get("XMPPRoom"), //$NON-NLS-1$
-						userSettings.get("XMPPControlRoom"), //$NON-NLS-1$
-						userSettings.get("language"), //$NON-NLS-1$
-						userSettings.get("country"), //$NON-NLS-1$
-						Integer.parseInt(userSettings.get("idleTimeout"))); //$NON-NLS-1$
+				chatManager = new ChatManager(userSettings.get("XMPPLogin") + "@" +   
+						userSettings.get("XMPPDomain"),  
+						userSettings.get("password"), 
+						userSettings.get("nickName"), 
+						userSettings.get("XMPPServer"), 
+						userSettings.get("XMPPRoom"), 
+						userSettings.get("XMPPControlRoom"), 
+						userSettings.get("language"), 
+						userSettings.get("country"), 
+						Integer.parseInt(userSettings.get("idleTimeout"))); 
 				
 				if(chatManager.hasErrors())
 					hasErrors = true;
@@ -229,8 +229,8 @@ public class Client extends JFrame implements WindowListener{
 					
 					if(createUser){
 						
-						LOGGER.info(xStrings.getString("Client.creatingXMPPUser")); //$NON-NLS-1$
-						loadingSplash.setStatus(xStrings.getString("Client.creatingXMPPUser")); //$NON-NLS-1$
+						LOGGER.info(xStrings.getString("Client.creatingXMPPUser")); 
+						loadingSplash.setStatus(xStrings.getString("Client.creatingXMPPUser")); 
 						
 						if(!chatManager.createUser())
 							hasErrors = true;
@@ -255,7 +255,7 @@ public class Client extends JFrame implements WindowListener{
 		// Set preferred L&F
 		try {
 		    for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-		        if (xStrings.getString("Client.lookAndFeel").equals(info.getName())) { //$NON-NLS-1$
+		        if (xStrings.getString("Client.lookAndFeel").equals(info.getName())) { 
 		            UIManager.setLookAndFeel(info.getClassName());
 		            break;
 		        }
@@ -284,11 +284,11 @@ public class Client extends JFrame implements WindowListener{
 				phonebox.closeLoadingSplash();
 			}else{
 				
-				Exception e = new Exception(xStrings.getString("Client.onLoadError")); //$NON-NLS-1$
+				Exception e = new Exception(xStrings.getString("Client.onLoadError")); 
 
-				System.err.println(xStrings.getString("Client.logErrorPrefix") + e.getMessage()); //$NON-NLS-1$
+				System.err.println(xStrings.getString("Client.logErrorPrefix") + e.getMessage()); 
 				e.printStackTrace();
-				JOptionPane.showMessageDialog(null, e.getMessage(), xStrings.getString("Client.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
+				JOptionPane.showMessageDialog(null, e.getMessage(), xStrings.getString("Client.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); 
 				LOGGER.severe(e.getMessage());
 				phonebox.closeLoadingSplash();
 				
@@ -298,19 +298,19 @@ public class Client extends JFrame implements WindowListener{
 			
 		}else if (args.length == 0){
 			
-			I18NStrings xStrings = new I18NStrings("en", "GB");  //$NON-NLS-1$//$NON-NLS-2$
-			Client phonebox = new Client("en", "GB"); //$NON-NLS-1$ //$NON-NLS-2$
+			I18NStrings xStrings = new I18NStrings("en", "GB");  
+			Client phonebox = new Client("en", "GB");  
 		
 			if(!phonebox.hasErrors()){
 				phonebox.setVisible(true);
 				phonebox.closeLoadingSplash();
 			}else{
 				
-				Exception e = new Exception(xStrings.getString("Client.onLoadError")); //$NON-NLS-1$
+				Exception e = new Exception(xStrings.getString("Client.onLoadError")); 
 
-				System.err.println(xStrings.getString("Client.logErrorPrefix") + e.getMessage()); //$NON-NLS-1$
+				System.err.println(xStrings.getString("Client.logErrorPrefix") + e.getMessage()); 
 				e.printStackTrace();
-				JOptionPane.showMessageDialog(null, e.getMessage(), xStrings.getString("Client.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
+				JOptionPane.showMessageDialog(null, e.getMessage(), xStrings.getString("Client.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); 
 				LOGGER.severe(e.getMessage());
 				phonebox.closeLoadingSplash();
 				
@@ -320,12 +320,12 @@ public class Client extends JFrame implements WindowListener{
 			
 		}else{
 			
-			I18NStrings xStrings = new I18NStrings("en", "GB");  //$NON-NLS-1$//$NON-NLS-2$
-			Exception e = new Exception(xStrings.getString("Client.usageError")); //$NON-NLS-1$
+			I18NStrings xStrings = new I18NStrings("en", "GB");  
+			Exception e = new Exception(xStrings.getString("Client.usageError")); 
 
-			System.err.println(xStrings.getString("Client.logErrorPrefix") + e.getMessage()); //$NON-NLS-1$
+			System.err.println(xStrings.getString("Client.logErrorPrefix") + e.getMessage()); 
 			e.printStackTrace();
-			JOptionPane.showMessageDialog(null, e.getMessage(), xStrings.getString("Client.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
+			JOptionPane.showMessageDialog(null, e.getMessage(), xStrings.getString("Client.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); 
 			LOGGER.severe(e.getMessage());
 			
 			System.exit(1);
@@ -348,19 +348,19 @@ public class Client extends JFrame implements WindowListener{
 		CALL_LOGGER.setLevel(CALL_LOG_LEVEL);
 		CALL_INPUT_LOGGER.setLevel(CALL_INPUT_LEVEL);
 		
-		LOGGER.info(xStrings.getString("Client.logSetupLogging")); //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("Client.logSetupLogging")); 
 		
 		try{
-			LOGGER.addHandler(new FileHandler("tvapb.log")); //$NON-NLS-1$
-			CHAT_LOGGER = LOGGER;//.addHandler(new FileHandler("tvapb.log")); //$NON-NLS-1$
-			DATABASE_LOGGER = LOGGER;//.addHandler(new FileHandler("tvapb.log")); //$NON-NLS-1$
-			RECORDS_LOGGER = LOGGER;//.addHandler(new FileHandler("tvapb.log")); //$NON-NLS-1$
-			CALL_LOGGER = LOGGER;//.addHandler(new FileHandler("tvapb.log")); //$NON-NLS-1$
-			CALL_INPUT_LOGGER = LOGGER;//.addHandler(new FileHandler("tvapb.log")); //$NON-NLS-1$
+			LOGGER.addHandler(new FileHandler("tvapb.log")); 
+			CHAT_LOGGER = LOGGER;//.addHandler(new FileHandler("tvapb.log")); 
+			DATABASE_LOGGER = LOGGER;//.addHandler(new FileHandler("tvapb.log")); 
+			RECORDS_LOGGER = LOGGER;//.addHandler(new FileHandler("tvapb.log")); 
+			CALL_LOGGER = LOGGER;//.addHandler(new FileHandler("tvapb.log")); 
+			CALL_INPUT_LOGGER = LOGGER;//.addHandler(new FileHandler("tvapb.log")); 
 		}catch(IOException e){
 			
 			e.printStackTrace();
-			showWarning(e, xStrings.getString("Client.loggerCreateError")); //$NON-NLS-1$
+			showWarning(e, xStrings.getString("Client.loggerCreateError")); 
 			
 		}
 		
@@ -373,9 +373,9 @@ public class Client extends JFrame implements WindowListener{
 	 */
 	private void showWarning(Exception e, String friendlyErrorMessage){
 		
-		System.err.println(xStrings.getString("Client.logErrorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
+		System.err.println(xStrings.getString("Client.logErrorPrefix") + friendlyErrorMessage); 
 		e.printStackTrace();
-		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("Client.errorBoxTitle"), JOptionPane.WARNING_MESSAGE); //$NON-NLS-1$
+		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("Client.errorBoxTitle"), JOptionPane.WARNING_MESSAGE); 
 		LOGGER.warning(friendlyErrorMessage);
 		
 	}
@@ -383,8 +383,8 @@ public class Client extends JFrame implements WindowListener{
 	@Override
 	public void windowClosing(WindowEvent arg0) {
 		
-		LOGGER.info(xStrings.getString("Client.appTitle") + " " +  //$NON-NLS-1$ //$NON-NLS-2$
-				xStrings.getString("Client.logApplicationClosing")); //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("Client.appTitle") + " " +   
+				xStrings.getString("Client.logApplicationClosing")); 
 		
 		//Clean up and free connections/memory
 		try{

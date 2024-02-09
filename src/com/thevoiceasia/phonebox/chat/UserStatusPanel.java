@@ -58,7 +58,7 @@ public class UserStatusPanel extends JPanel implements ParticipantStatusListener
 		this.setLayout(new BorderLayout());
 		this.add(new JSeparator(JSeparator.HORIZONTAL), BorderLayout.NORTH);
 		onlineList.setEditable(false);
-		listStyle = onlineList.addStyle("listStyle", null); //$NON-NLS-1$
+		listStyle = onlineList.addStyle("listStyle", null); 
 		
 		clear();
 		onlineScroll = new JScrollPane(onlineList);
@@ -76,8 +76,8 @@ public class UserStatusPanel extends JPanel implements ParticipantStatusListener
 				String user = users.next();
 				String friendlyUser = user;
 				
-				if(friendlyUser.contains("/")) //$NON-NLS-1$
-					friendlyUser = friendlyUser.split("/")[1]; //$NON-NLS-1$
+				if(friendlyUser.contains("/")) 
+					friendlyUser = friendlyUser.split("/")[1]; 
 				
 				if(chatRoom.getOccupantPresence(user).getMode() == Mode.available ||
 						chatRoom.getOccupantPresence(user).getMode() == Mode.chat || 
@@ -131,16 +131,16 @@ public class UserStatusPanel extends JPanel implements ParticipantStatusListener
 	 */
 	private void clear(){
 		
-		LOGGER.info(xStrings.getString("UserStatusPanel.logClearOnlineList")); //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("UserStatusPanel.logClearOnlineList")); 
 		
 		setTextColour(Color.BLACK);
 		StyledDocument doc = onlineList.getStyledDocument();
 				
 		try{
 			doc.remove(0, doc.getLength());
-			doc.insertString(doc.getLength(), xStrings.getString("UserStatusPanel.onlineTitle") + "\n", listStyle); //$NON-NLS-1$ //$NON-NLS-2$
+			doc.insertString(doc.getLength(), xStrings.getString("UserStatusPanel.onlineTitle") + "\n", listStyle);  
 		}catch(BadLocationException e){
-			LOGGER.severe(xStrings.getString("UserStatusPanel.logErrorClearingOnlineList")); //$NON-NLS-1$
+			LOGGER.severe(xStrings.getString("UserStatusPanel.logErrorClearingOnlineList")); 
 			e.printStackTrace();
 		}
 		
@@ -181,10 +181,10 @@ public class UserStatusPanel extends JPanel implements ParticipantStatusListener
 							
 						try{
 							StyledDocument doc = onlineList.getStyledDocument();
-							doc.insertString(doc.getLength(), user.getKey() + "\n", listStyle); //$NON-NLS-1$
-							LOGGER.info(xStrings.getString("UserStatusPanel.logUpdatedOnlineList") + user.getKey() + user.getValue()); //$NON-NLS-1$
+							doc.insertString(doc.getLength(), user.getKey() + "\n", listStyle); 
+							LOGGER.info(xStrings.getString("UserStatusPanel.logUpdatedOnlineList") + user.getKey() + user.getValue()); 
 						}catch(BadLocationException e){
-							LOGGER.severe(xStrings.getString("UserStatusPanel.logErrorUpdatingOnlineList") + user.getKey()); //$NON-NLS-1$
+							LOGGER.severe(xStrings.getString("UserStatusPanel.logErrorUpdatingOnlineList") + user.getKey()); 
 							e.printStackTrace();
 						}
 						
@@ -201,11 +201,11 @@ public class UserStatusPanel extends JPanel implements ParticipantStatusListener
 	@Override
 	public void joined(String participant) {
 		
-		LOGGER.info(participant + " " + xStrings.getString("UserStatusPanel.logChatParticipantJoined"));  //$NON-NLS-1$//$NON-NLS-2$
+		LOGGER.info(participant + " " + xStrings.getString("UserStatusPanel.logChatParticipantJoined"));  
 		String friendlyParticipant = participant;
 		
-		if(friendlyParticipant.contains("/")) //$NON-NLS-1$
-			friendlyParticipant = friendlyParticipant.split("/")[1]; //$NON-NLS-1$
+		if(friendlyParticipant.contains("/")) 
+			friendlyParticipant = friendlyParticipant.split("/")[1]; 
 		
 		if(chatRoom.getOccupantPresence(participant).getMode() == Mode.available ||
 			chatRoom.getOccupantPresence(participant).getMode() == Mode.chat || 
@@ -221,11 +221,11 @@ public class UserStatusPanel extends JPanel implements ParticipantStatusListener
 	@Override
 	public void left(String participant) {
 
-		LOGGER.info(participant + " " + xStrings.getString("UserStatusPanel.logChatParticipantLeft"));  //$NON-NLS-1$//$NON-NLS-2$
+		LOGGER.info(participant + " " + xStrings.getString("UserStatusPanel.logChatParticipantLeft"));  
 		String friendlyParticipant = participant;
 		
-		if(friendlyParticipant.contains("/")) //$NON-NLS-1$
-			friendlyParticipant = friendlyParticipant.split("/")[1]; //$NON-NLS-1$
+		if(friendlyParticipant.contains("/")) 
+			friendlyParticipant = friendlyParticipant.split("/")[1]; 
 		
 		roomRoster.remove(friendlyParticipant);
 		updateRoster();
@@ -284,11 +284,11 @@ public class UserStatusPanel extends JPanel implements ParticipantStatusListener
 		if(XMPPPacket instanceof Presence){
 			
 			Presence p = (Presence)XMPPPacket;
-			LOGGER.info(xStrings.getString("UserStatusPanel.logPresenceUpdate") + p.getFrom() + ": " + p.getMode()); //$NON-NLS-1$ //$NON-NLS-2$
+			LOGGER.info(xStrings.getString("UserStatusPanel.logPresenceUpdate") + p.getFrom() + ": " + p.getMode());  
 			String friendlyFrom = p.getFrom();
 			
-			if(friendlyFrom.contains("/")) //$NON-NLS-1$
-					friendlyFrom = friendlyFrom.split("/")[1]; //$NON-NLS-1$
+			if(friendlyFrom.contains("/")) 
+					friendlyFrom = friendlyFrom.split("/")[1]; 
 			
 			if(p.isAvailable()){
 				if(p.getMode() == Mode.available || p.getMode() == Mode.chat || p.getMode() == null)

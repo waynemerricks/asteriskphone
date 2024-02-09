@@ -6,7 +6,7 @@ import java.util.ResourceBundle;
 
 public class I18NStrings {
 	
-	private static final String BUNDLE_NAME = "com.thevoiceasia.phonebox.calls.strings"; //$NON-NLS-1$
+	private static final String BUNDLE_NAME = "com.thevoiceasia.phonebox.calls.strings"; 
 	private ResourceBundle RESOURCE_BUNDLE;
 	private String language, country;
 	
@@ -25,7 +25,7 @@ public class I18NStrings {
 	 * @return
 	 */
 	public String getLocale(){
-		return language + "," + country; //$NON-NLS-1$
+		return language + "," + country; 
 	}
 	
 	

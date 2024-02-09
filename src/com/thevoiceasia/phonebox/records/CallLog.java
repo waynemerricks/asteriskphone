@@ -35,11 +35,11 @@ public class CallLog {
 		xStrings = new I18NStrings(language, country);
 		
 		//Get the skeleton of the record, number -> person
-		String SQL = "SELECT callhistory.time, person.name, person.location FROM " //$NON-NLS-1$
-				+ "callhistory INNER JOIN phonenumbers ON callhistory.phonenumber = "  //$NON-NLS-1$
-				+ "phonenumbers.phone_number INNER JOIN person ON phonenumbers.person_id = " //$NON-NLS-1$
-				+ "person.person_id WHERE callhistory.callchannel = " + channel  //$NON-NLS-1$
-				+ " AND callhistory.state = 'R'"; //$NON-NLS-1$
+		String SQL = "SELECT callhistory.time, person.name, person.location FROM " 
+				+ "callhistory INNER JOIN phonenumbers ON callhistory.phonenumber = "  
+				+ "phonenumbers.phone_number INNER JOIN person ON phonenumbers.person_id = " 
+				+ "person.person_id WHERE callhistory.callchannel = " + channel  
+				+ " AND callhistory.state = 'R'"; 
 		
 		Statement statement = null;
 		ResultSet resultSet = null;
@@ -47,21 +47,21 @@ public class CallLog {
 		try{
 			statement = readConnection.createStatement();
 		    resultSet = statement.executeQuery(SQL);
-		    SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss"); //$NON-NLS-1$
+		    SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss"); 
 		    
 		    while(resultSet.next()){
 		    	
 		    	this.time = sdf.format(new Date(
-		    			resultSet.getTimestamp("time").getTime())); //$NON-NLS-1$
-		    	this.location = resultSet.getString("location"); //$NON-NLS-1$
-		    	this.name = resultSet.getString("name"); //$NON-NLS-1$
+		    			resultSet.getTimestamp("time").getTime())); 
+		    	this.location = resultSet.getString("location"); 
+		    	this.name = resultSet.getString("name"); 
 		    	this.conversation = null;
 		    	
 		    }
 		    
 		}catch (SQLException e){
 			
-			LOGGER.severe(xStrings.getString("CallLog.callhistorySQLError") + SQL); //$NON-NLS-1$
+			LOGGER.severe(xStrings.getString("CallLog.callhistorySQLError") + SQL); 
 			
 		}finally {
 		    
@@ -98,7 +98,7 @@ public class CallLog {
 		xStrings = new I18NStrings(language, country);
 		
 		//Get the conversation part of the record
-		String SQL = "SELECT person_id, time, conversation FROM conversations WHERE channel = "  //$NON-NLS-1$
+		String SQL = "SELECT person_id, time, conversation FROM conversations WHERE channel = "  
 				+ channel;
 
 		Statement statement = null;
@@ -107,14 +107,14 @@ public class CallLog {
 		try{
 			statement = readConnection.createStatement();
 		    resultSet = statement.executeQuery(SQL);
-		    SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss"); //$NON-NLS-1$
+		    SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss"); 
 		    
 		    while(resultSet.next()){
 		    	
-		    	this.id = resultSet.getString("person_id"); //$NON-NLS-1$
-		    	this.conversation = resultSet.getString("conversation"); //$NON-NLS-1$
+		    	this.id = resultSet.getString("person_id"); 
+		    	this.conversation = resultSet.getString("conversation"); 
 		    	this.time = sdf.format(new Date(
-		    			resultSet.getTimestamp("time").getTime())); //$NON-NLS-1$
+		    			resultSet.getTimestamp("time").getTime())); 
 		    	
 		    	lookupPerson(readConnection);
 		    	
@@ -122,7 +122,7 @@ public class CallLog {
 		    
 		}catch (SQLException e){
 			
-			LOGGER.severe(xStrings.getString("CallLog.conversationSQLError") + SQL); //$NON-NLS-1$
+			LOGGER.severe(xStrings.getString("CallLog.conversationSQLError") + SQL); 
 			
 		}finally {
 		    
@@ -151,7 +151,7 @@ public class CallLog {
 	private void lookupPerson(Connection readConnection) {
 		
 		//Get the persons details associated with this record
-		String SQL = "SELECT name, location FROM person WHERE person_id = " + id;  //$NON-NLS-1$
+		String SQL = "SELECT name, location FROM person WHERE person_id = " + id;  
 
 		Statement statement = null;
 		ResultSet resultSet = null;
@@ -162,14 +162,14 @@ public class CallLog {
 		    
 		    while(resultSet.next()){
 		    	
-		    	this.name = resultSet.getString("name"); //$NON-NLS-1$
-		    	this.location = resultSet.getString("location"); //$NON-NLS-1$
+		    	this.name = resultSet.getString("name"); 
+		    	this.location = resultSet.getString("location"); 
 		    	
 		    }
 		    
 		}catch (SQLException e){
 			
-			LOGGER.severe(xStrings.getString("CallLog.LookupPersonSQLError") + SQL); //$NON-NLS-1$
+			LOGGER.severe(xStrings.getString("CallLog.LookupPersonSQLError") + SQL); 
 			
 		}finally {
 		    
@@ -231,7 +231,7 @@ public class CallLog {
 		String tmpConv = conversation;
 		
 		if(tmpConv == null)
-			tmpConv = xStrings.getString("CallLog.NoConversation"); //$NON-NLS-1$
+			tmpConv = xStrings.getString("CallLog.NoConversation"); 
 		
 		return tmpConv;
 		
@@ -253,7 +253,7 @@ public class CallLog {
 		String tmpLoc = location;
 		
 		if(tmpLoc == null)
-			tmpLoc = xStrings.getString("CallLog.UnknownLocation"); //$NON-NLS-1$
+			tmpLoc = xStrings.getString("CallLog.UnknownLocation"); 
 		
 		return tmpLoc;
 		
@@ -282,7 +282,7 @@ public class CallLog {
 		String tmpName = name;
 		
 		if(tmpName == null)
-			tmpName = xStrings.getString("CallLog.UnknownName"); //$NON-NLS-1$
+			tmpName = xStrings.getString("CallLog.UnknownName"); 
 		
 		return tmpName;
 		
@@ -298,7 +298,7 @@ public class CallLog {
 		
 		if(tmpTime == null){
 			
-			SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss"); //$NON-NLS-1$
+			SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss"); 
 			tmpTime = sdf.format(new Date());
 			time = tmpTime;
 					

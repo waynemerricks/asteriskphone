@@ -34,10 +34,10 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	public static final int ALERT_INFORMATION = 1;
 	public static final int ALERT_WARNING = 2;
 	public static final int ALERT_BANNED = 3;
-	public static final String ALERT_FAVOURITE = "images/favourite.png"; //$NON-NLS-1$
+	public static final String ALERT_FAVOURITE = "images/favourite.png"; 
 	
-	private static final String[] ALERT_ICONS = {"OptionPane.questionIcon", //$NON-NLS-1$
-		"OptionPane.informationIcon", "OptionPane.warningIcon", "OptionPane.errorIcon"};  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
+	private static final String[] ALERT_ICONS = {"OptionPane.questionIcon", 
+		"OptionPane.informationIcon", "OptionPane.warningIcon", "OptionPane.errorIcon"};   
 	/* Modes:
 	 * 1 = Ringing
 	 * 2 = Answered
@@ -115,7 +115,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		xStrings = new I18NStrings(language, country);
 		
 		defaultColour = this.getBackground();
-		ringingTimer = new Timer("ringingTimer:" + channelID); //$NON-NLS-1$
+		ringingTimer = new Timer("ringingTimer:" + channelID); 
 		this.channelID = channelID;
 		
 		this.hangupActive = hangupActive;
@@ -138,7 +138,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 
 		}
 
-		this.setLayout(new MigLayout("insets 0, gap 0, fillx")); //$NON-NLS-1$
+		this.setLayout(new MigLayout("insets 0, gap 0, fillx")); 
 		
 		//Alert Icon
 		alertIcon = new CallIconPanel(UIManager.getIcon(ALERT_ICONS[alertLevel]),
@@ -146,20 +146,20 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		alertIcon.setMinimumSize(new Dimension(100, 64));
 		
 		//Timer Label 1 row/column
-		timeLabel = new TimerLabel(xStrings.getString("CallInfoPanel.callTimeInit"), //$NON-NLS-1$
+		timeLabel = new TimerLabel(xStrings.getString("CallInfoPanel.callTimeInit"), 
 				TransparentLabel.CENTER, hourOffset); 
 		//timeLabel.setPreferredSize(new Dimension(100, 30));
 		timeLabel.setMinimumSize(new Dimension(100, 30));
 		
-		this.add(timeLabel, "growx 25, split"); //$NON-NLS-1$
+		this.add(timeLabel, "growx 25, split"); 
 		
 		//Connected To Label, will be blank by default, fill row
-		connectedToLabel = new TransparentLabel(" ", TransparentLabel.CENTER); //$NON-NLS-1$
+		connectedToLabel = new TransparentLabel(" ", TransparentLabel.CENTER); 
 		
 		connectedToLabel.setPreferredSize(new Dimension(150, 30));
 		connectedToLabel.setMinimumSize(new Dimension(150, 30));
 		
-		this.add(connectedToLabel, "growx, gap 0, wrap"); //$NON-NLS-1$
+		this.add(connectedToLabel, "growx, gap 0, wrap"); 
 		
 		//Name Label, 2nd Row, fill horizontal
 		nameLabel = new BoldLabel(callerName, TransparentLabel.CENTER);
@@ -167,7 +167,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		nameLabel.setPreferredSize(new Dimension(250, 30));
 		nameLabel.setMinimumSize(new Dimension(250, 30));
 		
-		this.add(nameLabel, "growx, span 3, wrap"); //$NON-NLS-1$
+		this.add(nameLabel, "growx, span 3, wrap"); 
 		
 		//Location Label, 3rd Row, fill horizontal
 		locationLabel = new BoldLabel(callerLocation, TransparentLabel.CENTER);
@@ -175,7 +175,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		locationLabel.setPreferredSize(new Dimension(250, 30));
 		locationLabel.setMinimumSize(new Dimension(250, 30));
 		
-		this.add(locationLabel, "growx, span 3, wrap"); //$NON-NLS-1$
+		this.add(locationLabel, "growx, span 3, wrap"); 
 		
 		//Conversation Label, 4th Row, fill height/horiz
 		conversationLabel = new TransparentLabel(conversation);
@@ -185,8 +185,8 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		conversationLabel.setPreferredSize(new Dimension(350, 60));
 		conversationLabel.setMinimumSize(new Dimension(350, 30));
 		
-		this.add(conversationLabel, "south"); //$NON-NLS-1$
-		this.add(alertIcon, "west"); //Add Alert to Panel, west //$NON-NLS-1$
+		this.add(conversationLabel, "south"); 
+		this.add(alertIcon, "west"); //Add Alert to Panel, west 
 		
 		this.setPreferredSize(new Dimension(350, 150));
 		this.setMinimumSize(new Dimension(350, 150));
@@ -225,8 +225,8 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	 */
 	public void changeChannelID(String id){
 		//TODO
-		LOGGER.severe(xStrings.getString("CallInfoPanel.changingChannelID") +  //$NON-NLS-1$
-				channelID + "/" + id); //$NON-NLS-1$
+		LOGGER.severe(xStrings.getString("CallInfoPanel.changingChannelID") +  
+				channelID + "/" + id); 
 		channelID = id;
 		
 	}
@@ -659,7 +659,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 			public void run(){
 				
 				setBackground(QUEUED_COLOUR);
-				connectedToLabel.setText(""); //$NON-NLS-1$
+				connectedToLabel.setText(""); 
 				
 			}
 			
@@ -770,11 +770,11 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		});
 		
 		//Update the record held by this panel
-		this.getPhoneCallRecord().getActivePerson().alert = "" + level; //$NON-NLS-1$
+		this.getPhoneCallRecord().getActivePerson().alert = "" + level; 
 		
 		//If we need to notify others then do so
 		if(updateOthers)
-			sendCallerUpdated("alert", alertText + "@@" + level); //$NON-NLS-1$ //$NON-NLS-2$
+			sendCallerUpdated("alert", alertText + "@@" + level);  
 		
 			
 	}
@@ -801,7 +801,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		});
 		
 		if(updateOthers){
-			sendCallerUpdated("alert", alertText + "@@" + pathToImage.replace("/", "+")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+			sendCallerUpdated("alert", alertText + "@@" + pathToImage.replace("/", "+"));    
 			//We can also save to DB here
 			this.getPhoneCallRecord().getActivePerson().alert = alertText;
 		}
@@ -818,7 +818,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		getIconPanel().setBadgeIcon(pathToImage);
 		
 		if(updateOthers)
-			sendCallerUpdated("calltype", badgeText + "@@" + pathToImage.replace("/", "+")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+			sendCallerUpdated("calltype", badgeText + "@@" + pathToImage.replace("/", "+"));    
 		
 	}
 	
@@ -840,7 +840,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 				icon = new ImageIcon(imgURL, description);
 			else{
 				
-				LOGGER.warning(xStrings.getString("CallInfoPanel.logLoadIconError") + path); //$NON-NLS-1$
+				LOGGER.warning(xStrings.getString("CallInfoPanel.logLoadIconError") + path); 
 				
 			}
 		
@@ -855,7 +855,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	 */
 	private void sendControlMessage(int messageMode){
 		
-		LOGGER.info(xStrings.getString("CallInfoPanel.sendingControlMessage")); //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("CallInfoPanel.sendingControlMessage")); 
 		
 		if(controlRoom != null){
 			
@@ -865,26 +865,26 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 				
 				if(hangupActive){//Hang Up RINGING or QUEUED CALL
 					
-					message = xStrings.getString("calls.hangup") + "/" + channelID;  //$NON-NLS-1$//$NON-NLS-2$
+					message = xStrings.getString("calls.hangup") + "/" + channelID;  
 					hangupActive = false;
-					LOGGER.info(xStrings.getString("CallInfoPanel.requestHangupCall")  //$NON-NLS-1$
+					LOGGER.info(xStrings.getString("CallInfoPanel.requestHangupCall")  
 							+ channelID);
 					notifyManualHangupListeners();
 					
 				}else{//Transfer the call to my phone (aka Answer it)
-					message = xStrings.getString("calls.transfer") + "/" + channelID + "/"  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					message = xStrings.getString("calls.transfer") + "/" + channelID + "/"    
 									+ myExtension;
-					LOGGER.info(xStrings.getString("CallInfoPanel.requestTransferCall") //$NON-NLS-1$
-							+ channelID + "/" + myExtension); //$NON-NLS-1$
+					LOGGER.info(xStrings.getString("CallInfoPanel.requestTransferCall") 
+							+ channelID + "/" + myExtension); 
 				}
 			}else if(messageMode == MODE_RINGING_ME || messageMode == MODE_QUEUED_ME 
 					|| messageMode == MODE_ON_AIR_ME){
 				
 				if(hangupActive){//Hangup Call RINGING ME or QUEUED ME or ON AIR ME or ANSWERED ME
 					
-					message = xStrings.getString("calls.hangup") + "/" + channelID;  //$NON-NLS-1$//$NON-NLS-2$
+					message = xStrings.getString("calls.hangup") + "/" + channelID;  
 					hangupActive = false;
-					LOGGER.info(xStrings.getString("CallInfoPanel.requestHangupCall")  //$NON-NLS-1$
+					LOGGER.info(xStrings.getString("CallInfoPanel.requestHangupCall")  
 							+ channelID);
 					notifyManualHangupListeners();
 					
@@ -919,9 +919,9 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 							/* Old TRANSFERENDPOINT code for reference
 							
 							  //If this is our call we can transfer the end point
-							  message = xStrings.getString("calls.transferEndPoint") + "/" + channelID;  //$NON-NLS-1$//$NON-NLS-2$
+							  message = xStrings.getString("calls.transferEndPoint") + "/" + channelID;  
 							  LOGGER.info(xStrings.getString(
-									"CallInfoPanel.requestTransferEndpoint")  //$NON-NLS-1$
+									"CallInfoPanel.requestTransferEndpoint")  
 									+ channelID);
 							 */
 							break;
@@ -934,16 +934,16 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 				
 				if(hangupActive || manualCall){//Hangup an ANSWERED call or a manual call by clicking
 					
-					message = xStrings.getString("calls.hangup") + "/" + channelID; //$NON-NLS-1$ //$NON-NLS-2$
+					message = xStrings.getString("calls.hangup") + "/" + channelID;  
 					hangupActive = false;
-					LOGGER.info(xStrings.getString("CallInfoPanel.requestHangupCall")  //$NON-NLS-1$
+					LOGGER.info(xStrings.getString("CallInfoPanel.requestHangupCall")  
 							+ channelID);
 					notifyManualHangupListeners();
 					
 				}else{//Transfer this call to QUEUE
-					message = xStrings.getString("calls.queue") + "/" + channelID; //$NON-NLS-1$ //$NON-NLS-2$
-					LOGGER.info(xStrings.getString("CallInfoPanel.requestQueueCall") //$NON-NLS-1$
-							+ channelID + "/" + myExtension); //$NON-NLS-1$
+					message = xStrings.getString("calls.queue") + "/" + channelID;  
+					LOGGER.info(xStrings.getString("CallInfoPanel.requestQueueCall") 
+							+ channelID + "/" + myExtension); 
 				}
 			}else if(messageMode == MODE_ANSWERED_ELSEWHERE || messageMode == MODE_ON_AIR){
 				
@@ -952,18 +952,18 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 					
 					if(hangupActive){
 						
-						message = xStrings.getString("calls.hangup") + "/" + channelID; //$NON-NLS-1$ //$NON-NLS-2$ 
+						message = xStrings.getString("calls.hangup") + "/" + channelID;   
 						hangupActive = false;
-						LOGGER.info(xStrings.getString("CallInfoPanel.requestHangupCallOther")  //$NON-NLS-1$
+						LOGGER.info(xStrings.getString("CallInfoPanel.requestHangupCallOther")  
 								+ channelID);
 						notifyManualHangupListeners();
 						
 					}else{
-						message = xStrings.getString("calls.transfer") + "/" + channelID //$NON-NLS-1$ //$NON-NLS-2$
-									+ "/" + myExtension; //$NON-NLS-1$
+						message = xStrings.getString("calls.transfer") + "/" + channelID  
+									+ "/" + myExtension; 
 						LOGGER.info(xStrings.getString(
-								"CallInfoPanel.requestTransferCallOther") //$NON-NLS-1$
-								+ channelID + "/" + myExtension); //$NON-NLS-1$
+								"CallInfoPanel.requestTransferCallOther") 
+								+ channelID + "/" + myExtension); 
 					}
 					
 				}else{
@@ -984,11 +984,11 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 				try {
 					controlRoom.sendMessage(message);
 				} catch (XMPPException e) {
-					LOGGER.severe(xStrings.getString("CallInfoPanel.errorSendingControlMessage")); //$NON-NLS-1$
+					LOGGER.severe(xStrings.getString("CallInfoPanel.errorSendingControlMessage")); 
 				}
 			
 		}else
-			LOGGER.severe(xStrings.getString("CallInfoPanel.noControlRoomSet")); //$NON-NLS-1$
+			LOGGER.severe(xStrings.getString("CallInfoPanel.noControlRoomSet")); 
 		
 	}
 	
@@ -1003,9 +1003,9 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		if(canTakeCall){
 			
 			int option = JOptionPane.showConfirmDialog(this, 
-					xStrings.getString("CallInfoPanel.takeCall"),  //$NON-NLS-1$
-					xStrings.getString("CallInfoPanel.takeCallTitle")//$NON-NLS-1$
-						.replace("\\n", "\n").replace("\\t", "\t"), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+					xStrings.getString("CallInfoPanel.takeCall"),  
+					xStrings.getString("CallInfoPanel.takeCallTitle")
+						.replace("\\n", "\n").replace("\\t", "\t"),
 					JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 			
 			if(option == JOptionPane.YES_OPTION)
@@ -1097,16 +1097,16 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	 */
 	public void hangup(){
 	
-		String message = xStrings.getString("calls.hangup") + "/" + channelID; //$NON-NLS-1$ //$NON-NLS-2$
+		String message = xStrings.getString("calls.hangup") + "/" + channelID;  
 		hangupActive = false;
-		LOGGER.info(xStrings.getString("CallInfoPanel.requestHangupCall")  //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("CallInfoPanel.requestHangupCall")  
 				+ channelID);
 		notifyManualHangupListeners();
 		
 		try {
 			controlRoom.sendMessage(message);
 		} catch (XMPPException e) {
-			LOGGER.severe(xStrings.getString("CallInfoPanel.errorSendingControlMessage")); //$NON-NLS-1$
+			LOGGER.severe(xStrings.getString("CallInfoPanel.errorSendingControlMessage")); 
 		}
 		
 	}
@@ -1147,12 +1147,12 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		
 		conversationLabel.setText(text);
 		
-		if(text.contains("/")) //$NON-NLS-1$
-			text = text.replaceAll("/", "^^%%$$");  //$NON-NLS-1$//$NON-NLS-2$
+		if(text.contains("/")) 
+			text = text.replaceAll("/", "^^%%$$");  
 		
 		//Update Others
 		if(updateOthers)
-			sendCallerUpdated("conversation", text); //$NON-NLS-1$
+			sendCallerUpdated("conversation", text); 
 		
 	}
 	
@@ -1168,7 +1168,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		
 		//Update Others
 		if(updateOthers)
-			sendCallerUpdated("name", text); //$NON-NLS-1$
+			sendCallerUpdated("name", text); 
 		
 	}
 	
@@ -1184,7 +1184,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		
 		//Update Others
 		if(updateOthers)
-			sendCallerUpdated("location", text); //$NON-NLS-1$
+			sendCallerUpdated("location", text); 
 		
 	}
 	
@@ -1213,7 +1213,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 	 */
 	public void setOutgoing(boolean yes){
 	
-		LOGGER.info(xStrings.getString("CallInfoPanel.setOutgoing") + yes + " " + channelID); //$NON-NLS-1$ //$NON-NLS-2$
+		LOGGER.info(xStrings.getString("CallInfoPanel.setOutgoing") + yes + " " + channelID);  
 		outgoing = yes;
 		
 	}

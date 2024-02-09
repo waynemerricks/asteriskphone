@@ -52,9 +52,9 @@ public class ChatInputPanel extends JPanel implements ActionListener, KeyListene
 		message.setWrapStyleWord(true);
 		message.addKeyListener(this);
 		
-		String sendButtonText = xStrings.getString("ChatInputPanel.buttonSend");  //$NON-NLS-1$
+		String sendButtonText = xStrings.getString("ChatInputPanel.buttonSend");  
 		JButton send = new JButton(sendButtonText);
-		send.setToolTipText(xStrings.getString("ChatInputPanel.buttonSendToolTip")); //$NON-NLS-1$
+		send.setToolTipText(xStrings.getString("ChatInputPanel.buttonSendToolTip")); 
 		send.setMnemonic(sendButtonText.substring(0,1).toLowerCase().toCharArray()[0]);
 		send.addActionListener(this);
 		
@@ -72,7 +72,7 @@ public class ChatInputPanel extends JPanel implements ActionListener, KeyListene
 		
 		if(message.getText().trim().length() > 0){
 			
-			LOGGER.info(xStrings.getString("ChatInputPanel.logSendingMessage")); //$NON-NLS-1$
+			LOGGER.info(xStrings.getString("ChatInputPanel.logSendingMessage")); 
 			
 			try {
 				
@@ -85,9 +85,9 @@ public class ChatInputPanel extends JPanel implements ActionListener, KeyListene
 				});
 				
 			}catch(XMPPException e){
-				showWarning(e, xStrings.getString("ChatInputPanel.chatRoomError")); //$NON-NLS-1$
+				showWarning(e, xStrings.getString("ChatInputPanel.chatRoomError")); 
 			}catch(IllegalStateException e){
-				showWarning(e, xStrings.getString("ChatInputPanel.ServerGoneError")); //$NON-NLS-1$
+				showWarning(e, xStrings.getString("ChatInputPanel.ServerGoneError")); 
 			}
 			
 		}
@@ -101,9 +101,9 @@ public class ChatInputPanel extends JPanel implements ActionListener, KeyListene
 	 */
 	private void showWarning(Exception e, String friendlyErrorMessage){
 		
-		System.err.println(xStrings.getString("ChatInputPanel.logErrorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
+		System.err.println(xStrings.getString("ChatInputPanel.logErrorPrefix") + friendlyErrorMessage); 
 		e.printStackTrace();
-		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("ChatInputPanel.errorBoxTitle"), JOptionPane.WARNING_MESSAGE); //$NON-NLS-1$
+		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("ChatInputPanel.errorBoxTitle"), JOptionPane.WARNING_MESSAGE); 
 		LOGGER.warning(friendlyErrorMessage);
 		
 	}

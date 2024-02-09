@@ -106,7 +106,7 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 					
 					//Convert the component to a MultiLineCellRenderer so we can set the Document
 					MultiLineCellRenderer textPane = (MultiLineCellRenderer)c;
-					textPane.setContentType("text/html"); //$NON-NLS-1$
+					textPane.setContentType("text/html"); 
 					
 					//Set the document to our wanted attributes
 					textPane.getStyledDocument().setParagraphAttributes(0, 
@@ -161,18 +161,18 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 	private void getCallLog(Connection readConnection){
 		
 		Date oldestRecord = new Date(new Date().getTime() - maxRecordAge);
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss"); //$NON-NLS-1$
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss"); 
 		String date = sdf.format(oldestRecord);
 		
 		//Get the records from callhistory
-		String SQL = "SELECT callchannel FROM callhistory WHERE time > "  //$NON-NLS-1$
-						+ date + " AND (state = 'Q' OR state = 'A') GROUP BY callchannel " //$NON-NLS-1$
-						+ "ORDER BY time DESC"; //$NON-NLS-1$
+		String SQL = "SELECT callchannel FROM callhistory WHERE time > "  
+						+ date + " AND (state = 'Q' OR state = 'A') GROUP BY callchannel " 
+						+ "ORDER BY time DESC"; 
 		
 		Statement statement = null;
 		ResultSet resultSet = null;
 		
-		LOGGER.info(xStrings.getString("CallLogPanel.gettingCallHistory")); //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("CallLogPanel.gettingCallHistory")); 
 		
 		try{
 			statement = readConnection.createStatement();
@@ -181,7 +181,7 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 		    while(resultSet.next()){
 		    	
 		    	CallLog log = new CallLog(language, country,
-		    			resultSet.getString("callchannel"),  //$NON-NLS-1$
+		    			resultSet.getString("callchannel"),  
 		    			readConnection);
 		    	
 		    	if(log.isComplete())
@@ -189,7 +189,7 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 		    	else{
 		    		
 		    		log = new CallLog(language, country, 
-		    				resultSet.getString("callchannel"),  //$NON-NLS-1$
+		    				resultSet.getString("callchannel"),  
 		    				readConnection, true);
 		    		
 		    		/* BUG FIX: Can get into a situation where a person does not exist
@@ -214,7 +214,7 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 		    }
 		    
 		}catch (SQLException e){
-			showError(e, xStrings.getString("CallLogPanel.getLogSQLError")); //$NON-NLS-1$
+			showError(e, xStrings.getString("CallLogPanel.getLogSQLError")); 
 		}finally {
 		    
 			if (resultSet != null) {
@@ -245,17 +245,17 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 	private String[] getPerson(Connection readConnection, int id){
 		
 		String[] person = new String[2];
-		person[0] = xStrings.getString("CallLogPanel.nameNotFound"); //$NON-NLS-1$
-		person[1] = xStrings.getString("CallLogPanel.locationNotFound"); //$NON-NLS-1$
+		person[0] = xStrings.getString("CallLogPanel.nameNotFound"); 
+		person[1] = xStrings.getString("CallLogPanel.locationNotFound"); 
 		
 		//Get the records from callhistory
-		String SQL = "SELECT `name`, `location` FROM `person` " + //$NON-NLS-1$
-				"WHERE `person_id` = " + id; //$NON-NLS-1$
+		String SQL = "SELECT `name`, `location` FROM `person` " + 
+				"WHERE `person_id` = " + id; 
 		
 		Statement statement = null;
 		ResultSet resultSet = null;
 		
-		LOGGER.info(xStrings.getString("CallLogPanel.getPerson") + id); //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("CallLogPanel.getPerson") + id); 
 		
 		try{
 			statement = readConnection.createStatement();
@@ -263,15 +263,15 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 		    
 		    while(resultSet.next()){
 		    	
-		    	person[0] = resultSet.getString("name"); //$NON-NLS-1$
-		    	person[1] = resultSet.getString("location"); //$NON-NLS-1$
+		    	person[0] = resultSet.getString("name"); 
+		    	person[1] = resultSet.getString("location"); 
 		    		
 		    }
 		    
 		}catch (SQLException e){
 			
 			showError(e, xStrings.getString(
-					"CallLogPanel.getPersonSQLError") + id); //$NON-NLS-1$
+					"CallLogPanel.getPersonSQLError") + id); 
 			
 		}finally {
 		    
@@ -322,10 +322,10 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 		//TODO read this from db instead of hard coding
 		columnNames = new String[4];
 		
-		columnNames[0] = xStrings.getString("CallLogPanel.nameField"); //$NON-NLS-1$
-		columnNames[1] = xStrings.getString("CallLogPanel.conversationField"); //$NON-NLS-1$
-		columnNames[2] = xStrings.getString("CallLogPanel.locationField"); //$NON-NLS-1$
-		columnNames[3] = xStrings.getString("CallerHistoryPanel.timeField"); //$NON-NLS-1$
+		columnNames[0] = xStrings.getString("CallLogPanel.nameField"); 
+		columnNames[1] = xStrings.getString("CallLogPanel.conversationField"); 
+		columnNames[2] = xStrings.getString("CallLogPanel.locationField"); 
+		columnNames[3] = xStrings.getString("CallerHistoryPanel.timeField"); 
 		
 	}
 	
@@ -336,9 +336,9 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 	 */
 	private void showError(Exception e, String friendlyErrorMessage){
 		
-		System.err.println(xStrings.getString("CallLogPanel.logErrorPrefix") + friendlyErrorMessage); //$NON-NLS-1$
+		System.err.println(xStrings.getString("CallLogPanel.logErrorPrefix") + friendlyErrorMessage); 
 		e.printStackTrace();
-		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("CallLogPanel.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
+		JOptionPane.showMessageDialog(null, friendlyErrorMessage, xStrings.getString("CallLogPanel.errorBoxTitle"), JOptionPane.ERROR_MESSAGE); 
 		LOGGER.severe(friendlyErrorMessage);
 		
 	}
@@ -351,14 +351,14 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 			Message message = (Message)XMPPPacket;
 			
 			//React to commands thread all of this if performance is a problem
-			LOGGER.info(xStrings.getString("CallLogPanel.receivedMessage") + //$NON-NLS-1$
+			LOGGER.info(xStrings.getString("CallLogPanel.receivedMessage") + 
 						message.getBody());
 				
-			String[] command = message.getBody().split("/"); //$NON-NLS-1$
+			String[] command = message.getBody().split("/"); 
 			
 			//UPDATEFIELD
 			if(command.length == 4 && command[0].equals(
-					xStrings.getString("CallLogPanel.commandUpdateField"))){ //$NON-NLS-1$
+					xStrings.getString("CallLogPanel.commandUpdateField"))){ 
 				
 				/* Only care about name, conversation, location
 				 * TODO Change this to read fields wanted from DB
@@ -373,14 +373,14 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 					 * and use that for the channel vs person lookup					
 					 */
 					//Add to call log table
-					LOGGER.info(xStrings.getString("CallLogPanel.logNewUpdate") + " " + command[2]); //$NON-NLS-1$ //$NON-NLS-2$
+					LOGGER.info(xStrings.getString("CallLogPanel.logNewUpdate") + " " + command[2]);  
 					
 					CallLog log = new CallLog(language, country,
 			    			command[2],
 			    			readConnection, true);
 			    	//TODO DEBUG change back to info
 					LOGGER.severe(
-							xStrings.getString("CallLogPanel.addingChannelToLog") + //$NON-NLS-1$
+							xStrings.getString("CallLogPanel.addingChannelToLog") + 
 							log.getChannel()); 
 					
 			    	records.put(log.getChannel(), log);
@@ -388,66 +388,66 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 					
 				}
 				
-				if(command[1].equals(xStrings.getString("CallLogPanel.name"))){ //$NON-NLS-1$
+				if(command[1].equals(xStrings.getString("CallLogPanel.name"))){ 
 					
-					LOGGER.info(xStrings.getString("CallLogPanel.logNameUpdate")); //$NON-NLS-1$
+					LOGGER.info(xStrings.getString("CallLogPanel.logNameUpdate")); 
 					
 					//Set Internal Record
 					records.get(command[2]).setName(command[3]);
 					
 					//Set table row value
-					changeCallLog(command[2], "name", command[3]); //$NON-NLS-1$
+					changeCallLog(command[2], "name", command[3]); 
 					
-				}else if(command[1].equals(xStrings.getString("CallLogPanel.conversation"))){ //$NON-NLS-1$
+				}else if(command[1].equals(xStrings.getString("CallLogPanel.conversation"))){ 
 					
-					LOGGER.info(xStrings.getString("CallLogPanel.logConversationUpdate")); //$NON-NLS-1$
+					LOGGER.info(xStrings.getString("CallLogPanel.logConversationUpdate")); 
 					
 					//Set Internal Record
 					records.get(command[2]).setConversation(command[3]);
 					
 					//Set table row value
-					changeCallLog(command[2], "conversation", command[3]); //$NON-NLS-1$
+					changeCallLog(command[2], "conversation", command[3]); 
 					
-				}else if(command[1].equals(xStrings.getString("CallLogPanel.location"))){ //$NON-NLS-1$
+				}else if(command[1].equals(xStrings.getString("CallLogPanel.location"))){ 
 					
-					LOGGER.info(xStrings.getString("CallLogPanel.logLocationUpdate")); //$NON-NLS-1$
+					LOGGER.info(xStrings.getString("CallLogPanel.logLocationUpdate")); 
 					
 					//Set Internal Record
 					records.get(command[2]).setLocation(command[3]);
 					
 					//Set table row value
-					changeCallLog(command[2], "location", command[3]); //$NON-NLS-1$
+					changeCallLog(command[2], "location", command[3]); 
 					
 				}
 			
 			}else if(command.length == 4 && command[0].equals(
-					xStrings.getString("CallLogPanel.commandQueue")) && //$NON-NLS-1$
+					xStrings.getString("CallLogPanel.commandQueue")) && 
 					command[1].equals(incomingQueue)){//QUEUE INCOMING
 				
 				//Add to call log table
-				LOGGER.info(xStrings.getString("CallLogPanel.logQUEUE")); //$NON-NLS-1$
+				LOGGER.info(xStrings.getString("CallLogPanel.logQUEUE")); 
 				
 				CallLog log = new CallLog(language, country,
 		    			command[3],
 		    			readConnection, true);
 		    	//TODO DEBUG change back to info
 				LOGGER.severe(
-						xStrings.getString("CallLogPanel.addingChannelToLog") + //$NON-NLS-1$
+						xStrings.getString("CallLogPanel.addingChannelToLog") + 
 						log.getChannel()); 
 				
 		    	records.put(log.getChannel(), log);
 		    	addCallLog(log);
 		    		
 		    }else if(command.length == 4 && command[0].equals(
-		    		xStrings.getString("CallLogPanel.commandEndPoint"))){ //$NON-NLS-1$
+		    		xStrings.getString("CallLogPanel.commandEndPoint"))){ 
 		    	//TODO DEBUG change back to info
 		    	//Store as we'll expect a channel swap on this
-		    	LOGGER.severe(xStrings.getString("CallLogPanel.logEndPoint") + " " +  //$NON-NLS-1$ //$NON-NLS-2$
-		    			"Number: " + command[3] + " Channel: " + command[1]);   //$NON-NLS-1$//$NON-NLS-2$
+		    	LOGGER.severe(xStrings.getString("CallLogPanel.logEndPoint") + " " +   
+		    			"Number: " + command[3] + " Channel: " + command[1]);   
 		    	channelSwapList.put(command[3], command[1]);//key = number, value = channel
 		    	
 		    }else if(command.length == 4 && command[0].equals(
-		    		xStrings.getString("CallLogPanel.commandQueue")) && //$NON-NLS-1$
+		    		xStrings.getString("CallLogPanel.commandQueue")) && 
 		    		command[1].equals(onairQueue)){ //QUEUE ON AIR
 		    	
 		    	//Check for channel swap
@@ -455,7 +455,7 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 		    		
 		    		if(channelSwapList.containsKey(command[2])){
 		    			
-		    			LOGGER.info(xStrings.getString("CallLogPanel.receivedSwapOnAirQueue")); //$NON-NLS-1$
+		    			LOGGER.info(xStrings.getString("CallLogPanel.receivedSwapOnAirQueue")); 
 			    		swapChannel(channelSwapList.get(command[2]), command[3]);
 		    			channelSwapList.remove(command[2]);
 		    			
@@ -464,7 +464,7 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 		    	}
 		    	
 		    }else if(command.length == 3 && command[0].equals(
-					xStrings.getString("CallLogPanel.changed"))){ //$NON-NLS-1$
+					xStrings.getString("CallLogPanel.changed"))){ 
 				
 				/* CHANGED
 				 * Update log record for a given channel to another person only 
@@ -476,8 +476,8 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 		    	String[] person = getPerson(readConnection, 
 		    			Integer.parseInt(command[2]));
 		    	
-		    	changeCallLog(command[1], "name", person[0]); //$NON-NLS-1$
-		    	changeCallLog(command[1], "location", person[1]); //$NON-NLS-1$
+		    	changeCallLog(command[1], "name", person[0]); 
+		    	changeCallLog(command[1], "location", person[1]); 
 		    	
 			}else if(command.length == 3 && command[0].equals(
 					xStrings.getString("CallLogPanel.manual"))){
@@ -490,7 +490,7 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 		    			readConnection, true);
 		    	
 				LOGGER.info(
-						xStrings.getString("CallLogPanel.addingChannelToLog") + //$NON-NLS-1$
+						xStrings.getString("CallLogPanel.addingChannelToLog") + 
 						log.getChannel()); 
 				
 		    	records.put(log.getChannel(), log);
@@ -509,8 +509,8 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 	 */
 	private void swapChannel(String fromChannel, String toChannel) {
 		//TODO DEBUG change to info
-		LOGGER.severe(xStrings.getString("CallLogPanel.logChannelUpdate") +  //$NON-NLS-1$
-				fromChannel + "/" + toChannel); //$NON-NLS-1$
+		LOGGER.severe(xStrings.getString("CallLogPanel.logChannelUpdate") +  
+				fromChannel + "/" + toChannel); 
 		
 		//Set Internal Record
 		if(!records.containsKey(fromChannel)){
@@ -521,7 +521,7 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 	    			toChannel,
 	    			readConnection, true);
 			//TODO DEBUG change to info TODO xStrings Swap Adding New Log
-			LOGGER.severe("Swap Adding New Log: " + toChannel); //$NON-NLS-1$
+			LOGGER.severe("Swap Adding New Log: " + toChannel); 
 			records.put(toChannel, log);
 			
 			addCallLog(log);
@@ -534,7 +534,7 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 			records.put(toChannel, log);
 			
 			//Set table row value
-			changeCallLog(fromChannel, "channel", toChannel); //$NON-NLS-1$
+			changeCallLog(fromChannel, "channel", toChannel); 
 			
 		}
 		
@@ -557,7 +557,7 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 		
 		//New chat initiated so add a message listener to it
 		chat.addMessageListener(this);
-		LOGGER.info(xStrings.getString("CallLogPanel.receivedPrivateChatRequest")); //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("CallLogPanel.receivedPrivateChatRequest")); 
 				
 	}
 
@@ -566,13 +566,13 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 	public void processMessage(Chat chat, Message message) {
 		
 		//Can pass this on to the processPacket method as part of normal message handling
-		LOGGER.info(xStrings.getString("CallLogPanel.receivedPrivateMessage") //$NON-NLS-1$
+		LOGGER.info(xStrings.getString("CallLogPanel.receivedPrivateMessage") 
 				+ message.getBody()); 
 		
-		String[] command = message.getBody().split("/"); //$NON-NLS-1$
+		String[] command = message.getBody().split("/"); 
 		
 		if(command.length == 5 && command[0].equals(
-				xStrings.getString("CallLogPanel.commandCall")) && //$NON-NLS-1$
+				xStrings.getString("CallLogPanel.commandCall")) && 
 				command[2].equals(incomingQueue)){ 
 		
 			//This will be a call still ringing so add it to our call history for later
@@ -580,7 +580,7 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 			//Calls that aren't in the incoming queue will already be in the conversation
 			//list (in theory but needs testing)
 			//TODO DEBUG info & xStrings
-			LOGGER.severe("Private Add New Log: " + command[3]); //$NON-NLS-1$
+			LOGGER.severe("Private Add New Log: " + command[3]); 
 			CallLog log = new CallLog(language, country,
 	    			command[3],
 	    			readConnection, true);

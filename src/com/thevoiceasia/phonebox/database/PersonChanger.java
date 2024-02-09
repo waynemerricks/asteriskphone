@@ -51,8 +51,8 @@ public class PersonChanger implements Runnable, MessageListener {
 		
 		this.phoneNumber = phoneNumber;
 		
-		LOGGER.info(xStrings.getString("PersonChanger.ChangingPerson") +  //$NON-NLS-1$
-				"\n\tChannel: " + channelID + "\n\tNew Person ID: " + personID); //$NON-NLS-1$ //$NON-NLS-2$
+		LOGGER.info(xStrings.getString("PersonChanger.ChangingPerson") +  
+				"\n\tChannel: " + channelID + "\n\tNew Person ID: " + personID);  
 		
 	}
 	
@@ -63,18 +63,18 @@ public class PersonChanger implements Runnable, MessageListener {
 	 */
 	private void sendPrivateMessage(String recipient, String message){
 	
-		Chat chat = controlRoom.createPrivateChat(controlRoom.getRoom() + "/" + recipient, this); //$NON-NLS-1$
+		Chat chat = controlRoom.createPrivateChat(controlRoom.getRoom() + "/" + recipient, this); 
 		
 		try {
 			
-			LOGGER.info(xStrings.getString("PersonChanger.sendingPrivateMessage") +  //$NON-NLS-1$
-					recipient + "/" + message); //$NON-NLS-1$
+			LOGGER.info(xStrings.getString("PersonChanger.sendingPrivateMessage") +  
+					recipient + "/" + message); 
 			chat.sendMessage(message);
 			
 		} catch (XMPPException e) {
 			
 			LOGGER.severe(xStrings.getString(
-					"PersonChanger.XMPPSendErrorChangeFailed")); //$NON-NLS-1$
+					"PersonChanger.XMPPSendErrorChangeFailed")); 
 			e.printStackTrace();
 			
 		}
@@ -116,7 +116,7 @@ public class PersonChanger implements Runnable, MessageListener {
 			 * It will save other clients from unnecessary processing
 			 */
 			sendPrivateMessage(operator, xStrings.getString(
-						"PersonChanger.changeFailed") + "/" + channelID);  //$NON-NLS-1$//$NON-NLS-2$
+						"PersonChanger.changeFailed") + "/" + channelID);  
 			
 		}else{
 			
@@ -124,13 +124,13 @@ public class PersonChanger implements Runnable, MessageListener {
 			try {
 				
 				controlRoom.sendMessage(xStrings.getString(
-						"PersonChanger.changed") + "/" + channelID + "/" +  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						"PersonChanger.changed") + "/" + channelID + "/" +    
 						personID);
 			
 			} catch (XMPPException e) {
 				
 				LOGGER.severe(xStrings.getString(
-						"PersonChanger.XMPPSendErrorChanged")); //$NON-NLS-1$
+						"PersonChanger.XMPPSendErrorChanged")); 
 				e.printStackTrace();
 				
 			}
@@ -155,9 +155,9 @@ public class PersonChanger implements Runnable, MessageListener {
 		try{
 			
 			/* Get number and operator from the DB */
-			SQL = "SELECT `phonenumber`, `operator` FROM `callhistory` " + //$NON-NLS-1$
-					"WHERE (`state` = 'A' OR `state` = 'M') AND `callchannel` = \"" + channelID + //$NON-NLS-1$
-					"\" AND `operator` != 'NA' ORDER BY `time` DESC LIMIT 1";  //$NON-NLS-1$
+			SQL = "SELECT `phonenumber`, `operator` FROM `callhistory` " + 
+					"WHERE (`state` = 'A' OR `state` = 'M') AND `callchannel` = \"" + channelID + 
+					"\" AND `operator` != 'NA' ORDER BY `time` DESC LIMIT 1";  
 			
 			statement = readConnection.createStatement();
 		    results = statement.executeQuery(SQL);
@@ -170,14 +170,14 @@ public class PersonChanger implements Runnable, MessageListener {
 				if(!temp.equals("PersonChanger.unknown") && phoneNumber.equals("PersonChanger.unknown"))
 					phoneNumber = temp;
 					
-				operator = results.getString("operator"); //$NON-NLS-1$
+				operator = results.getString("operator"); 
 				success = true;
 				
 			}
 			
 		}catch(SQLException e){
 		
-			showError(e, xStrings.getString("PersonChanger.errorGettingNumOp") + //$NON-NLS-1$
+			showError(e, xStrings.getString("PersonChanger.errorGettingNumOp") + 
 					channelID);
 			
 			success = false;
@@ -226,7 +226,7 @@ public class PersonChanger implements Runnable, MessageListener {
 				
 		}catch(SQLException e){
 		
-			showError(e, xStrings.getString("PersonChanger.errorGettingNumber") + //$NON-NLS-1$
+			showError(e, xStrings.getString("PersonChanger.errorGettingNumber") + 
 					channelID);
 			
 		}finally{
@@ -266,19 +266,19 @@ public class PersonChanger implements Runnable, MessageListener {
 		if(getCallLogInfo() && phoneNumber != null && operator != null){
 			
 			String error = xStrings.getString(
-					"PersonChanger.errorUpdatingCallLog") + //$NON-NLS-1$
-					"\n\tChannel: " + channelID + //$NON-NLS-1$
-					"\n\tPersonID: " + personID; //$NON-NLS-1$
+					"PersonChanger.errorUpdatingCallLog") + 
+					"\n\tChannel: " + channelID + 
+					"\n\tPersonID: " + personID; 
 
 			try{
 				
-				SQL = "INSERT INTO `callhistory` (`phonenumber`, `state`, " + //$NON-NLS-1$
-						"`operator`, `callchannel`, `activePerson`) VALUES " + //$NON-NLS-1$
-						"(?, ?, ?, ?, ?)"; //$NON-NLS-1$
+				SQL = "INSERT INTO `callhistory` (`phonenumber`, `state`, " + 
+						"`operator`, `callchannel`, `activePerson`) VALUES " + 
+						"(?, ?, ?, ?, ?)"; 
 				
 				statement = writeConnection.prepareStatement(SQL);
 				statement.setString(1, phoneNumber);
-				statement.setString(2, "C"); //$NON-NLS-1$
+				statement.setString(2, "C"); 
 				statement.setString(3, operator);
 				statement.setString(4, channelID);
 				statement.setLong(5, personID);
@@ -318,16 +318,16 @@ public class PersonChanger implements Runnable, MessageListener {
 		//	WHERE channel = channelID
 		boolean success = false;
 		String error = xStrings.getString(
-				"PersonChanger.errorUpdatingConversation") + //$NON-NLS-1$
-				"\n\tChannel: " + channelID + //$NON-NLS-1$
-				"\n\tPersonID: " + personID; //$NON-NLS-1$
+				"PersonChanger.errorUpdatingConversation") + 
+				"\n\tChannel: " + channelID + 
+				"\n\tPersonID: " + personID; 
 
 		PreparedStatement statement = null;
 		String SQL = null;
 		
 		try{
 			
-			SQL = "UPDATE `conversations` SET `person_id` = ? WHERE `channel` = ?"; //$NON-NLS-1$
+			SQL = "UPDATE `conversations` SET `person_id` = ? WHERE `channel` = ?"; 
 			
 			statement = writeConnection.prepareStatement(SQL);
 			statement.setLong(1, personID);
@@ -338,8 +338,8 @@ public class PersonChanger implements Runnable, MessageListener {
 				//If no conversation has been typed, there won't be anything to
 				//update, so we should expect 0 rows changed too
 				LOGGER.info(xStrings.getString(
-						"PersonChanger.noConversationToUpdate") +  //$NON-NLS-1$
-						"\n\tChannel: " + channelID); //$NON-NLS-1$
+						"PersonChanger.noConversationToUpdate") +  
+						"\n\tChannel: " + channelID); 
 				
 			}
 			
@@ -378,15 +378,15 @@ public class PersonChanger implements Runnable, MessageListener {
 		
 		try{
 			
-			SQL = "INSERT INTO `person` VALUES()"; //$NON-NLS-1$
+			SQL = "INSERT INTO `person` VALUES()"; 
 			
 			statement = writeConnection.prepareStatement(SQL, 
 					Statement.RETURN_GENERATED_KEYS);
 			
 			if(statement.executeUpdate() == 0)
 				showError(new SQLException(
-					xStrings.getString("PersonChanger.errorInsertingNewPerson")), //$NON-NLS-1$
-					xStrings.getString("PersonChanger.errorInsertingNewPerson")); //$NON-NLS-1$
+					xStrings.getString("PersonChanger.errorInsertingNewPerson")), 
+					xStrings.getString("PersonChanger.errorInsertingNewPerson")); 
 			else{
 				
 				results = statement.getGeneratedKeys();
@@ -399,7 +399,7 @@ public class PersonChanger implements Runnable, MessageListener {
 		}catch(SQLException e){
 			
 			showError(e, 
-					xStrings.getString("PersonChanger.errorInsertingNewPerson")); //$NON-NLS-1$ 
+					xStrings.getString("PersonChanger.errorInsertingNewPerson"));  
 			
 		}finally{
 			

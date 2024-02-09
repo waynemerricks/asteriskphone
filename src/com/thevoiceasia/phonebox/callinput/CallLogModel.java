@@ -118,13 +118,13 @@ public class CallLogModel extends AbstractTableModel {
 				//We found the record so lets change the value
 				done = true;
 				
-				if(field.equals("name")) //$NON-NLS-1$
+				if(field.equals("name")) 
 					data.get(i).setName(value);
-				else if(field.equals("location")) //$NON-NLS-1$
+				else if(field.equals("location")) 
 					data.get(i).setLocation(value);
-				else if(field.equals("conversation")) //$NON-NLS-1$
+				else if(field.equals("conversation")) 
 					data.get(i).setConversation(value);
-				else if(field.equals("channel")) //$NON-NLS-1$
+				else if(field.equals("channel")) 
 					data.get(i).setChannel(value);
 				
 				//fire data changed on row

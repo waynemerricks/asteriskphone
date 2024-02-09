@@ -9,10 +9,10 @@ public class HostUserLookup {
 		
 		String machineName = InetAddress.getLocalHost().getHostName();
 		
-		String userName = System.getProperty("user.name"); //$NON-NLS-1$
+		String userName = System.getProperty("user.name");
 		
-		System.out.println("Host Name: " + machineName); //$NON-NLS-1$
-		System.out.println("User Name: " + userName); //$NON-NLS-1$
+		System.out.println("Host Name: " + machineName);
+		System.out.println("User Name: " + userName);
 		
 	}
 

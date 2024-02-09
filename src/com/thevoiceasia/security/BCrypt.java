@@ -383,7 +383,6 @@ public class BCrypt {
 	 * @return	base64-encoded string
 	 * @exception IllegalArgumentException if the length is invalid
 	 */
-	@SuppressWarnings("nls")
 	private static String encode_base64(byte d[], int len)
 		throws IllegalArgumentException {
 		int off = 0;
@@ -438,7 +437,6 @@ public class BCrypt {
 	 * @return	an array containing the decoded bytes
 	 * @throws IllegalArgumentException if maxolen is invalid
 	 */
-	@SuppressWarnings("nls")
 	private static byte[] decode_base64(String s, int maxolen)
 		throws IllegalArgumentException {
 		StringBuffer rs = new StringBuffer();
@@ -606,7 +604,6 @@ public class BCrypt {
 	 * of rounds of hashing to apply
 	 * @return	an array containing the binary hashed password
 	 */
-	@SuppressWarnings("nls")
 	private byte[] crypt_raw(byte password[], byte salt[], int log_rounds) {
 		int rounds, i, j;
 		int cdata[] = (int[])bf_crypt_ciphertext.clone();
@@ -648,7 +645,6 @@ public class BCrypt {
 	 * using BCrypt.gensalt)
 	 * @return	the hashed password
 	 */
-	@SuppressWarnings("nls")
 	public static String hashpw(String password, String salt) {
 		BCrypt B;
 		String real_salt;
@@ -707,7 +703,6 @@ public class BCrypt {
 	 * @param random		an instance of SecureRandom to use
 	 * @return	an encoded salt value
 	 */
-	@SuppressWarnings("nls")
 	public static String gensalt(int log_rounds, SecureRandom random) {
 		StringBuffer rs = new StringBuffer();
 		byte rnd[] = new byte[BCRYPT_SALT_LEN];

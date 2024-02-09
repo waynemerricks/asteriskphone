@@ -54,17 +54,17 @@ public class KeepAliveThread implements Runnable {
 		Statement statement = null;
 		ResultSet resultSet = null;
 		
-		String SQL = "SELECT id FROM callinputfields WHERE id = 1"; //$NON-NLS-1$
+		String SQL = "SELECT id FROM callinputfields WHERE id = 1"; 
 		
 		try{
 			
 			statement = connection.createStatement();
 			resultSet = statement.executeQuery(SQL);
-			LOGGER.info(xStrings.getString("KeepAliveThread.ranKeepAlive")); //$NON-NLS-1$
+			LOGGER.info(xStrings.getString("KeepAliveThread.ranKeepAlive")); 
 		
 		}catch (SQLException e){
 			
-			LOGGER.severe(xStrings.getString("KeepAliveThread.SQLError")); //$NON-NLS-1$
+			LOGGER.severe(xStrings.getString("KeepAliveThread.SQLError")); 
 			
 		}finally {
 		    
@@ -113,7 +113,7 @@ public class KeepAliveThread implements Runnable {
 			}catch(InterruptedException e){
 				
 				go = false;
-				LOGGER.info(xStrings.getString("KeepAliveThread.threadInterrupted")); //$NON-NLS-1$
+				LOGGER.info(xStrings.getString("KeepAliveThread.threadInterrupted")); 
 				
 			}
 			

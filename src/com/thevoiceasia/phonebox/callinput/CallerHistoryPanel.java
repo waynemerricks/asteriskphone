@@ -76,7 +76,7 @@ public class CallerHistoryPanel {
 					
 					//Convert the component to a MultiLineCellRenderer so we can set the Document
 					MultiLineCellRenderer textPane = (MultiLineCellRenderer)c;
-					textPane.setContentType("text/html"); //$NON-NLS-1$
+					textPane.setContentType("text/html"); 
 					
 					//Set the document to our wanted attributes
 					textPane.getStyledDocument().setParagraphAttributes(0, 
@@ -139,7 +139,7 @@ public class CallerHistoryPanel {
 		Vector<Vector<String>> data = new Vector<Vector<String>>();
 		
 		Iterator<Conversation> iterator = conversations.iterator();
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy MMM dd HH:mm:ss"); //$NON-NLS-1$
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy MMM dd HH:mm:ss"); 
 		
 		while(iterator.hasNext()){
 			
@@ -159,8 +159,8 @@ public class CallerHistoryPanel {
 	
 	private void buildTableColumns(){
 		
-		columnNames.add(xStrings.getString("CallerHistoryPanel.timeField")); //$NON-NLS-1$
-		columnNames.add(xStrings.getString("CallerHistoryPanel.conversationField")); //$NON-NLS-1$
+		columnNames.add(xStrings.getString("CallerHistoryPanel.timeField")); 
+		columnNames.add(xStrings.getString("CallerHistoryPanel.conversationField")); 
 		
 	}
 

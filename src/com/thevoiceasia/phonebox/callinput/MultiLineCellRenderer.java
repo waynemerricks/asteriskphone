@@ -28,7 +28,7 @@ public class MultiLineCellRenderer extends JTextPane implements
 		if(value != null)
 			setText(value.toString());
 		else
-			setText(""); //$NON-NLS-1$
+			setText("");
 		
 		//Adjust the height to fit the text
 		this.setSize(new Dimension(table.getTableHeader().getColumnModel().getColumn(column).

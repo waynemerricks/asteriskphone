@@ -83,7 +83,7 @@ public class ChangePersonModel extends AbstractTableModel {
 				value = person.number;
 				break;
 			case 99://return the id of the person this is not shown in the table
-				value = "" + person.id; //$NON-NLS-1$
+				value = "" + person.id; 
 				break;
 		
 		}
@@ -110,11 +110,11 @@ public class ChangePersonModel extends AbstractTableModel {
 				//We found the record so lets change the value
 				done = true;
 				
-				if(field.equals("name")) //$NON-NLS-1$
+				if(field.equals("name")) 
 					data.get(i).name = value;
-				else if(field.equals("location")) //$NON-NLS-1$
+				else if(field.equals("location")) 
 					data.get(i).location = value;
-				else if(field.equals("number")) //$NON-NLS-1$
+				else if(field.equals("number")) 
 					data.get(i).number = value;
 				
 				//fire data changed on row

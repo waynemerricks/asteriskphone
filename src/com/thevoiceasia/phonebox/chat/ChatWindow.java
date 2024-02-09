@@ -39,7 +39,7 @@ public class ChatWindow extends JPanel implements MouseListener, LastActionTimer
 		
 		boolean studio = false;
 		
-		if(isStudio != null && isStudio.equals("true")) //$NON-NLS-1$
+		if(isStudio != null && isStudio.equals("true")) 
 			studio = true;
 		
 		/*
@@ -67,7 +67,7 @@ public class ChatWindow extends JPanel implements MouseListener, LastActionTimer
 			chatManager.getChatRoom().addMessageListener(chatManager);//ChatManager needs to monitor messages for presence
 			chatManager.getChatRoom().addSubjectUpdatedListener(messages);//Messages also needs to know about topic changes
 			chatManager.getChatRoom().addParticipantStatusListener(messages);//And when people are joining/leaving
-			messages.subjectUpdated(chatManager.getChatRoom().getSubject(), "");//Send the current topic to messages //$NON-NLS-1$
+			messages.subjectUpdated(chatManager.getChatRoom().getSubject(), "");//Send the current topic to messages 
 			messages.getTextPane().addMouseListener(this);
 			
 			this.setLayout(new BorderLayout());
