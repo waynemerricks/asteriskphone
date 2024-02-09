@@ -1322,7 +1322,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 			
 			if(mode != MODE_CLICKED){
 
-				int modeWhenClicked = new Integer(mode);
+				int modeWhenClicked = mode;
 				setClicked();
 
 				sendControlMessage(modeWhenClicked);
