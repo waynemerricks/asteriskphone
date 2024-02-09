@@ -5,6 +5,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Properties;
 import java.util.logging.Logger;
 
 import java.security.SecureRandom;
@@ -501,10 +502,12 @@ public class DatabaseManager {
 				
 				try{
 					
-					Class.forName("com.mysql.jdbc.Driver").newInstance(); 
+					Properties dbProps = new Properties();
+					dbProps.put("user", database.getString("user"));
+					dbProps.put("password", database.getString("password"));
+					
 					databaseConnection = DriverManager.getConnection("jdbc:mysql://" +  
-							database.getString("host") + "/" + database.getString("database") +   
-							"?user=" + database.getString("user") + "&password=" + database.getString("password"));
+							database.getString("host") + "/" + database.getString("database"), dbProps);
 					
 					LOGGER.info(xStrings.getString("DatabaseManager.logConnected")); 
 					
