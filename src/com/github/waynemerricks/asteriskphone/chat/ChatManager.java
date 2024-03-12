@@ -7,30 +7,40 @@ import java.util.logging.Logger;
 
 import javax.swing.JOptionPane;
 
-import org.jivesoftware.smack.AccountManager;
+import org.jivesoftware.smack.AbstractXMPPConnection;
+import org.jivesoftware.smackx.iqregister.AccountManager;
 import org.jivesoftware.smack.Connection;
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.SmackConfiguration;
+import org.jivesoftware.smack.SmackException.NoResponseException;
+import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Presence;
-import org.jivesoftware.smackx.muc.DiscussionHistory;
+import org.jivesoftware.smack.tcp.XMPPTCPConnection;
+import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
+import org.jivesoftware.smackx.muc.MucEnterConfiguration.Builder;
 import org.jivesoftware.smackx.muc.MultiUserChat;
+import org.jivesoftware.smackx.muc.MultiUserChatManager;
 import org.jivesoftware.smackx.muc.UserStatusListener;
+import org.jxmpp.stringprep.XmppStringprepException;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.jid.parts.Localpart;
+import org.jxmpp.jid.parts.Resourcepart;
 
 import com.github.waynemerricks.asteriskphone.misc.LastActionTimer;
 
 public class ChatManager implements UserStatusListener, PacketListener {
 
 	//XMPP Settings
-	private String XMPPUserName, XMPPPassword, XMPPNickName, XMPPServerHostName, XMPPRoomName,
-		XMPPControlRoomName;
+	private String XMPPNickName, XMPPRoomName, XMPPControlRoomName;
+	private XMPPTCPConnectionConfiguration XMPPConfig;
 	private int XMPPChatHistory, idleTimeout;
 	
 	//XMPP Connections/Rooms
-	private Connection XMPPServerConnection;
+	private AbstractXMPPConnection XMPPServerConnection;
 	private MultiUserChat phoneboxChat, controlChat;
 	
 	//ChatManager vars
@@ -62,14 +72,23 @@ public class ChatManager implements UserStatusListener, PacketListener {
 		
 		//Get I18N handle for external strings
 		xStrings = new I18NStrings(language, country);
-		this.XMPPUserName = userName;
-		this.XMPPPassword = password;
-		this.XMPPServerHostName = serverHostName;
 		this.XMPPRoomName = roomName;
 		this.XMPPControlRoomName = controlRoomName;
 		this.XMPPChatHistory = XMPP_CHAT_HISTORY;
 		this.XMPPNickName = nickName;
 		this.idleTimeout = idleTimeout;
+		
+		//Smack 4 Config and Connection Setup
+		try {
+			XMPPConfig = XMPPTCPConnectionConfiguration.builder()
+					  .setUsernameAndPassword(userName, password)
+					  .setXmppDomain(roomName.split("@")[1])
+					  .setHost(serverHostName)
+					  .build();
+		} catch (XmppStringprepException e) {
+			hasErrors = true;
+			LOGGER.severe(xStrings.getString("ChatManager.XMPPConfigBuilderError"));
+		}
 		
 	}
 	
@@ -152,30 +171,34 @@ public class ChatManager implements UserStatusListener, PacketListener {
 		
 		boolean created = false;
 		
-		LOGGER.info(xStrings.getString("ChatManager.logCreatingXMPPUser") + XMPPUserName); 
-		XMPPConnection setupConnection = new XMPPConnection(XMPPServerHostName);
+		LOGGER.info(xStrings.getString("ChatManager.logCreatingXMPPUser") + XMPPConfig.getUsername());
+		
+		AbstractXMPPConnection setupConnection = new XMPPTCPConnection(XMPPConfig);
 		
 		try {
 			setupConnection.connect();
-		} catch (XMPPException e) {
+		} catch (Exception e) {
 			hasErrors = true;
 			showError(e, xStrings.getString("ChatManager.setupUserConnectionFailure")); 
 		}
 		
 		if(!hasErrors){
 			
-			AccountManager XMPPAccounts = new AccountManager(setupConnection);
+			AccountManager XMPPAccounts = AccountManager.getInstance(setupConnection);
 			
 			try {
-				XMPPAccounts.createAccount(XMPPUserName.split("@")[0], XMPPPassword); 
-				LOGGER.info(xStrings.getString("ChatManager.logCreatedXMPPUser") + XMPPUserName); 
+				
+				XMPPAccounts.createAccount(Localpart.from(XMPPConfig.getUsername().toString().split("@")[0]), 
+						XMPPConfig.getPassword()); 
+				LOGGER.info(xStrings.getString("ChatManager.logCreatedXMPPUser") + XMPPConfig.getUsername()); 
 				created = true;
 				setupConnection.disconnect();
 				LOGGER.info(xStrings.getString("ChatManager.logSetupDisconnected")); 
-			} catch (XMPPException e) {
-				showError(e, xStrings.getString("ChatManager.errorCreatingXMPPUser") + XMPPUserName); 
-				LOGGER.severe(xStrings.getString("ChatManager.errorCreatingXMPPUser") + XMPPUserName); 
-			}
+			} catch (Exception e) {
+				showError(e, xStrings.getString("ChatManager.errorCreatingXMPPUser") + XMPPConfig.getUsername()); 
+				LOGGER.severe(xStrings.getString("ChatManager.errorCreatingXMPPUser") + XMPPConfig.getUsername());
+				hasErrors = true;
+			} 
 			
 		}
 		
@@ -252,7 +275,7 @@ public class ChatManager implements UserStatusListener, PacketListener {
 	 */
 	public void connect(){
 		
-		XMPPServerConnection = new XMPPConnection(XMPPServerHostName);
+		XMPPServerConnection = new XMPPTCPConnection(XMPPConfig);
 		hasErrors = false;
 		
 		//Connect to Server
@@ -260,7 +283,7 @@ public class ChatManager implements UserStatusListener, PacketListener {
 			LOGGER.info(xStrings.getString("ChatManager.logConnect")); 
 			XMPPServerConnection.connect();
 			LOGGER.info(xStrings.getString("ChatManager.logConnected")); 
-		}catch(XMPPException e){
+		}catch(Exception e){
 			
 			showError(e, xStrings.getString("ChatManager.connectError")); 
 			hasErrors = true;
@@ -272,13 +295,9 @@ public class ChatManager implements UserStatusListener, PacketListener {
 			
 			try{
 				LOGGER.info(xStrings.getString("ChatManager.logLogin")); 
-				
-				if(XMPPRoomName == null)
-					XMPPServerConnection.login(XMPPUserName, XMPPPassword, "Client"); 
-				else
-					XMPPServerConnection.login(XMPPUserName, XMPPPassword, "Server"); 
+				XMPPServerConnection.login(); 
 				LOGGER.info(xStrings.getString("ChatManager.logLoggedIn")); 
-			}catch(XMPPException e){
+			}catch(Exception e){
 				
 				showError(e, xStrings.getString("ChatManager.loginError")); 
 				hasErrors = true;
@@ -290,12 +309,12 @@ public class ChatManager implements UserStatusListener, PacketListener {
 			if(!hasErrors){
 				
 				if(XMPPRoomName != null){
-					phoneboxChat = new MultiUserChat(XMPPServerConnection, XMPPRoomName);
-					joinRoom(phoneboxChat);
+				
+					joinRoom(MultiUserChatManager.getInstanceFor(XMPPServerConnection), XMPPRoomName, false);
+					
 				}
 				
-				controlChat = new MultiUserChat(XMPPServerConnection, XMPPControlRoomName);
-				joinRoom(controlChat);
+				joinRoom(MultiUserChatManager.getInstanceFor(XMPPServerConnection), XMPPControlRoomName, true);
 				
 			}
 			
@@ -305,24 +324,41 @@ public class ChatManager implements UserStatusListener, PacketListener {
 	
 	/**
 	 * Joins the given MUC to the chat room, sets error flag if there are problems
-	 * @param room room to join
+	 * @param roomManager Connection Manager for this room
+	 * @param roomName room to join
+	 * @param isControl true if this is the control room rather than general chat (false)
 	 * @return true if successful
 	 */
-	private boolean joinRoom(MultiUserChat room){
+	private boolean joinRoom(MultiUserChatManager roomManager, String roomName, boolean isControl){
 		
 		boolean success = false;
 		
-		DiscussionHistory chatHistory = new DiscussionHistory();
-		chatHistory.setSeconds(XMPPChatHistory);
-		
 		try{
 			LOGGER.info(xStrings.getString("ChatManager.logJoinRoom")); 
-			room.join(XMPPNickName, XMPPPassword, chatHistory, 
-					SmackConfiguration.getPacketReplyTimeout());
-			LOGGER.info(xStrings.getString("ChatManager.logJoinedRoom")); 
-			success = true;
 			
-		}catch(XMPPException e){
+			MultiUserChat room = roomManager.getMultiUserChat(JidCreate.entityBareFrom(roomName));
+			
+			//Set the room config to return chat history from last x Seconds
+			Builder roomConfig = room.getEnterConfigurationBuilder(Resourcepart.from(XMPPNickName));
+			roomConfig.requestHistorySince(XMPPChatHistory);
+			
+			//Join TODO check if history from above applies here
+			room.join(Resourcepart.from(XMPPNickName), XMPPConfig.getPassword());
+			
+			if(room.isJoined()) {
+				success = true;
+				LOGGER.info(xStrings.getString("ChatManager.logJoinedRoom")); 
+				
+				//Give reference to these rooms for later usage
+				if(isControl)
+					controlChat = room;
+				else
+					phoneboxChat = room;
+				
+			}else
+				throw(new Exception(xStrings.getString("ChatManager.chatRoomError")));
+			
+		}catch(Exception e){
 			
 			showError(e, xStrings.getString("ChatManager.chatRoomError")); 
 			hasErrors = true;
@@ -354,13 +390,29 @@ public class ChatManager implements UserStatusListener, PacketListener {
 		}
 		
 		//Leave joined XMPP rooms, not strictly necessary as disconnect will handle this
-		if(phoneboxChat != null){
-			
-			LOGGER.info(xStrings.getString("ChatManager.logLeaveRoom")); 
-			phoneboxChat.leave();
-			LOGGER.info(xStrings.getString("ChatManager.logLeftRoom")); 
-			phoneboxChat = null;
-			
+		try {
+			if(phoneboxChat != null){
+				
+				LOGGER.info(xStrings.getString("ChatManager.logLeaveRoom")); 
+				phoneboxChat.leave();
+				LOGGER.info(xStrings.getString("ChatManager.logLeftRoom")); 
+				phoneboxChat = null;
+				
+			}
+		}catch(Exception e) {
+			//Don't care, we're closing connection here anyway
+		}
+		
+		//Also cleanly leaving controlChat here, which was previously missing.
+		try {
+			if(controlChat != null) {
+				LOGGER.info(xStrings.getString("ChatManager.logLeaveControlRoom")); 
+				controlChat.leave();
+				LOGGER.info(xStrings.getString("ChatManager.logLeftControlRoom")); 
+				phoneboxChat = null;
+			}
+		}catch(Exception e) {
+			//Don't care, we're closing connection
 		}
 			
 		//Disconnect from XMPP server and close resources
@@ -403,10 +455,10 @@ public class ChatManager implements UserStatusListener, PacketListener {
 			else
 				controlChat.sendMessage(msg);
 			
-		}catch(XMPPException e){
-			showWarning(e, xStrings.getString("ChatManager.chatRoomError")); 
 		}catch(IllegalStateException e){
 			showWarning(e, xStrings.getString("ChatManager.serverGoneError")); 
+		}catch(Exception e) {
+			showWarning(e, xStrings.getString("ChatManager.chatRoomError")); 
 		}
 		
 	}
