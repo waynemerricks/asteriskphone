@@ -15,7 +15,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
-import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 
 import com.github.waynemerricks.asteriskphone.misc.LastActionTimer;
@@ -84,10 +83,8 @@ public class ChatInputPanel extends JPanel implements ActionListener, KeyListene
 					}
 				});
 				
-			}catch(XMPPException e){
+			}catch(Exception e){
 				showWarning(e, xStrings.getString("ChatInputPanel.chatRoomError")); 
-			}catch(IllegalStateException e){
-				showWarning(e, xStrings.getString("ChatInputPanel.ServerGoneError")); 
 			}
 			
 		}
