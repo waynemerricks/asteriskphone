@@ -9,16 +9,12 @@ import javax.swing.JOptionPane;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smackx.iqregister.AccountManager;
-import org.jivesoftware.smack.Connection;
-import org.jivesoftware.smack.PacketListener;
-import org.jivesoftware.smack.SmackConfiguration;
-import org.jivesoftware.smack.SmackException.NoResponseException;
-import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.chat2.Chat;
+import org.jivesoftware.smack.chat2.IncomingChatMessageListener;
 import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smack.packet.PresenceBuilder;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smackx.muc.MucEnterConfiguration.Builder;
@@ -26,13 +22,15 @@ import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
 import org.jivesoftware.smackx.muc.UserStatusListener;
 import org.jxmpp.stringprep.XmppStringprepException;
+import org.jxmpp.jid.EntityBareJid;
+import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.jid.parts.Localpart;
 import org.jxmpp.jid.parts.Resourcepart;
 
 import com.github.waynemerricks.asteriskphone.misc.LastActionTimer;
 
-public class ChatManager implements UserStatusListener, PacketListener {
+public class ChatManager implements UserStatusListener, IncomingChatMessageListener {
 
 	//XMPP Settings
 	private String XMPPNickName, XMPPRoomName, XMPPControlRoomName;
@@ -63,8 +61,10 @@ public class ChatManager implements UserStatusListener, PacketListener {
 	 * @param nickName
 	 * @param serverHostName
 	 * @param roomName
+	 * @param controlRoomName
 	 * @param language
 	 * @param country
+	 * @param idleTimeout
 	 */
 	public ChatManager(String userName, String password, String nickName, 
 			String serverHostName, String roomName, String controlRoomName,
@@ -491,53 +491,75 @@ public class ChatManager implements UserStatusListener, PacketListener {
 		
 	}
 
-	/** PacketListener methods **/
-	@Override
-	public void processPacket(Packet XMPPPacket) {
+	/** IncomingChatMessageListener methods **/
+	public void newIncomingMessage(EntityBareJid jid, Message message, Chat chat) {
+			
+		String friendlyFrom = message.getFrom().toString();
+		//TODO Test
+		if(friendlyFrom.contains("/")) 
+			friendlyFrom = friendlyFrom.split("/")[1]; 
 		
-		if(XMPPPacket instanceof Message){
+		String b = message.getBody();
+		
+		//Check for status change
+		if(friendlyFrom.equals(XMPPNickName)){
 			
-			Message message = (Message)XMPPPacket;
-			String friendlyFrom = message.getFrom();
-			if(friendlyFrom.contains("/")) 
-				friendlyFrom = friendlyFrom.split("/")[1]; 
-			
-			String b = message.getBody();
-			
-			//Check for status change
-			if(friendlyFrom.equals(XMPPNickName)){
-				
-				if(b.equals(xStrings.getString("ChatManager.chatReturned"))) 
-					setPresenceAvailable();
-				else if(b.equals(xStrings.getString("ChatManager.chatBackSoon"))) 
-					setPresenceAwayManual();
-				
-			}
+			if(b.equals(xStrings.getString("ChatManager.chatReturned"))) 
+				setPresenceAvailable();
+			else if(b.equals(xStrings.getString("ChatManager.chatBackSoon"))) 
+				setPresenceAwayManual();
 			
 		}
 		
 	}
 	
 	/**
+	 * Helper method to do the grunt work for presence building and sending the
+	 * update messages to the XMPP server/chat.
+	 * @param mode Presence.Mode to set
+	 * @param type Presence.Type to set
+	 * @param presenceStatus Status string to set
+	 */
+	private void sendPresenceUpdate(Presence.Mode mode, Presence.Type type, String presenceStatus) {
+		
+		String presenceNick = null;
+		
+		//BUG FIX Nickname is ignored and this presence sets name back to the login name
+		if(XMPPNickName != null && XMPPNickName.length() > 0)
+			presenceNick = XMPPRoomName + "/" + XMPPNickName;
+		else
+			presenceNick = XMPPRoomName + "/" + XMPPConfig.getUsername().toString().split("@")[0];
+		
+		try {
+			
+			Presence presence = PresenceBuilder.buildPresence()
+					.from(presenceNick)
+					.setMode(mode)
+					.ofType(type)
+					.setPriority(1)
+					.setStatus(presenceStatus).build();
+			
+			LOGGER.info(xStrings.getString("ChatManager.logSendingPresence") +  
+					presence.getFrom() + ": " + presence.getMode()); 
+			
+			XMPPServerConnection.sendStanza(presence);
+			
+		}catch(Exception e) {
+			
+			showWarning(e, xStrings.getString("ChatManager.errorSendingPresence"));
+			
+		}
+		
+	}
+	/**
 	 * Sets the XMPP Presence to available
+	 * Calls sendPresenceUpdate to reduce code duplication
 	 */
 	private void setPresenceAvailable(){
 		
 		available = true;
 		manualAway = false;
-		
-		Presence presence = new Presence(Presence.Type.available, 
-				xStrings.getString("ChatManager.available"), 1, 
-				Presence.Mode.available); 
-		//BUG FIX Nickname is ignored and this presence sets name back to the login name
-		if(XMPPNickName != null && XMPPNickName.length() > 0)
-			presence.setTo(XMPPRoomName + "/" + XMPPNickName); 
-		else
-			presence.setTo(XMPPRoomName + "/" + XMPPUserName.split("@")[0]);  
-		
-		LOGGER.info(xStrings.getString("ChatManager.logSendingPresence") +  
-				presence.getFrom() + ": " + presence.getMode()); 
-		XMPPServerConnection.sendPacket(presence);
+		sendPresenceUpdate(Presence.Mode.available, Presence.Type.available, xStrings.getString("ChatManager.available"));
 		
 	}
 	
@@ -554,29 +576,17 @@ public class ChatManager implements UserStatusListener, PacketListener {
 	
 	/**
 	 * Sets our presence to away
+	 * Moved to sendPresenceUpdate to reduce code duplication
 	 */
 	private void setPresenceAway(){
 		
 		available = false;
-		Presence presence = new Presence(Presence.Type.available, 
-				xStrings.getString("ChatManager.away"), 0, 
-						Presence.Mode.away); 
-		
-		//BUG FIX Nickname is ignored and this presence sets name back to the login name
-		if(XMPPNickName != null && XMPPNickName.length() > 0)
-			presence.setTo(XMPPRoomName + "/" + XMPPNickName); 
-		else
-			presence.setTo(XMPPRoomName + "/" + XMPPUserName.split("@")[0]);  
-		
-		LOGGER.info(xStrings.getString("ChatManager.logSendingPresence") +  
-				presence.getFrom() + ": " + presence.getMode()); 
-		XMPPServerConnection.sendPacket(presence);
+		sendPresenceUpdate(Presence.Mode.away, Presence.Type.available, xStrings.getString("ChatManager.away"));
 		
 	}
 	
 	/** UserStatusListener methods **/
-	@Override
-	public void kicked(String actor, String reason) {
+	public void kicked(Jid actor, String reason) {
 
 		/*
 		 * Called when a user is kicked from a room
@@ -588,39 +598,4 @@ public class ChatManager implements UserStatusListener, PacketListener {
 		
 	}
 
-	/** UNUSED UserStatusListener methods **/
-	@Override
-	public void adminGranted() {}
-
-	@Override
-	public void adminRevoked() {}
-
-	@Override
-	public void membershipGranted() {}
-
-	@Override
-	public void membershipRevoked() {}
-
-	@Override
-	public void moderatorGranted() {}
-
-	@Override
-	public void moderatorRevoked() {}
-
-	@Override
-	public void ownershipGranted() {}
-
-	@Override
-	public void ownershipRevoked() {}
-
-	@Override
-	public void voiceGranted() {}
-
-	@Override
-	public void voiceRevoked() {}
-	
-	@Override
-	public void banned(String actor, String reason) {}
-	/** END UNUSED userStatusListener methods **/
-	
 }
