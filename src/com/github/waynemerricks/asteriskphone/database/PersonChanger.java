@@ -7,13 +7,13 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.logging.Logger;
 
-import org.jivesoftware.smack.Chat;
-import org.jivesoftware.smack.MessageListener;
+import org.jivesoftware.smack.chat2.Chat;
+import org.jivesoftware.smack.chat2.ChatManager;
 import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smackx.muc.MultiUserChat;
+import org.jxmpp.jid.impl.JidCreate;
 
-public class PersonChanger implements Runnable, MessageListener {
+public class PersonChanger implements Runnable {
 
 	private String channelID, operator, phoneNumber;
 	private Connection readConnection, writeConnection;
@@ -63,15 +63,17 @@ public class PersonChanger implements Runnable, MessageListener {
 	 */
 	private void sendPrivateMessage(String recipient, String message){
 	
-		Chat chat = controlRoom.createPrivateChat(controlRoom.getRoom() + "/" + recipient, this); 
+		//Smack 4 rework from MUC -> ChatManager -> Chat2
+		ChatManager cm = ChatManager.getInstanceFor(controlRoom.getXmppConnection());
 		
 		try {
 			
 			LOGGER.info(xStrings.getString("PersonChanger.sendingPrivateMessage") +  
 					recipient + "/" + message); 
-			chat.sendMessage(message);
+			Chat chat = cm.chatWith(JidCreate.entityBareFrom(recipient + "@" + controlRoom.getRoom()));
+			chat.send(message);
 			
-		} catch (XMPPException e) {
+		} catch (Exception e) {
 			
 			LOGGER.severe(xStrings.getString(
 					"PersonChanger.XMPPSendErrorChangeFailed")); 
@@ -127,7 +129,7 @@ public class PersonChanger implements Runnable, MessageListener {
 						"PersonChanger.changed") + "/" + channelID + "/" +    
 						personID);
 			
-			} catch (XMPPException e) {
+			} catch (Exception e) {
 				
 				LOGGER.severe(xStrings.getString(
 						"PersonChanger.XMPPSendErrorChanged")); 
@@ -471,13 +473,6 @@ public class PersonChanger implements Runnable, MessageListener {
 		
 		e.printStackTrace();
 		LOGGER.severe(friendlyError);
-		
-	}
-
-	@Override
-	public void processMessage(Chat chat, Message message) {
-		
-		//We don't need to respond to private messages here so ignore
 		
 	}
 		
