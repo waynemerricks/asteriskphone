@@ -11,11 +11,13 @@ import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 
-import org.jivesoftware.smack.PacketListener;
+import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smack.packet.Packet;
+import org.jivesoftware.smack.packet.MessageBuilder;
 import org.jivesoftware.smackx.muc.ParticipantStatusListener;
 import org.jivesoftware.smackx.muc.SubjectUpdatedListener;
+import org.jxmpp.jid.EntityFullJid;
+import org.jxmpp.jid.impl.JidCreate;
 
 /**
  * Simple class which sets up a JPanel in border layout with a JScrollPane
@@ -25,7 +27,7 @@ import org.jivesoftware.smackx.muc.SubjectUpdatedListener;
  * @author Wayne Merricks
  *
  */
-public class ChatMessagePanel extends JPanel implements PacketListener, SubjectUpdatedListener, ParticipantStatusListener{
+public class ChatMessagePanel extends JPanel implements MessageListener, SubjectUpdatedListener, ParticipantStatusListener{
 
 	private JTextPane messages = new JTextPane();
 	private Style chatStyle;
@@ -108,76 +110,78 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 		
 	}
 	
+	/*
+	 * MessageListener Methods
+	 */
 	@Override
-	public void processPacket(Packet XMPPPacket) {
-		
-		LOGGER.info(xStrings.getString("ChatMessagePanel.logReceivedMessage") + XMPPPacket); 
-		
-		if(XMPPPacket instanceof Message){
-			
-			Message message = (Message)XMPPPacket;
-			
-			String friendlyFrom = message.getFrom();
-			if(friendlyFrom.contains("/")) 
-				friendlyFrom = friendlyFrom.split("/")[1]; 
-			
-			String b = message.getBody();
-			
-			if(friendlyFrom.equals(xStrings.getString("ChatMessagePanel.SYSTEM"))){  
-				
-				//Control Messages, need to clean up message body and act accordingly
-				//chatroom@domain/username !ChatManager.chatParticipantLeft!
-				if(b.contains("/")) 
-					b = b.split("/")[1]; 
-				
-			}
-			
-			final String from = friendlyFrom;
-			final String body = b + "\n"; 
-			
-			SwingUtilities.invokeLater(new Runnable(){
-				public void run(){
-					
-					try{
-						
-						if(from.equals(myNickName))
-							setTextColour(Color.RED);
-						else if(from.equals("SYSTEM")) 
-							setTextColour(GREEN);
-						else
-							setTextColour(Color.BLUE);
-						
-						StyledDocument doc = messages.getStyledDocument();
-						doc.insertString(doc.getLength(), from + ": ", chatStyle); 
-						
-						//Add Message in normal black
-						if(!from.equals("SYSTEM")) 
-							setTextColour(Color.BLACK);
-						doc.insertString(doc.getLength(), body, chatStyle);
-						
-						//Make sure chat scrolls to new message (basically scroll to the end)
-						try{
-							messages.setCaretPosition(messages.getText().length());
-						}catch(IllegalArgumentException e){
-							
-							/* Stupid Windows machines throw an error here no matter what position
-							 * Lets ignore it */
-							
-						}
-						
-					}catch(BadLocationException e){
-						LOGGER.severe(xStrings.getString("ChatMessagePanel.logErrorInsertingMessage")); 
-						e.printStackTrace();
-					}
-					
-				}
-			});
-			
-		}
-		
+	public void subjectUpdated(String subject, EntityFullJid from) {
+		// Not using subject changes yet
 	}
 
 	@Override
+	public void processMessage(Message message) {
+		
+		LOGGER.info(xStrings.getString("ChatMessagePanel.logReceivedMessage") + message); 
+		
+		String friendlyFrom = message.getFrom().toString();
+		
+		if(friendlyFrom.contains("/")) 
+			friendlyFrom = friendlyFrom.split("/")[1]; 
+		
+		String b = message.getBody();
+		
+		if(friendlyFrom.equals(xStrings.getString("ChatMessagePanel.SYSTEM"))){  
+			
+			//Control Messages, need to clean up message body and act accordingly
+			//chatroom@domain/username !ChatManager.chatParticipantLeft!
+			if(b.contains("/")) 
+				b = b.split("/")[1]; 
+			
+		}
+		
+		final String from = friendlyFrom;
+		final String body = b + "\n"; 
+		
+		SwingUtilities.invokeLater(new Runnable(){
+			public void run(){
+				
+				try{
+					
+					if(from.equals(myNickName))
+						setTextColour(Color.RED);
+					else if(from.equals("SYSTEM")) 
+						setTextColour(GREEN);
+					else
+						setTextColour(Color.BLUE);
+					
+					StyledDocument doc = messages.getStyledDocument();
+					doc.insertString(doc.getLength(), from + ": ", chatStyle); 
+					
+					//Add Message in normal black
+					if(!from.equals("SYSTEM")) 
+						setTextColour(Color.BLACK);
+					doc.insertString(doc.getLength(), body, chatStyle);
+					
+					//Make sure chat scrolls to new message (basically scroll to the end)
+					try{
+						messages.setCaretPosition(messages.getText().length());
+					}catch(IllegalArgumentException e){
+						
+						/* Stupid Windows machines throw an error here no matter what position
+						 * Lets ignore it */
+						
+					}
+					
+				}catch(BadLocationException e){
+					LOGGER.severe(xStrings.getString("ChatMessagePanel.logErrorInsertingMessage")); 
+					e.printStackTrace();
+				}
+				
+			}
+		});
+		
+	}
+
 	public void subjectUpdated(String subject, String from) {
 		
 		LOGGER.info(xStrings.getString("ChatMessagePanel.logSettingTopic") + subject); 
@@ -206,8 +210,33 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 		
 	}
 
+	/**
+	 * Internal method to handle MessageBuilder message creation of user joined/left messages
+	 * @param participant person who joined/left
+	 * @param status status to use for message
+	 * @return built message or null if failed
+	 */
+	private Message buildStatusMessage(String participant, String status) {
+		
+		Message msg = null;
+		MessageBuilder mb = MessageBuilder.buildMessage();
+		
+		mb.addBody(language, participant + " " + xStrings.getString("ChatMessagePanel.chatParticipantJoined"));
+		
+		try {
+			
+			mb.from(JidCreate.bareFrom(xStrings.getString("ChatMessagePanel.SYSTEM")));
+			msg = mb.build();
+		
+		}catch(Exception e) {
+			LOGGER.severe(xStrings.getString("ChatMessagePanel.logErrorCreatingStatusMessage")); 
+		}
+		
+		return msg;
+		
+	}
+	
 	/** ParticipantStatusListener methods **/
-	@Override
 	public void joined(String participant) {
 		
 		LOGGER.info(participant + " " + xStrings.getString("ChatMessagePanel.chatParticipantJoined"));  
@@ -216,14 +245,13 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 		 * If you send a message with a custom from that isn't your user name, you will get silently kicked from the server
 		 * So these are created and sent internally.
 		 */
-		Message joinedMessage = new Message();
-		joinedMessage.addBody(language, participant + " " + xStrings.getString("ChatMessagePanel.chatParticipantJoined"));  
-		joinedMessage.setFrom(xStrings.getString("ChatMessagePanel.SYSTEM")); 
-		processPacket(joinedMessage);
+		Message statusMessage = buildStatusMessage(participant, xStrings.getString("ChatMessagePanel.chatParticipantJoined"));
+		
+		if(statusMessage != null)
+			processMessage(statusMessage);
 		
 	}
 
-	@Override
 	public void left(String participant) {
 
 		LOGGER.info(participant + " " + xStrings.getString("ChatMessagePanel.chatParticipantLeft"));  
@@ -232,55 +260,17 @@ public class ChatMessagePanel extends JPanel implements PacketListener, SubjectU
 		 * If you send a message with a custom from that isn't your user name, you will get silently kicked from the server
 		 * So these are created and sent internally.
 		 */
-		Message leftMessage = new Message();
-		leftMessage.addBody(language, participant + " " + xStrings.getString("ChatMessagePanel.chatParticipantLeft")); 
-		leftMessage.setFrom(xStrings.getString("ChatMessagePanel.SYSTEM")); 
-		processPacket(leftMessage);
+		Message statusMessage = buildStatusMessage(participant, xStrings.getString("ChatMessagePanel.chatParticipantLeft"));
+		
+		if(statusMessage != null)
+			processMessage(statusMessage);
 		
 	}
 	
-	@Override
 	public void kicked(String participant, String actor, String reason) {
 		
 		left(participant);
 		
 	}
-	
-	/** UNUSED ParticipantStatusListener methods **/
-	@Override
-	public void adminGranted(String participant) {}
-
-	@Override
-	public void adminRevoked(String participant) {}
-
-	@Override
-	public void banned(String participant, String actor, String reason) {}
-
-	@Override
-	public void membershipGranted(String participant) {}
-
-	@Override
-	public void membershipRevoked(String participant) {}
-
-	@Override
-	public void moderatorGranted(String participant) {}
-
-	@Override
-	public void moderatorRevoked(String participant) {}
-
-	@Override
-	public void nicknameChanged(String participant, String newNick) {}
-
-	@Override
-	public void ownershipGranted(String participant) {}
-
-	@Override
-	public void ownershipRevoked(String participant) {}
-
-	@Override
-	public void voiceGranted(String participant) {}
-
-	@Override
-	public void voiceRevoked(String participant) {}
 	
 }
