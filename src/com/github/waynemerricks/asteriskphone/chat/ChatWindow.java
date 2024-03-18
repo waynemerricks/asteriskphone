@@ -83,7 +83,7 @@ public class ChatWindow extends JPanel implements MouseListener, LastActionTimer
 			
 			userStatus = new UserStatusPanel(language, country, chatManager.getChatRoom());
 			chatManager.getChatRoom().addParticipantStatusListener(userStatus);
-			chatManager.getChatRoom().addParticipantListener(userStatus);
+			//chatManager.getChatRoom().addParticipantListener(userStatus);
 			userStatus.getTextPane().addMouseListener(new MouseListener(){
 				public void mouseClicked(MouseEvent evt){
 					lastActionTime = new Date().getTime();

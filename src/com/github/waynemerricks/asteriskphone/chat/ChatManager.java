@@ -8,10 +8,9 @@ import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
+import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smackx.iqregister.AccountManager;
 import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smack.chat2.Chat;
-import org.jivesoftware.smack.chat2.IncomingChatMessageListener;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.packet.PresenceBuilder;
@@ -22,7 +21,6 @@ import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
 import org.jivesoftware.smackx.muc.UserStatusListener;
 import org.jxmpp.stringprep.XmppStringprepException;
-import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.jid.parts.Localpart;
@@ -30,7 +28,7 @@ import org.jxmpp.jid.parts.Resourcepart;
 
 import com.github.waynemerricks.asteriskphone.misc.LastActionTimer;
 
-public class ChatManager implements UserStatusListener, IncomingChatMessageListener {
+public class ChatManager implements UserStatusListener, MessageListener {
 
 	//XMPP Settings
 	private String XMPPNickName, XMPPRoomName, XMPPControlRoomName;
@@ -491,9 +489,10 @@ public class ChatManager implements UserStatusListener, IncomingChatMessageListe
 		
 	}
 
-	/** IncomingChatMessageListener methods **/
-	public void newIncomingMessage(EntityBareJid jid, Message message, Chat chat) {
-			
+	/** MessageListener methods **/
+	@Override
+	public void processMessage(Message message) {
+		
 		String friendlyFrom = message.getFrom().toString();
 		//TODO Test
 		if(friendlyFrom.contains("/")) 
