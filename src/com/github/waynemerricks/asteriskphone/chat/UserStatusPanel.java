@@ -18,19 +18,20 @@ import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 
-import org.jivesoftware.smack.PacketListener;
-import org.jivesoftware.smack.packet.Packet;
+import org.jivesoftware.smack.PresenceListener;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.packet.Presence.Mode;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.ParticipantStatusListener;
+import org.jxmpp.jid.EntityFullJid;
+import org.jxmpp.jid.Jid;
 
 /**
  * Simple online/available/away list of users in the MultiUserChat room
  * @author Wayne Merricks
  *
  */
-public class UserStatusPanel extends JPanel implements ParticipantStatusListener, PacketListener {
+public class UserStatusPanel extends JPanel implements ParticipantStatusListener, PresenceListener {
 
 	private HashMap<String, Integer> roomRoster = new HashMap<String, Integer>();
 	private I18NStrings xStrings; //Link to external string resources
@@ -69,12 +70,12 @@ public class UserStatusPanel extends JPanel implements ParticipantStatusListener
 		//Get current online list
 		if(chatRoom.getOccupantsCount() > 0){
 			
-			Iterator<String> users = chatRoom.getOccupants();
+			Iterator<EntityFullJid> users = chatRoom.getOccupants().iterator();
 			
 			while(users.hasNext()){
 				
-				String user = users.next();
-				String friendlyUser = user;
+				EntityFullJid user = users.next();
+				String friendlyUser = user.toString();
 				
 				if(friendlyUser.contains("/")) 
 					friendlyUser = friendlyUser.split("/")[1]; 
@@ -199,10 +200,10 @@ public class UserStatusPanel extends JPanel implements ParticipantStatusListener
 
 	/** ParticipantStatusListener methods **/
 	@Override
-	public void joined(String participant) {
+	public void joined(EntityFullJid participant) {
 		
 		LOGGER.info(participant + " " + xStrings.getString("UserStatusPanel.logChatParticipantJoined"));  
-		String friendlyParticipant = participant;
+		String friendlyParticipant = participant.toString();
 		
 		if(friendlyParticipant.contains("/")) 
 			friendlyParticipant = friendlyParticipant.split("/")[1]; 
@@ -219,10 +220,10 @@ public class UserStatusPanel extends JPanel implements ParticipantStatusListener
 	}
 
 	@Override
-	public void left(String participant) {
+	public void left(EntityFullJid participant) {
 
 		LOGGER.info(participant + " " + xStrings.getString("UserStatusPanel.logChatParticipantLeft"));  
-		String friendlyParticipant = participant;
+		String friendlyParticipant = participant.toString();
 		
 		if(friendlyParticipant.contains("/")) 
 			friendlyParticipant = friendlyParticipant.split("/")[1]; 
@@ -233,74 +234,30 @@ public class UserStatusPanel extends JPanel implements ParticipantStatusListener
 	}
 	
 	@Override
-	public void kicked(String participant, String actor, String reason) {
+	public void kicked(EntityFullJid participant, Jid actor, String reason) {
 		
 		left(participant);
 		
 	}
 
-	
-	/** UNUSED ParticipantStatusListener methods **/
 	@Override
-	public void nicknameChanged(String participant, String newNick) {}
-	
-	@Override
-	public void banned(String participant, String actor, String reason) {}
-
-	@Override
-	public void adminGranted(String participant) {}
-
-	@Override
-	public void adminRevoked(String participant) {}
-
-	@Override
-	public void membershipGranted(String participant) {}
-
-	@Override
-	public void membershipRevoked(String participant) {}
-
-	@Override
-	public void moderatorGranted(String participant) {}
-
-	@Override
-	public void moderatorRevoked(String participant) {}
-
-	@Override
-	public void ownershipGranted(String participant) {}
-
-	@Override
-	public void ownershipRevoked(String participant) {}
-
-	@Override
-	public void voiceGranted(String participant) {}
-
-	@Override
-	public void voiceRevoked(String participant) {}
-	/** END UNUSED ParticipantStatusListener methods **/
-
-	@Override
-	public void processPacket(Packet XMPPPacket) {
+	public void processPresence(Presence presence) {
 		
-		if(XMPPPacket instanceof Presence){
-			
-			Presence p = (Presence)XMPPPacket;
-			LOGGER.info(xStrings.getString("UserStatusPanel.logPresenceUpdate") + p.getFrom() + ": " + p.getMode());  
-			String friendlyFrom = p.getFrom();
-			
-			if(friendlyFrom.contains("/")) 
-					friendlyFrom = friendlyFrom.split("/")[1]; 
-			
-			if(p.isAvailable()){
-				if(p.getMode() == Mode.available || p.getMode() == Mode.chat || p.getMode() == null)
-					roomRoster.put(friendlyFrom, 2);
-				else
-					roomRoster.put(friendlyFrom, 1);
-			}else
-				roomRoster.remove(friendlyFrom);
-			
-			updateRoster();
-			
-		}
+		LOGGER.info(xStrings.getString("UserStatusPanel.logPresenceUpdate") + presence.getFrom() + ": " + presence.getMode());  
+		String friendlyFrom = presence.getFrom().toString();
+		
+		if(friendlyFrom.contains("/")) 
+				friendlyFrom = friendlyFrom.split("/")[1]; 
+		
+		if(presence.isAvailable()){
+			if(presence.getMode() == Mode.available || presence.getMode() == Mode.chat || presence.getMode() == null)
+				roomRoster.put(friendlyFrom, 2);
+			else
+				roomRoster.put(friendlyFrom, 1);
+		}else
+			roomRoster.remove(friendlyFrom);
+		
+		updateRoster();
 		
 	}
 	
