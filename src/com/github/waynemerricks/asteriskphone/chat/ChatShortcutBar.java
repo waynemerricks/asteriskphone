@@ -15,10 +15,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JToggleButton;
 
-import org.jivesoftware.smack.PacketListener;
-import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 
 import com.github.waynemerricks.asteriskphone.misc.AlertSounder;
@@ -31,7 +29,7 @@ import com.github.waynemerricks.asteriskphone.misc.LastActionTimer;
  * @author Wayne Merricks
  *
  */
-public class ChatShortcutBar extends JPanel implements ActionListener, LastActionTimer, PacketListener {
+public class ChatShortcutBar extends JPanel implements ActionListener, LastActionTimer, MessageListener {
 
 	/** STATICS **/
 	private static final Logger LOGGER = Logger.getLogger(ChatShortcutBar.class.getName());//Logger
@@ -201,10 +199,8 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 		try {
 			LOGGER.info(xStrings.getString("ChatShortcutBar.logSendRoomMessage") + message); 
 			room.sendMessage(message);
-		}catch(XMPPException e){
+		}catch(Exception e){
 			showWarning(e, xStrings.getString("ChatShortcutBar.chatRoomError")); 
-		}catch(IllegalStateException e){
-			showWarning(e, xStrings.getString("ChatShortcutBar.serverGoneError")); 
 		}
 		
 	}
@@ -218,10 +214,8 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 		try {
 			LOGGER.info(xStrings.getString("ChatShortcutBar.logChangeRoomTopic")); 
 			chatRoom.changeSubject(topic);
-		}catch(XMPPException e){
+		}catch(Exception e){
 			showWarning(e, xStrings.getString("ChatShortcutBar.changeSubjectError")); 
-		}catch(IllegalStateException e){
-			showWarning(e, xStrings.getString("ChatShortcutBar.serverGoneError")); 
 		}
 		
 	}
@@ -361,31 +355,25 @@ public class ChatShortcutBar extends JPanel implements ActionListener, LastActio
 	}
 
 	@Override
-	public void processPacket(Packet XMPPPacket) {
+	public void processMessage(Message message) {
 
 		/* As part of the chat alert process I want this to monitor for alerts
 		 * from other people.
 		 * 
 		 * Control Room: ALERT/ALERT = Play alert noise
 		 */
-		LOGGER.info(xStrings.getString("ChatMessagePanel.logReceivedMessage") + XMPPPacket); 
+		LOGGER.info(xStrings.getString("ChatMessagePanel.logReceivedMessage") + message); 
 		
-		if(XMPPPacket instanceof Message){
+		String from = message.getFrom().toString();
+			
+		if(from.contains("/")) 
+			from = from.split("/")[1]; 
 		
-			Message message = (Message)XMPPPacket;
-			
-			String from = message.getFrom();
-			
-			if(from.contains("/")) 
-				from = from.split("/")[1]; 
-			
-			if(!from.equals(controlRoom.getNickname())){//If the message didn't come from me 
-			
-				if(message.getBody().equals(xStrings.getString("ChatShortcutBar.commandAlert")))
-						alert.play();
-			
-			}
-			
+		if(!from.equals(controlRoom.getNickname().toString())){//If the message didn't come from me 
+		
+			if(message.getBody().equals(xStrings.getString("ChatShortcutBar.commandAlert")))
+					alert.play();
+		
 		}
 		
 	}
