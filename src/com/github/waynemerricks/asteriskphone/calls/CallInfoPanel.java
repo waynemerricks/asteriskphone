@@ -19,7 +19,6 @@ import javax.swing.UIManager;
 
 import net.miginfocom.swing.MigLayout;
 
-import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 
 import com.github.waynemerricks.asteriskphone.callinput.CallerUpdater;
@@ -983,7 +982,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 			if(message != null)
 				try {
 					controlRoom.sendMessage(message);
-				} catch (XMPPException e) {
+				} catch (Exception e) {
 					LOGGER.severe(xStrings.getString("CallInfoPanel.errorSendingControlMessage")); 
 				}
 			
@@ -1105,7 +1104,7 @@ public class CallInfoPanel extends JPanel implements MouseListener{
 		
 		try {
 			controlRoom.sendMessage(message);
-		} catch (XMPPException e) {
+		} catch (Exception e) {
 			LOGGER.severe(xStrings.getString("CallInfoPanel.errorSendingControlMessage")); 
 		}
 		
