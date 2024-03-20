@@ -416,7 +416,7 @@ public class CallManagerPanel extends JPanel implements MessageListener, MouseLi
 		if(from.contains("/")) 
 			from = from.split("/")[1]; 
 		
-		if(!from.equals(controlRoom.getNickname())){//If the message didn't come from me 
+		if(!from.equals(controlRoom.getNickname().toString())){//If the message didn't come from me 
 			
 			//React to commands thread all of this if performance is a problem
 			LOGGER.info(xStrings.getString("CallManager.receivedMessage") + 
