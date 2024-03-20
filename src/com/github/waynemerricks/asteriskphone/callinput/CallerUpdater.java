@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.logging.Logger;
 
-import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 
 public class CallerUpdater implements Runnable{
@@ -70,10 +69,8 @@ public class CallerUpdater implements Runnable{
 				
 				controlRoom.sendMessage(message);
 				
-			}catch(XMPPException e){
+			}catch(Exception e){
 				LOGGER.severe(xStrings.getString("CallerUpdater.chatRoomError")); 
-			}catch(IllegalStateException e){
-				LOGGER.severe(xStrings.getString("CallerUpdater.ServerGoneError")); 
 			}
 			
 		}else
