@@ -24,15 +24,14 @@ import javax.swing.SwingUtilities;
 import net.miginfocom.layout.LC;
 import net.miginfocom.swing.MigLayout;
 
-import org.jivesoftware.smack.Chat;
-import org.jivesoftware.smack.ChatManagerListener;
 import org.jivesoftware.smack.MessageListener;
-import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.chat2.Chat;
+import org.jivesoftware.smack.chat2.ChatManager;
+import org.jivesoftware.smack.chat2.IncomingChatMessageListener;
 import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smackx.muc.MultiUserChat;
+import org.jxmpp.jid.EntityBareJid;
 
 import com.github.waynemerricks.asteriskphone.callinput.CallerUpdater;
 import com.github.waynemerricks.asteriskphone.database.DatabaseManager;
@@ -43,8 +42,8 @@ import com.github.waynemerricks.asteriskphone.misc.PhoneRinger;
 import com.github.waynemerricks.asteriskphone.records.Person;
 import com.github.waynemerricks.asteriskphone.records.PhoneCall;
 
-public class CallManagerPanel extends JPanel implements PacketListener, MouseListener, 
-									LastActionTimer, ChatManagerListener, MessageListener,
+public class CallManagerPanel extends JPanel implements MessageListener, MouseListener, 
+									LastActionTimer, IncomingChatMessageListener,
 									ManualHangupListener, DialListener {
 
 	/** STATICS */
@@ -107,7 +106,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		this.addMouseListener(this);
 		
 		//Add Private Chat Listener
-		connection.getChatManager().addChatListener(this);
+		ChatManager.getInstanceFor(connection).addIncomingListener(this);
 		
 		//Store a copy of all the system extensions so we can decide what calls we need
 		//to handle
@@ -144,7 +143,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 			controlRoom.sendMessage(xStrings.getString("calls.manual") + "/"
 					+ settings.get("nickName"));
 			
-		} catch (XMPPException e) {
+		} catch (Exception e) {
 			
 			showWarning(xStrings.getString("CallManagerPanel.errorSendingManualCommand"));
 			LOGGER.severe(xStrings.getString("CallManagerPanel.errorSendingManualCommand"));
@@ -195,7 +194,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		try {
 			controlRoom.sendMessage(xStrings.getString("CallManagerPanel.commandUpdate") +  
 					"/" + settings.get("myExtension"));  
-		} catch (XMPPException e) {
+		} catch (Exception e) {
 			LOGGER.severe(xStrings.getString("CallManagerPanel.errorSendingUpdateCommand")); 
 			showWarning(xStrings.getString("CallManagerPanel.errorSendingUpdateCommand")); 
 		}
@@ -409,705 +408,699 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 	}
 	
 	@Override
-	public void processPacket(Packet XMPPPacket) {
+	public void processMessage(Message message) {
 		//TODO Break this out into own processing thread/class for readability
 		//TODO Encapsulate String.split into PhoneMessage class (getChannel etc)
-		if(XMPPPacket instanceof Message){
+		String from = message.getFrom().toString();
+		
+		if(from.contains("/")) 
+			from = from.split("/")[1]; 
+		
+		if(!from.equals(controlRoom.getNickname())){//If the message didn't come from me 
 			
-			Message message = (Message)XMPPPacket;
+			//React to commands thread all of this if performance is a problem
+			LOGGER.info(xStrings.getString("CallManager.receivedMessage") + 
+					message.getBody()); 
 			
-			String from = message.getFrom();
+			String[] command = message.getBody().split("/"); 
+			/*
+			 * Current Control Messages:
+			 * SEE Wiki
+			 */
 			
-			if(from.contains("/")) 
-				from = from.split("/")[1]; 
+			//RINGING - Can Ignore
 			
-			if(!from.equals(controlRoom.getNickname())){//If the message didn't come from me 
+			//CALL - Entry point to handler
+			if(command.length == 4 || command.length == 5){
 				
-				//React to commands thread all of this if performance is a problem
-				LOGGER.info(xStrings.getString("CallManager.receivedMessage") + 
-						message.getBody()); 
+				//Creation time here if command.length = 5
+				long creationTime = -1;
 				
-				String[] command = message.getBody().split("/"); 
-				/*
-				 * Current Control Messages:
-				 * SEE Wiki
-				 */
+				if(command.length == 5)
+					creationTime = getCreationTime(command[4]);
 				
-				//RINGING - Can Ignore
-				
-				//CALL - Entry point to handler
-				if(command.length == 4 || command.length == 5){
+				if(command[0].equals(xStrings.getString("CallManagerPanel.callRingingFrom"))){
+					//CALL/FROM/TO/CHANNEL
+					//Create a CallInfoPanel with skeleton details
+					if(callPanels.get(command[3]) == null){
 					
-					//Creation time here if command.length = 5
-					long creationTime = -1;
-					
-					if(command.length == 5)
-						creationTime = getCreationTime(command[4]);
-					
-					if(command[0].equals(xStrings.getString("CallManagerPanel.callRingingFrom"))){
-						//CALL/FROM/TO/CHANNEL
-						//Create a CallInfoPanel with skeleton details
-						if(callPanels.get(command[3]) == null){
+						/*
+						 * Was too simplistic to use CALL/FROM/TO/CHANNEL as a way of determining
+						 * outside calls coming in.
+						 * 
+						 * Exception case: Call from system extension to an outside line you get:
+						 * CALL/1234/4444444/CHANNEL
+						 * 
+						 * What we want to happen is:
+						 * 
+						 * Check if call is from us and not another system extension and to outside
+						 * 		set the panel to answered
+						 * If call is from another system extension and to outside
+						 * 		set the panel to answered elsewhere
+						 * if call is internal from system to system carry on as normal but
+						 * 		set connected to as the person they're dialling
+						 */
+						if(systemExtensions.contains(command[1]) && 
+								systemExtensions.contains(command[2])){
+							
+							//Internal call amongst ourselves
+							int mode = CallInfoPanel.MODE_RINGING;
+							
+							if(isMyPhone(command[1])){
+								
+								mode = CallInfoPanel.MODE_RINGING_ME;
+								
+								if(isOnAirQueue(command[2]))
+									mode = CallInfoPanel.MODE_QUEUED_ME;
+								
+							}else if(isOnAirQueue(command[2]))
+								mode = CallInfoPanel.MODE_QUEUED;
+								
+							createSkeletonCallInfoPanel(command[1], command[3], 
+									mode, command[2], creationTime);
+								
+							callPanels.get(command[3]).setOriginator(command[1]);
+							
+						}else if(systemExtensions.contains(command[1]) && 
+								!systemExtensions.contains(command[2])){
+							
+							/* Call from our system to someone else
+							 * CALL/1234/4444444/1396477192.139
+						     */
+							int mode = CallInfoPanel.MODE_ANSWERED_ELSEWHERE;
+							
+							if(isMyPhone(command[1]))//Internal call to someone from me
+								mode = CallInfoPanel.MODE_RINGING_ME;
+							
+							createSkeletonCallInfoPanel(command[2], command[3], 
+								mode, command[1], 
+								creationTime);
 						
-							/*
-							 * Was too simplistic to use CALL/FROM/TO/CHANNEL as a way of determining
-							 * outside calls coming in.
-							 * 
-							 * Exception case: Call from system extension to an outside line you get:
-							 * CALL/1234/4444444/CHANNEL
-							 * 
-							 * What we want to happen is:
-							 * 
-							 * Check if call is from us and not another system extension and to outside
-							 * 		set the panel to answered
-							 * If call is from another system extension and to outside
-							 * 		set the panel to answered elsewhere
-							 * if call is internal from system to system carry on as normal but
-							 * 		set connected to as the person they're dialling
-							 */
-							if(systemExtensions.contains(command[1]) && 
-									systemExtensions.contains(command[2])){
-								
-								//Internal call amongst ourselves
-								int mode = CallInfoPanel.MODE_RINGING;
-								
-								if(isMyPhone(command[1])){
-									
-									mode = CallInfoPanel.MODE_RINGING_ME;
-									
-									if(isOnAirQueue(command[2]))
-										mode = CallInfoPanel.MODE_QUEUED_ME;
-									
-								}else if(isOnAirQueue(command[2]))
-									mode = CallInfoPanel.MODE_QUEUED;
-									
-								createSkeletonCallInfoPanel(command[1], command[3], 
-										mode, command[2], creationTime);
-									
-								callPanels.get(command[3]).setOriginator(command[1]);
-								
-							}else if(systemExtensions.contains(command[1]) && 
-									!systemExtensions.contains(command[2])){
-								
-								/* Call from our system to someone else
-								 * CALL/1234/4444444/1396477192.139
-							     */
-								int mode = CallInfoPanel.MODE_ANSWERED_ELSEWHERE;
-								
-								if(isMyPhone(command[1]))//Internal call to someone from me
-									mode = CallInfoPanel.MODE_RINGING_ME;
-								
-								createSkeletonCallInfoPanel(command[2], command[3], 
-									mode, command[1], 
-									creationTime);
+							callPanels.get(command[3]).setOriginator(command[1]);
 							
-								callPanels.get(command[3]).setOriginator(command[1]);
+						}else if(!systemExtensions.contains(command[1]) && 
+								systemExtensions.contains(command[2])){
+							
+							//Outside call coming in
+							if(isIncomingQueue(command[2])){
 								
-							}else if(!systemExtensions.contains(command[1]) && 
-									systemExtensions.contains(command[2])){
+								//Outside call coming into a queue as normal
+								createIncomingCall(command, creationTime);
+	
+							}else if(isOnAirQueue(command[2])){
 								
-								//Outside call coming in
-								if(isIncomingQueue(command[2])){
+								//Outside call coming into a on air queue as normal
+								
+								/* TODO ENDPOINT Removed, check this functions as intended
+								 * After placing a call and transferring the endpoint, a new channel
+								 * is created and all the record information is lost as the channel
+								 * is different.
+								 * 
+								 * We need to check the endpoint records to see if we're expecting
+								 * a channel change and then point the record to the original call
+								 * channel
+								 */
+								/*if(endPoints.containsKey(command[1])){
 									
-									//Outside call coming into a queue as normal
-									createIncomingCall(command, creationTime);
-
-								}else if(isOnAirQueue(command[2])){
+									EndPointRecord updateMe = endPoints.get(command[1]);
+									endPoints.remove(command[2]);
 									
-									//Outside call coming into a on air queue as normal
-									
-									/* TODO ENDPOINT Removed, check this functions as intended
-									 * After placing a call and transferring the endpoint, a new channel
-									 * is created and all the record information is lost as the channel
-									 * is different.
-									 * 
-									 * We need to check the endpoint records to see if we're expecting
-									 * a channel change and then point the record to the original call
-									 * channel
-									 */
-									/*if(endPoints.containsKey(command[1])){
-										
-										EndPointRecord updateMe = endPoints.get(command[1]);
-										endPoints.remove(command[2]);
-										
-										if(isMyPhone(command[2]))
-											createSkeletonCallInfoPanel(command[1], command[3], 
-													CallInfoPanel.MODE_QUEUED_ME, null, creationTime, updateMe);
-										else
-											createSkeletonCallInfoPanel(command[1], command[3], 
-													CallInfoPanel.MODE_QUEUED, null, creationTime, updateMe);
-										//TODO Creation time taken from original channel at point of transferendpoint?
-										
-									}else{*/
-										
-										//TODO Should we check for MODE_QUEUED_ME here?
+									if(isMyPhone(command[2]))
 										createSkeletonCallInfoPanel(command[1], command[3], 
-												CallInfoPanel.MODE_QUEUED, null, creationTime);
-										
-									//}
+												CallInfoPanel.MODE_QUEUED_ME, null, creationTime, updateMe);
+									else
+										createSkeletonCallInfoPanel(command[1], command[3], 
+												CallInfoPanel.MODE_QUEUED, null, creationTime, updateMe);
+									//TODO Creation time taken from original channel at point of transferendpoint?
 									
-									//Set Number and Queue Badge
-									callPanels.get(command[3]).setOriginator(command[1]);
+								}else{*/
 									
-									if(settings.get("queue_" + command[2] + "_icon") != null)  
-										callPanels.get(command[3]).getIconPanel().setBadgeIcon(settings.get("queue_" + command[2] + "_icon"));  
-									
-									
-								}else if(!command[1].equals(xStrings.getString("CallManagerPanel.callSystemUnknown"))){ 
-									
-									//Outside call coming direct to a phone TODO wasn't this UNKNOWN removed from server?
+									//TODO Should we check for MODE_QUEUED_ME here?
 									createSkeletonCallInfoPanel(command[1], command[3], 
-											CallInfoPanel.MODE_RINGING, command[2], creationTime);
-									callPanels.get(command[3]).setOriginator(command[1]);
-
-								}
-																
+											CallInfoPanel.MODE_QUEUED, null, creationTime);
+									
+								//}
+								
+								//Set Number and Queue Badge
+								callPanels.get(command[3]).setOriginator(command[1]);
+								
+								if(settings.get("queue_" + command[2] + "_icon") != null)  
+									callPanels.get(command[3]).getIconPanel().setBadgeIcon(settings.get("queue_" + command[2] + "_icon"));  
+								
+								
+							}else if(!command[1].equals(xStrings.getString("CallManagerPanel.callSystemUnknown"))){ 
+								
+								//Outside call coming direct to a phone TODO wasn't this UNKNOWN removed from server?
+								createSkeletonCallInfoPanel(command[1], command[3], 
+										CallInfoPanel.MODE_RINGING, command[2], creationTime);
+								callPanels.get(command[3]).setOriginator(command[1]);
+	
 							}
-							
+															
 						}
 						
-					}else if(command[0].equals(xStrings.getString("CallManagerPanel.callQueued"))){ 
+					}
 					
-						//Call Added to QUEUE read queue number and act accordingly
-						if(command[1].equals(settings.get("incomingQueueNumber"))){ 
+				}else if(command[0].equals(xStrings.getString("CallManagerPanel.callQueued"))){ 
+				
+					//Call Added to QUEUE read queue number and act accordingly
+					if(command[1].equals(settings.get("incomingQueueNumber"))){ 
+						
+						//IncomingQueue
+						LOGGER.info(xStrings.getString("CallManagerPanel.CallIncomingQueue")); 
+						
+						/* 
+						 * Normally handled by CALL however depending on the trunk a CALL may have the following format:
+						 * CALL/person's phone number/trunk phone number that the person called/channel
+						 * 
+						 * In this case, CALL does not handle the call creation so we can do it here instead
+						 *
+						 * If channel not exists create call same as CALL outside to us
+						 *  
+						 */
+						if(callPanels.get(command[3]) == null){
 							
-							//IncomingQueue
-							LOGGER.info(xStrings.getString("CallManagerPanel.CallIncomingQueue")); 
-							
-							/* 
-							 * Normally handled by CALL however depending on the trunk a CALL may have the following format:
-							 * CALL/person's phone number/trunk phone number that the person called/channel
+							/* Normal command array at this point looks like this:
+							 * QUEUE/4000/012341523456/1452171951.10
 							 * 
-							 * In this case, CALL does not handle the call creation so we can do it here instead
-							 *
-							 * If channel not exists create call same as CALL outside to us
-							 *  
+							 * In order for creation to lookup correctly we need to swap
+							 * to the CALL format which is this:
+							 * CALL/012345123456/441211231234/1452171951.10
 							 */
-							if(callPanels.get(command[3]) == null){
-								
-								/* Normal command array at this point looks like this:
-								 * QUEUE/4000/012341523456/1452171951.10
-								 * 
-								 * In order for creation to lookup correctly we need to swap
-								 * to the CALL format which is this:
-								 * CALL/012345123456/441211231234/1452171951.10
-								 */
-								String[] temp = new String[4];
-								temp[0] = xStrings.getString("CallManagerPanel.callRingingFrom"); 
-								temp[1] = command[2];
-								temp[2] = command[1];
-								temp[3] = command[3];
-								
-								createIncomingCall(temp, creationTime);
-
-							}
+							String[] temp = new String[4];
+							temp[0] = xStrings.getString("CallManagerPanel.callRingingFrom"); 
+							temp[1] = command[2];
+							temp[2] = command[1];
+							temp[3] = command[3];
 							
-						}else if(command[1].equals(settings.get("onAirQueueNumber"))){ 
-							
-							LOGGER.info(xStrings.getString("CallManagerPanel.CallOnAirQueue")); 
-							
-							//On Air Queue - This is a call going into the ready for on air / studio queue 4001
-							if(callPanels.get(command[3]) != null){
-								
-								//Already in our list so update
-								if(isMyPhone(command[2])){
-									callPanels.get(command[3]).setQueuedMe(true);
-									LOGGER.info(xStrings.getString("CallManagerPanel.setQueueMeMode")); 
-								}else{
-									callPanels.get(command[3]).setQueued(true);
-									LOGGER.info(xStrings.getString("CallManagerPanel.setQueueMode")); 
-								}
-								
-							}else{
-								
-								//Not in our list so create skeleton and spawn update thread
-								//queue, name, number, channel
-								if(isMyPhone(command[2]))
-									createSkeletonCallInfoPanel(command[2], command[3], 
-											CallInfoPanel.MODE_QUEUED_ME, null, -1);
-								else
-									createSkeletonCallInfoPanel(command[2], command[3], 
-											CallInfoPanel.MODE_QUEUED, null, -1);
-									
-							}
-							
-						}	
+							createIncomingCall(temp, creationTime);
+	
+						}
 						
-					}else if(command[0].equals(
-							xStrings.getString("CallManagerPanel.callConnected"))){ 
+					}else if(command[1].equals(settings.get("onAirQueueNumber"))){ 
 						
-						//Turn off ringing for this channel
-						if(ringer != null)
-							stopRinging(command[3]);
+						LOGGER.info(xStrings.getString("CallManagerPanel.CallOnAirQueue")); 
 						
+						//On Air Queue - This is a call going into the ready for on air / studio queue 4001
 						if(callPanels.get(command[3]) != null){
 							
-							//Connected to a panel that already exists
-							/* if 1st argument = myphone its my phone connecting to 
-							 * someone else */
-							if(isMyPhone(command[1])){
-								/* At this stage, check if my phone is on air */
-								if(isStudioExtension(command[2]))
-									callPanels.get(command[3]).setOnAirMe(
-											studioExtensions.get(command[2]), true);
-								else
-									callPanels.get(command[3]).setAnsweredMe(command[2], 
-											true);
-								
-								/* BUG FIX: Forgot to notify listeners that we'd answered something
-								 * This only occurs when we dial out
-								 */
-								//notifyListeners(callPanels.get(command[3]));
-								/* TODO Do we still need this?
-								 * Seems logically incorrect to notify a listener that our own call has
-								 * been answered to ourselves */
-								
-							/* if 2nd argument = myphone its a call I've answered */
-							}else if(isMyPhone(command[2])){
-								
-								callPanels.get(command[3]).setAnswered(true);
-								
-								/* This is us answering a call so we need to alert any 
-								 * listeners so that we can update the input panel as
-								 * required
-								 */
-								notifyListeners(callPanels.get(command[3]));
-								
-							/* Not my phone, if 1st argument = one of our extensions, its
-							 * an internal phone connected somewhere else
-							 */
-							}else if(systemExtensions.contains(command[1])){
-								
-								/* If 2nd argument is studio then internal call on air*/
-								if(isStudioExtension(command[2]))
-									callPanels.get(command[3]).setOnAir(
-											studioExtensions.get(command[2]));
-								else{
-									
-									/* Lookup the extension, if we have a reference
-									 * exchange the number for a friendly name e.g.
-									 * 5001 = Steve, if its null leave it as 5001
-									 */
-									String connectedTo = userExtensions.get(command[2]);
-									
-									if(connectedTo != null)
-										callPanels.get(command[3]).setAnsweredElseWhere(
-												connectedTo, true);
-									else
-										callPanels.get(command[3]).setAnsweredElseWhere(
-												command[2], true);
-								}
-								
-							}else if(systemExtensions.contains(command[2])){
-								
-								/* If second argument is a system extension, this is an
-								 * outside call coming in but not to my phone
-								 */
-								if(isStudioExtension(command[2]))
-									callPanels.get(command[3]).setOnAir(
-											studioExtensions.get(command[2]));
-								else{
-									
-									/* Lookup the extension, if we have a reference
-									 * exchange the number for a friendly name e.g.
-									 * 5001 = Steve, if its null leave it as 5001
-									 */
-									String connectedTo = userExtensions.get(command[2]);
-									
-									if(connectedTo != null)
-										callPanels.get(command[3]).setAnsweredElseWhere(
-												connectedTo, true);
-									else
-										callPanels.get(command[3]).setAnsweredElseWhere(
-												command[2], true);
-									
-								}
-								
+							//Already in our list so update
+							if(isMyPhone(command[2])){
+								callPanels.get(command[3]).setQueuedMe(true);
+								LOGGER.info(xStrings.getString("CallManagerPanel.setQueueMeMode")); 
 							}else{
+								callPanels.get(command[3]).setQueued(true);
+								LOGGER.info(xStrings.getString("CallManagerPanel.setQueueMode")); 
+							}
+							
+						}else{
+							
+							//Not in our list so create skeleton and spawn update thread
+							//queue, name, number, channel
+							if(isMyPhone(command[2]))
+								createSkeletonCallInfoPanel(command[2], command[3], 
+										CallInfoPanel.MODE_QUEUED_ME, null, -1);
+							else
+								createSkeletonCallInfoPanel(command[2], command[3], 
+										CallInfoPanel.MODE_QUEUED, null, -1);
 								
-								/* WMM 23/08/2014 Server will parse out outgoing callerid, probably
-								 * don't need this anymore TODO
-								 * Here we arrive in an odd state because neither number
-								 * is registering as any phone in the system.  However, when dialling out
-								 * the callerid is swapped to the outgoing caller id so a call that 
-								 * would start as:
-								 * 
-								 * 5002 -> 907886123456
-								 * 
-								 * Would become:
-								 * 
-								 * 01211234567 -> 907886123456
-								 * 
-								 * This channel obviously exists so we need to look at it, figure out
-								 * if its us and then set this as ANSWERED_ME
+						}
+						
+					}	
+					
+				}else if(command[0].equals(
+						xStrings.getString("CallManagerPanel.callConnected"))){ 
+					
+					//Turn off ringing for this channel
+					if(ringer != null)
+						stopRinging(command[3]);
+					
+					if(callPanels.get(command[3]) != null){
+						
+						//Connected to a panel that already exists
+						/* if 1st argument = myphone its my phone connecting to 
+						 * someone else */
+						if(isMyPhone(command[1])){
+							/* At this stage, check if my phone is on air */
+							if(isStudioExtension(command[2]))
+								callPanels.get(command[3]).setOnAirMe(
+										studioExtensions.get(command[2]), true);
+							else
+								callPanels.get(command[3]).setAnsweredMe(command[2], 
+										true);
+							
+							/* BUG FIX: Forgot to notify listeners that we'd answered something
+							 * This only occurs when we dial out
+							 */
+							//notifyListeners(callPanels.get(command[3]));
+							/* TODO Do we still need this?
+							 * Seems logically incorrect to notify a listener that our own call has
+							 * been answered to ourselves */
+							
+						/* if 2nd argument = myphone its a call I've answered */
+						}else if(isMyPhone(command[2])){
+							
+							callPanels.get(command[3]).setAnswered(true);
+							
+							/* This is us answering a call so we need to alert any 
+							 * listeners so that we can update the input panel as
+							 * required
+							 */
+							notifyListeners(callPanels.get(command[3]));
+							
+						/* Not my phone, if 1st argument = one of our extensions, its
+						 * an internal phone connected somewhere else
+						 */
+						}else if(systemExtensions.contains(command[1])){
+							
+							/* If 2nd argument is studio then internal call on air*/
+							if(isStudioExtension(command[2]))
+								callPanels.get(command[3]).setOnAir(
+										studioExtensions.get(command[2]));
+							else{
+								
+								/* Lookup the extension, if we have a reference
+								 * exchange the number for a friendly name e.g.
+								 * 5001 = Steve, if its null leave it as 5001
 								 */
-								if(isMyPhone(callPanels.get(command[3]).getOriginator())){ 
-									//ANSWERED_ME
-									callPanels.get(command[3]).setAnsweredMe(command[2], true);
-									
-									/* BUG FIX: Forgot to notify listeners that we'd answered something
-									 * This only occurs when we dial out
-									 */
-									notifyListeners(callPanels.get(command[3]));
-									
-								}else{
-									//ANSWERED_ELSEWHERE
-									callPanels.get(command[3]).setAnsweredElseWhere(command[2], true);
-								}
+								String connectedTo = userExtensions.get(command[2]);
+								
+								if(connectedTo != null)
+									callPanels.get(command[3]).setAnsweredElseWhere(
+											connectedTo, true);
+								else
+									callPanels.get(command[3]).setAnsweredElseWhere(
+											command[2], true);
+							}
+							
+						}else if(systemExtensions.contains(command[2])){
+							
+							/* If second argument is a system extension, this is an
+							 * outside call coming in but not to my phone
+							 */
+							if(isStudioExtension(command[2]))
+								callPanels.get(command[3]).setOnAir(
+										studioExtensions.get(command[2]));
+							else{
+								
+								/* Lookup the extension, if we have a reference
+								 * exchange the number for a friendly name e.g.
+								 * 5001 = Steve, if its null leave it as 5001
+								 */
+								String connectedTo = userExtensions.get(command[2]);
+								
+								if(connectedTo != null)
+									callPanels.get(command[3]).setAnsweredElseWhere(
+											connectedTo, true);
+								else
+									callPanels.get(command[3]).setAnsweredElseWhere(
+											command[2], true);
 								
 							}
 							
 						}else{
 							
-							//Not exists so check details in case something slipped through
-							if(!isMyPhone(command[1]) && !isMyPhone(command[2])){
-								//TODO
-								//This isn't us so someone connected to someone else
-								//Check if we're connected to someone who is monitored by this program
-								if(systemExtensions.contains(command[2])){
-									
-									/* If we have a panel that was spawned by CALL
-									 * and it was from command[2] then drop the original
-									 * panel 
-									 */
-									checkDialledCall(command[1]);
-									
-									//This is an outside call connecting to someone else
-									//Check to see if someone else = studio
-									if(!isStudioExtension(command[2]))
-										createSkeletonCallInfoPanel(command[1], command[3], 
-												CallInfoPanel.MODE_ANSWERED_ELSEWHERE, command[2], 
-												creationTime);
-									else{
-										
-										createSkeletonCallInfoPanel(command[1], command[3], 
-												CallInfoPanel.MODE_ON_AIR, 
-												studioExtensions.get(command[2]), 
-												creationTime);
-										
-									}
-									
-								}
-								//the caller is not me but the receiver is
-							}else if(!isMyPhone(command[1]) && isMyPhone(command[2])){
+							/* WMM 23/08/2014 Server will parse out outgoing callerid, probably
+							 * don't need this anymore TODO
+							 * Here we arrive in an odd state because neither number
+							 * is registering as any phone in the system.  However, when dialling out
+							 * the callerid is swapped to the outgoing caller id so a call that 
+							 * would start as:
+							 * 
+							 * 5002 -> 907886123456
+							 * 
+							 * Would become:
+							 * 
+							 * 01211234567 -> 907886123456
+							 * 
+							 * This channel obviously exists so we need to look at it, figure out
+							 * if its us and then set this as ANSWERED_ME
+							 */
+							if(isMyPhone(callPanels.get(command[3]).getOriginator())){ 
+								//ANSWERED_ME
+								callPanels.get(command[3]).setAnsweredMe(command[2], true);
 								
-								/* Someone connected to us, most likely this is a second channel
-								 * for the receiver after we've dialled.
-								 * 
-								 * So check to see if we aren't already connected to this person
-								 * on another channel and if so we'll need to change the channelID
-								 * otherwise you lose conversation and call type as soon as the
-								 * call is put on hold under its own channelID
+								/* BUG FIX: Forgot to notify listeners that we'd answered something
+								 * This only occurs when we dial out
 								 */
+								notifyListeners(callPanels.get(command[3]));
 								
-								if(!isAlreadyConnected(command[1])){
-									
-									/* Don't have a panel for this AND caller is from an
-									 * internal or external phone
-									 */
-									createSkeletonCallInfoPanel(command[1], command[3],
-											CallInfoPanel.MODE_ANSWERED, null, creationTime);
-								
-									notifyListeners(callPanels.get(command[3]));
-									
-								}else{
-									
-									/* Need to drop original channel to reflect new
-									 * server behaviour 23/08/2014 WMM */
-									//CONNECTED/01234567890/5103/1408832327.787
-									String oldChannelID = getAlreadyConnectedChannel(command[1]);
-									
-									if(callPanels.get(oldChannelID) != null)
-										removePanel(oldChannelID);
-									
-									//Create new panel based on old outgoing call
-									createSkeletonCallInfoPanel(command[1], command[3],
-											CallInfoPanel.MODE_ANSWERED, command[2], creationTime);
-								
-									notifyListeners(callPanels.get(command[3]));
-									
-									/*Removed Old behaviour 23/08/2014
-									 * String oldChannelID = getAlreadyConnectedChannel(command[1]);
-									 * 
-									 * If already connected is an older channel then we 
-									 * dialled this channel so need to change the mode to 
-									 * an answered_me instead of generic answered
-									 * 
-									 *  BUG FIX can't use doubles as it won't pick up
-									 *  "1.407...E9" etc from callPanels
-									 *
-									
-									BigDecimal oldChannel = new BigDecimal(oldChannelID);
-									BigDecimal newChannel = new BigDecimal(command[3]);
-									
-									CallInfoPanel temp = callPanels.get(oldChannelID);
-									
-									if(oldChannel.compareTo(newChannel) == -1 &&
-											temp != null){
-										
-										/* Get the active person of the old channel ID because
-										 * When we swap to the new channel, the active person
-										 * won't be set and we'll lose info (and nullpointer)
-										 *//*
-										int activePerson = callPanels.get(oldChannelID).getPhoneCallRecord().getActivePerson().id;
-										sendSetActivePersonOnChannel(command[3], activePerson);
-										
-										callPanels.remove(temp.getChannelID());
-										temp.changeChannelID(command[3]);
-										callPanels.put(command[3], temp);
-										temp.setAnsweredMe(command[1], false);
-										notifyListeners(temp);
-										
-									}*/
-									
-								}
-								
-								//Caller is me and the receiver isn't
-							}else if(isMyPhone(command[1]) && !isMyPhone(command[2])){
-								
-								/* If we get here by normal control messages then this should 
-								 * be ignored
-								 * TODO We can't ignore this, if you dial out then reload program
-								 * you won't get any panel for this call
-								 */
-								
+							}else{
+								//ANSWERED_ELSEWHERE
+								callPanels.get(command[3]).setAnsweredElseWhere(command[2], true);
 							}
 							
 						}
-						//UPDATEFIELD
-					}else if(command[0].equals(xStrings.getString(
-							"CallManagerPanel.commandUpdateField"))){ 
-						//		0			1			2			3
-						//UPDATEFIELD/field mapping/channel id/field value
-						/*if(command[3].equals("<CLEAR>")) 
-							command[3] = ""; */
-						//Panel can be gone when update happens, check for exists first
-						if(callPanels.get(command[2]) != null){
-							
-							if(command[1].equals("name")){ 
-								callPanels.get(command[2]).setPhoneCallField(command[1], 
-										command[3].replace("^^%%$$", "/"),   
-										false);
-								callPanels.get(command[2]).setCallerName(
-										command[3].replace("^^%%$$", "/"), false);  
-							}else if(command[1].equals("location")){ 
-								callPanels.get(command[2]).setPhoneCallField(command[1], 
-										command[3].replace("^^%%$$", "/"),   
-										false);
-								callPanels.get(command[2]).setCallerLocation(command[3], false);
-							}else if(command[1].equals("conversation")){ 
-								callPanels.get(command[2]).setPhoneCallField(command[1], 
-										command[3].replace("^^%%$$", "/"),   
-										false);
-								callPanels.get(command[2]).setConversation(command[3], false);
-							}else if(command[1].equals("alert")){ 
+						
+					}else{
+						
+						//Not exists so check details in case something slipped through
+						if(!isMyPhone(command[1]) && !isMyPhone(command[2])){
+							//TODO
+							//This isn't us so someone connected to someone else
+							//Check if we're connected to someone who is monitored by this program
+							if(systemExtensions.contains(command[2])){
 								
-								String[] temp = command[3].split("@@"); 
+								/* If we have a panel that was spawned by CALL
+								 * and it was from command[2] then drop the original
+								 * panel 
+								 */
+								checkDialledCall(command[1]);
 								
-								try{
-									int level = Integer.parseInt(temp[1]);
-									callPanels.get(command[2]).setAlertLevel(null, level, false);
-								}catch(NumberFormatException e){
-									callPanels.get(command[2]).setAlertLevel(null,
-											temp[1].replace("+", "/"), false);  
+								//This is an outside call connecting to someone else
+								//Check to see if someone else = studio
+								if(!isStudioExtension(command[2]))
+									createSkeletonCallInfoPanel(command[1], command[3], 
+											CallInfoPanel.MODE_ANSWERED_ELSEWHERE, command[2], 
+											creationTime);
+								else{
+									
+									createSkeletonCallInfoPanel(command[1], command[3], 
+											CallInfoPanel.MODE_ON_AIR, 
+											studioExtensions.get(command[2]), 
+											creationTime);
+									
 								}
 								
-								callPanels.get(command[2]).setPhoneCallField("alert", 
-										temp[0], false);
+							}
+							//the caller is not me but the receiver is
+						}else if(!isMyPhone(command[1]) && isMyPhone(command[2])){
+							
+							/* Someone connected to us, most likely this is a second channel
+							 * for the receiver after we've dialled.
+							 * 
+							 * So check to see if we aren't already connected to this person
+							 * on another channel and if so we'll need to change the channelID
+							 * otherwise you lose conversation and call type as soon as the
+							 * call is put on hold under its own channelID
+							 */
+							
+							if(!isAlreadyConnected(command[1])){
 								
-							}else if(command[1].equals("calltype")){ 
+								/* Don't have a panel for this AND caller is from an
+								 * internal or external phone
+								 */
+								createSkeletonCallInfoPanel(command[1], command[3],
+										CallInfoPanel.MODE_ANSWERED, null, creationTime);
+							
+								notifyListeners(callPanels.get(command[3]));
 								
-								//Split the image from the value:
-								String[] temp = command[3].replace("+", "/").split("@@"); 
-								callPanels.get(command[2]).setBadgeIcon(null,
-											temp[1], false);  
-								//Set the record call type
-								callPanels.get(command[2]).setPhoneCallField("calltype",  
-										temp[0], false);
 							}else{
 								
-								//Custom Field
-								callPanels.get(command[2]).setPhoneCallField(command[1], 
-										command[3].replace("^^%%$$", "/"),   
-										false);
+								/* Need to drop original channel to reflect new
+								 * server behaviour 23/08/2014 WMM */
+								//CONNECTED/01234567890/5103/1408832327.787
+								String oldChannelID = getAlreadyConnectedChannel(command[1]);
+								
+								if(callPanels.get(oldChannelID) != null)
+									removePanel(oldChannelID);
+								
+								//Create new panel based on old outgoing call
+								createSkeletonCallInfoPanel(command[1], command[3],
+										CallInfoPanel.MODE_ANSWERED, command[2], creationTime);
+							
+								notifyListeners(callPanels.get(command[3]));
+								
+								/*Removed Old behaviour 23/08/2014
+								 * String oldChannelID = getAlreadyConnectedChannel(command[1]);
+								 * 
+								 * If already connected is an older channel then we 
+								 * dialled this channel so need to change the mode to 
+								 * an answered_me instead of generic answered
+								 * 
+								 *  BUG FIX can't use doubles as it won't pick up
+								 *  "1.407...E9" etc from callPanels
+								 *
+								
+								BigDecimal oldChannel = new BigDecimal(oldChannelID);
+								BigDecimal newChannel = new BigDecimal(command[3]);
+								
+								CallInfoPanel temp = callPanels.get(oldChannelID);
+								
+								if(oldChannel.compareTo(newChannel) == -1 &&
+										temp != null){
+									
+									/* Get the active person of the old channel ID because
+									 * When we swap to the new channel, the active person
+									 * won't be set and we'll lose info (and nullpointer)
+									 *//*
+									int activePerson = callPanels.get(oldChannelID).getPhoneCallRecord().getActivePerson().id;
+									sendSetActivePersonOnChannel(command[3], activePerson);
+									
+									callPanels.remove(temp.getChannelID());
+									temp.changeChannelID(command[3]);
+									callPanels.put(command[3], temp);
+									temp.setAnsweredMe(command[1], false);
+									notifyListeners(temp);
+									
+								}*/
 								
 							}
-						
+							
+							//Caller is me and the receiver isn't
+						}else if(isMyPhone(command[1]) && !isMyPhone(command[2])){
+							
+							/* If we get here by normal control messages then this should 
+							 * be ignored
+							 * TODO We can't ignore this, if you dial out then reload program
+							 * you won't get any panel for this call
+							 */
+							
 						}
-					}else if(command.length == 4 &&
-							command[0].equals(xStrings.getString("CallManagerPanel.endPoint"))){ 
-						
-						//Store endpoint and extension here then act on it in subsequent queue message
-						//ENDPOINT/1397214684.388/1397214684.391/9901234567890
-						//ENDPOINT/dialler ch    /receiver ch   /receiver clid
-						//endPoints.put(command[3], new EndPointRecord(command[1], command[2], command[3]));
-						//TODO Check removal is OK
 						
 					}
-					
-				}else if(command.length == 3 && 
-						command[0].startsWith(xStrings.getString("CallManagerPanel.callHangup"))){ 
-					
-					//Call Hangup received
-					LOGGER.info(
-							xStrings.getString("CallManagerPanel.removingPanelHangupReceived") +  
-									command[2]);
-					
-					//Turn off ringing for this channel (in case we get hang up with no answer)
-					if(ringer != null)
-						stopRinging(command[2]);
-					
-					//Check to see if we have the panel in the list and remove it
+					//UPDATEFIELD
+				}else if(command[0].equals(xStrings.getString(
+						"CallManagerPanel.commandUpdateField"))){ 
+					//		0			1			2			3
+					//UPDATEFIELD/field mapping/channel id/field value
+					/*if(command[3].equals("<CLEAR>")) 
+						command[3] = ""; */
+					//Panel can be gone when update happens, check for exists first
 					if(callPanels.get(command[2]) != null){
 						
-						//If this is our manual call being ended re-enable the add call button
-						if(command[2].startsWith("M_") &&
-								callPanels.get(command[2]).getModeWhenClicked() ==
-								CallInfoPanel.MODE_ANSWERED)
-							notifyManualListeners();
-
-						removePanel(command[2]);
-						
+						if(command[1].equals("name")){ 
+							callPanels.get(command[2]).setPhoneCallField(command[1], 
+									command[3].replace("^^%%$$", "/"),   
+									false);
+							callPanels.get(command[2]).setCallerName(
+									command[3].replace("^^%%$$", "/"), false);  
+						}else if(command[1].equals("location")){ 
+							callPanels.get(command[2]).setPhoneCallField(command[1], 
+									command[3].replace("^^%%$$", "/"),   
+									false);
+							callPanels.get(command[2]).setCallerLocation(command[3], false);
+						}else if(command[1].equals("conversation")){ 
+							callPanels.get(command[2]).setPhoneCallField(command[1], 
+									command[3].replace("^^%%$$", "/"),   
+									false);
+							callPanels.get(command[2]).setConversation(command[3], false);
+						}else if(command[1].equals("alert")){ 
+							
+							String[] temp = command[3].split("@@"); 
+							
+							try{
+								int level = Integer.parseInt(temp[1]);
+								callPanels.get(command[2]).setAlertLevel(null, level, false);
+							}catch(NumberFormatException e){
+								callPanels.get(command[2]).setAlertLevel(null,
+										temp[1].replace("+", "/"), false);  
+							}
+							
+							callPanels.get(command[2]).setPhoneCallField("alert", 
+									temp[0], false);
+							
+						}else if(command[1].equals("calltype")){ 
+							
+							//Split the image from the value:
+							String[] temp = command[3].replace("+", "/").split("@@"); 
+							callPanels.get(command[2]).setBadgeIcon(null,
+										temp[1], false);  
+							//Set the record call type
+							callPanels.get(command[2]).setPhoneCallField("calltype",  
+									temp[0], false);
+						}else{
+							
+							//Custom Field
+							callPanels.get(command[2]).setPhoneCallField(command[1], 
+									command[3].replace("^^%%$$", "/"),   
+									false);
+							
+						}
+					
 					}
+				}else if(command.length == 4 &&
+						command[0].equals(xStrings.getString("CallManagerPanel.endPoint"))){ 
 					
-				}else if(command.length == 3 &&
-						command[0].equals(xStrings.getString("CallManagerPanel.callTransfer"))){ 
+					//Store endpoint and extension here then act on it in subsequent queue message
+					//ENDPOINT/1397214684.388/1397214684.391/9901234567890
+					//ENDPOINT/dialler ch    /receiver ch   /receiver clid
+					//endPoints.put(command[3], new EndPointRecord(command[1], command[2], command[3]));
+					//TODO Check removal is OK
 					
-					//Transfer from another user, add their name to our extensions list
-					userExtensions.put(command[2], from);
-					
-					//Stop ringing it transferred to someone else
-					if(ringer != null)
-						stopRinging(command[1]);
-
-				}else if(command.length == 2 &&
-						command[0].equals(xStrings.getString("CallManagerPanel.callLocked"))){ 
-					
-					/* Notification that call was locked wait 3 seconds and if panel is 
-					 * still clicked reset it to normal mode
-					 */
-					if(callPanels.get(command[1]) != null){
-						
-						new Thread(new LockedWaitThread(callPanels.get(command[1]))).start();
-						
-					}//If it doesn't exist then ignore it, the call probably ended
-					
-				}else if(command.length == 2 && command[0].equals(
-						xStrings.getString("CallManagerPanel.changeFailed"))){ 
-				
-					showWarning(
-							xStrings.getString("CallManagerPanel.errorChangingPerson")); 
-				
-				}else if(command.length == 3 && command[0].equals(
-						xStrings.getString("CallManagerPanel.changed"))){ 
-					
-					//CHANGED
-					//Update CallInfoPanel, CallInputPanel.  CallLogPanel has its own listener
-					//CallInputPanel to be notified via notifyListeners method
-					if(callPanels.get(command[1]) != null){//Check we actually have this panel
-					
-						callPanels.get(command[1]).changeActivePerson(
-								new Person(Integer.parseInt(command[2]), 
-										language, country, 
-										database.getReadConnection()));
-						
-						//Notify listeners
-						notifyListeners(callPanels.get(command[1]));
-						
-					}
-					
-				}else if(command.length == 3 && command[0].equals(
-						xStrings.getString("CallManagerPanel.FAILED"))){ 
-					
-					/* Call failed to transfer to us
-					 * FAILED/Channel/Failure Code
-					 * 0: Extension Online/Ready
-					 * 1: Extension On a call
-					 * 4: Extension Off line
-					 *-1: Extension does not exist
-					 */
-					LOGGER.info(xStrings.getString(
-							"CallManagerPanel.clientPhoneError")); 
-					
-					//Reset CallInfoPanel
-					if(!command[1].equals("NA") &&  
-							callPanels.get(command[1]) != null)
-						callPanels.get(command[1]).reset();
-					
-					int errorCode = Integer.parseInt(command[2]);
-					
-					if(errorCode == 4)
-						showWarning(xStrings.getString(
-								"CallManagerPanel.errorExtensionOffline")); 
-					else if(errorCode == -1)
-						showWarning(xStrings.getString(
-								"CallManagerPanel.errorExtensionDoesNotExist")); 
-					else if(errorCode != 1)
-						showWarning(xStrings.getString(
-								"CallManagerPanel.errorExtension") + errorCode); 
-					
-				}else if(command.length == 2 && 
-						command[0].equals(xStrings.getString(
-								"CallManagerPanel.channelUpdate"))){ 
-					
-					//Update given panel looking for X in callhistory
-					//Then redo call answered if necessary
-					if(callPanels.containsKey(command[1])){
-						
-						CallInfoPanel panel = callPanels.get(command[1]);
-						
-						dbLookUpService.execute(
-								new InfoPanelPopulator(database, 
-										panel, 
-										panel.getNumber(), 
-										command[1], 
-										panel.getCallLocation()));
-						
-						if(panel.getMode() == CallInfoPanel.MODE_ANSWERED)
-							notifyListeners(panel);
-						
-					}
-					
-				}else if(command.length == 3 &&
-						command[0].equals(xStrings.getString(
-								"calls.manual"))){
-					
-					/* Manual Call Created
-					 * If [2] = our name this is manual for us
-					 * else manual for someone else just display answered by
-					 * them
-					 */
-					//TODO
-					//TODO
-					//TODO
-					int mode = CallInfoPanel.MODE_ANSWERED_ELSEWHERE;
-					
-					if(command[2].equals(settings.get("nickName")))
-						mode = CallInfoPanel.MODE_ANSWERED_ME;
-					
-					//MANUAL/M_1458563910616/waynemerricks
-					//String phoneNumber, String channelID, int mode,
-					//String connectedTo, long creationTime
-					createSkeletonCallInfoPanel(
-							xStrings.getString("CallManagerPanel.callSystemUnknown"),
-							command[1], mode, command[2], new Date().getTime());
-						
-					callPanels.get(command[1]).setOriginator(command[2]);
-					
-					//Set the panel to answered by us and notify listeners
-					if(mode == CallInfoPanel.MODE_ANSWERED_ME){
-
-						callPanels.get(command[1]).setAnswered(true);
-						notifyListeners(callPanels.get(command[1]));
-
-					}
-
 				}
 				
+			}else if(command.length == 3 && 
+					command[0].startsWith(xStrings.getString("CallManagerPanel.callHangup"))){ 
+				
+				//Call Hangup received
+				LOGGER.info(
+						xStrings.getString("CallManagerPanel.removingPanelHangupReceived") +  
+								command[2]);
+				
+				//Turn off ringing for this channel (in case we get hang up with no answer)
+				if(ringer != null)
+					stopRinging(command[2]);
+				
+				//Check to see if we have the panel in the list and remove it
+				if(callPanels.get(command[2]) != null){
+					
+					//If this is our manual call being ended re-enable the add call button
+					if(command[2].startsWith("M_") &&
+							callPanels.get(command[2]).getModeWhenClicked() ==
+							CallInfoPanel.MODE_ANSWERED)
+						notifyManualListeners();
+	
+					removePanel(command[2]);
+					
+				}
+				
+			}else if(command.length == 3 &&
+					command[0].equals(xStrings.getString("CallManagerPanel.callTransfer"))){ 
+				
+				//Transfer from another user, add their name to our extensions list
+				userExtensions.put(command[2], from);
+				
+				//Stop ringing it transferred to someone else
+				if(ringer != null)
+					stopRinging(command[1]);
+	
+			}else if(command.length == 2 &&
+					command[0].equals(xStrings.getString("CallManagerPanel.callLocked"))){ 
+				
+				/* Notification that call was locked wait 3 seconds and if panel is 
+				 * still clicked reset it to normal mode
+				 */
+				if(callPanels.get(command[1]) != null){
+					
+					new Thread(new LockedWaitThread(callPanels.get(command[1]))).start();
+					
+				}//If it doesn't exist then ignore it, the call probably ended
+				
+			}else if(command.length == 2 && command[0].equals(
+					xStrings.getString("CallManagerPanel.changeFailed"))){ 
+			
+				showWarning(
+						xStrings.getString("CallManagerPanel.errorChangingPerson")); 
+			
+			}else if(command.length == 3 && command[0].equals(
+					xStrings.getString("CallManagerPanel.changed"))){ 
+				
+				//CHANGED
+				//Update CallInfoPanel, CallInputPanel.  CallLogPanel has its own listener
+				//CallInputPanel to be notified via notifyListeners method
+				if(callPanels.get(command[1]) != null){//Check we actually have this panel
+				
+					callPanels.get(command[1]).changeActivePerson(
+							new Person(Integer.parseInt(command[2]), 
+									language, country, 
+									database.getReadConnection()));
+					
+					//Notify listeners
+					notifyListeners(callPanels.get(command[1]));
+					
+				}
+				
+			}else if(command.length == 3 && command[0].equals(
+					xStrings.getString("CallManagerPanel.FAILED"))){ 
+				
+				/* Call failed to transfer to us
+				 * FAILED/Channel/Failure Code
+				 * 0: Extension Online/Ready
+				 * 1: Extension On a call
+				 * 4: Extension Off line
+				 *-1: Extension does not exist
+				 */
+				LOGGER.info(xStrings.getString(
+						"CallManagerPanel.clientPhoneError")); 
+				
+				//Reset CallInfoPanel
+				if(!command[1].equals("NA") &&  
+						callPanels.get(command[1]) != null)
+					callPanels.get(command[1]).reset();
+				
+				int errorCode = Integer.parseInt(command[2]);
+				
+				if(errorCode == 4)
+					showWarning(xStrings.getString(
+							"CallManagerPanel.errorExtensionOffline")); 
+				else if(errorCode == -1)
+					showWarning(xStrings.getString(
+							"CallManagerPanel.errorExtensionDoesNotExist")); 
+				else if(errorCode != 1)
+					showWarning(xStrings.getString(
+							"CallManagerPanel.errorExtension") + errorCode); 
+				
+			}else if(command.length == 2 && 
+					command[0].equals(xStrings.getString(
+							"CallManagerPanel.channelUpdate"))){ 
+				
+				//Update given panel looking for X in callhistory
+				//Then redo call answered if necessary
+				if(callPanels.containsKey(command[1])){
+					
+					CallInfoPanel panel = callPanels.get(command[1]);
+					
+					dbLookUpService.execute(
+							new InfoPanelPopulator(database, 
+									panel, 
+									panel.getNumber(), 
+									command[1], 
+									panel.getCallLocation()));
+					
+					if(panel.getMode() == CallInfoPanel.MODE_ANSWERED)
+						notifyListeners(panel);
+					
+				}
+				
+			}else if(command.length == 3 &&
+					command[0].equals(xStrings.getString(
+							"calls.manual"))){
+				
+				/* Manual Call Created
+				 * If [2] = our name this is manual for us
+				 * else manual for someone else just display answered by
+				 * them
+				 */
+				//TODO
+				//TODO
+				//TODO
+				int mode = CallInfoPanel.MODE_ANSWERED_ELSEWHERE;
+				
+				if(command[2].equals(settings.get("nickName")))
+					mode = CallInfoPanel.MODE_ANSWERED_ME;
+				
+				//MANUAL/M_1458563910616/waynemerricks
+				//String phoneNumber, String channelID, int mode,
+				//String connectedTo, long creationTime
+				createSkeletonCallInfoPanel(
+						xStrings.getString("CallManagerPanel.callSystemUnknown"),
+						command[1], mode, command[2], new Date().getTime());
+					
+				callPanels.get(command[1]).setOriginator(command[2]);
+				
+				//Set the panel to answered by us and notify listeners
+				if(mode == CallInfoPanel.MODE_ANSWERED_ME){
+	
+					callPanels.get(command[1]).setAnswered(true);
+					notifyListeners(callPanels.get(command[1]));
+	
+				}
+	
 			}
 			
 		}
-		
+	
 	}
 	
 	/**
@@ -1821,7 +1814,7 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 			try {
 				controlRoom.sendMessage(xStrings.getString("CallManagerPanel.commandDial") +  
 						"/" + number + "/" + settings.get("myExtension"));   
-			} catch (XMPPException e) {
+			} catch (Exception e) {
 				LOGGER.severe(xStrings.getString("CallManagerPanel.errorSendingDialCommand")); 
 			}
 		
@@ -1865,19 +1858,9 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 		
 	}
 	
-	/* CHAT MANAGER LISTENER */
+	/* CHAT MANAGER LISTENER -> IncomingChatMessageListener Smack 4 */
 	@Override
-	public void chatCreated(Chat chat, boolean createdLocally) {
-		
-		//New chat initiated so add a message listener to it
-		chat.addMessageListener(this);
-		LOGGER.info(xStrings.getString("CallManagerPanel.receivedPrivateChatRequest")); 
-		
-	}
-
-	/* MESSAGE LISTENER */
-	@Override
-	public void processMessage(Chat chat, Message message) {
+	public void newIncomingMessage(EntityBareJid jid, Message message, Chat chat) {
 		
 		//Can pass this on to the processPacket method as part of normal message handling
 		LOGGER.info(xStrings.getString("CallManagerPanel.receivedPrivateMessage") 
@@ -1917,10 +1900,10 @@ public class CallManagerPanel extends JPanel implements PacketListener, MouseLis
 			notifyListeners(callPanels.get(command[3]));
 			
 		}else
-			processPacket(message);
+			processMessage(message); 
 		
 	}
-	
+
 	/* MOUSE LISTENER */
 	@Override
 	public void mouseClicked(MouseEvent evt) {
