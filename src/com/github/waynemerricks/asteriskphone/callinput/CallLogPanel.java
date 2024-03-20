@@ -21,12 +21,11 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 
-import org.jivesoftware.smack.Chat;
-import org.jivesoftware.smack.ChatManagerListener;
 import org.jivesoftware.smack.MessageListener;
-import org.jivesoftware.smack.PacketListener;
+import org.jivesoftware.smack.chat2.Chat;
+import org.jivesoftware.smack.chat2.IncomingChatMessageListener;
 import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smack.packet.Packet;
+import org.jxmpp.jid.EntityBareJid;
 
 import com.github.waynemerricks.asteriskphone.chat.ChatManager;
 import com.github.waynemerricks.asteriskphone.records.CallLog;
@@ -36,7 +35,7 @@ import com.github.waynemerricks.asteriskphone.records.CallLog;
  * @author waynemerricks
  *
  */
-public class CallLogPanel implements PacketListener, ChatManagerListener, MessageListener {
+public class CallLogPanel implements MessageListener, IncomingChatMessageListener {
 
 	/* CLASS VARS */
 	private I18NStrings xStrings;
@@ -148,8 +147,7 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 		manager.getControlChatRoom().addMessageListener(this);
 		
 		//Add Private Chat Listener
-		manager.getConnection().getChatManager().addChatListener(this);
-		
+		org.jivesoftware.smack.chat2.ChatManager.getInstanceFor(manager.getConnection()).addIncomingListener(this);
 		
 	}
 
@@ -344,91 +342,35 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 	}
 
 	@Override
-	public void processPacket(Packet XMPPPacket) {
+	public void processMessage(Message message) {
 		
-		if(XMPPPacket instanceof Message){
+		//React to commands thread all of this if performance is a problem
+		LOGGER.info(xStrings.getString("CallLogPanel.receivedMessage") + 
+					message.getBody());
 			
-			Message message = (Message)XMPPPacket;
+		String[] command = message.getBody().split("/"); 
+		
+		//UPDATEFIELD
+		if(command.length == 4 && command[0].equals(
+				xStrings.getString("CallLogPanel.commandUpdateField"))){ 
 			
-			//React to commands thread all of this if performance is a problem
-			LOGGER.info(xStrings.getString("CallLogPanel.receivedMessage") + 
-						message.getBody());
+			/* Only care about name, conversation, location
+			 * TODO Change this to read fields wanted from DB
+			 */
+			//Make sure channel exists in list before updating
+			if(!records.containsKey(command[2])){
 				
-			String[] command = message.getBody().split("/"); 
-			
-			//UPDATEFIELD
-			if(command.length == 4 && command[0].equals(
-					xStrings.getString("CallLogPanel.commandUpdateField"))){ 
-				
-				/* Only care about name, conversation, location
-				 * TODO Change this to read fields wanted from DB
+				//Create a new one based on this
+				/* TODO BUG fix dial channel swap
+				 * When we dial, the channel in command[2] will only show you
+				 * the person who called.  We need to find out who we're calling
+				 * and use that for the channel vs person lookup					
 				 */
-				//Make sure channel exists in list before updating
-				if(!records.containsKey(command[2])){
-					
-					//Create a new one based on this
-					/* TODO BUG fix dial channel swap
-					 * When we dial, the channel in command[2] will only show you
-					 * the person who called.  We need to find out who we're calling
-					 * and use that for the channel vs person lookup					
-					 */
-					//Add to call log table
-					LOGGER.info(xStrings.getString("CallLogPanel.logNewUpdate") + " " + command[2]);  
-					
-					CallLog log = new CallLog(language, country,
-			    			command[2],
-			    			readConnection, true);
-			    	//TODO DEBUG change back to info
-					LOGGER.severe(
-							xStrings.getString("CallLogPanel.addingChannelToLog") + 
-							log.getChannel()); 
-					
-			    	records.put(log.getChannel(), log);
-			    	addCallLog(log);
-					
-				}
-				
-				if(command[1].equals(xStrings.getString("CallLogPanel.name"))){ 
-					
-					LOGGER.info(xStrings.getString("CallLogPanel.logNameUpdate")); 
-					
-					//Set Internal Record
-					records.get(command[2]).setName(command[3]);
-					
-					//Set table row value
-					changeCallLog(command[2], "name", command[3]); 
-					
-				}else if(command[1].equals(xStrings.getString("CallLogPanel.conversation"))){ 
-					
-					LOGGER.info(xStrings.getString("CallLogPanel.logConversationUpdate")); 
-					
-					//Set Internal Record
-					records.get(command[2]).setConversation(command[3]);
-					
-					//Set table row value
-					changeCallLog(command[2], "conversation", command[3]); 
-					
-				}else if(command[1].equals(xStrings.getString("CallLogPanel.location"))){ 
-					
-					LOGGER.info(xStrings.getString("CallLogPanel.logLocationUpdate")); 
-					
-					//Set Internal Record
-					records.get(command[2]).setLocation(command[3]);
-					
-					//Set table row value
-					changeCallLog(command[2], "location", command[3]); 
-					
-				}
-			
-			}else if(command.length == 4 && command[0].equals(
-					xStrings.getString("CallLogPanel.commandQueue")) && 
-					command[1].equals(incomingQueue)){//QUEUE INCOMING
-				
 				//Add to call log table
-				LOGGER.info(xStrings.getString("CallLogPanel.logQUEUE")); 
+				LOGGER.info(xStrings.getString("CallLogPanel.logNewUpdate") + " " + command[2]);  
 				
 				CallLog log = new CallLog(language, country,
-		    			command[3],
+		    			command[2],
 		    			readConnection, true);
 		    	//TODO DEBUG change back to info
 				LOGGER.severe(
@@ -437,68 +379,118 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 				
 		    	records.put(log.getChannel(), log);
 		    	addCallLog(log);
-		    		
-		    }else if(command.length == 4 && command[0].equals(
-		    		xStrings.getString("CallLogPanel.commandEndPoint"))){ 
-		    	//TODO DEBUG change back to info
-		    	//Store as we'll expect a channel swap on this
-		    	LOGGER.severe(xStrings.getString("CallLogPanel.logEndPoint") + " " +   
-		    			"Number: " + command[3] + " Channel: " + command[1]);   
-		    	channelSwapList.put(command[3], command[1]);//key = number, value = channel
-		    	
-		    }else if(command.length == 4 && command[0].equals(
-		    		xStrings.getString("CallLogPanel.commandQueue")) && 
-		    		command[1].equals(onairQueue)){ //QUEUE ON AIR
-		    	
-		    	//Check for channel swap
-		    	if(channelSwapList.size() > 0){
-		    		
-		    		if(channelSwapList.containsKey(command[2])){
-		    			
-		    			LOGGER.info(xStrings.getString("CallLogPanel.receivedSwapOnAirQueue")); 
-			    		swapChannel(channelSwapList.get(command[2]), command[3]);
-		    			channelSwapList.remove(command[2]);
-		    			
-		    		}
-		    		
-		    	}
-		    	
-		    }else if(command.length == 3 && command[0].equals(
-					xStrings.getString("CallLogPanel.changed"))){ 
-				
-				/* CHANGED
-				 * Update log record for a given channel to another person only 
-				 * need to change name and location as the rest of the call
-				 * follows the channelID
-		    	 */
-				//CHANGED/channelID/personID
-		    	
-		    	String[] person = getPerson(readConnection, 
-		    			Integer.parseInt(command[2]));
-		    	
-		    	changeCallLog(command[1], "name", person[0]); 
-		    	changeCallLog(command[1], "location", person[1]); 
-		    	
-			}else if(command.length == 3 && command[0].equals(
-					xStrings.getString("CallLogPanel.manual"))){
-				
-				//Add to call log table
-				LOGGER.info(xStrings.getString("CallLogPanel.logManual")); 
-				
-				CallLog log = new CallLog(language, country,
-		    			command[1],
-		    			readConnection, true);
-		    	
-				LOGGER.info(
-						xStrings.getString("CallLogPanel.addingChannelToLog") + 
-						log.getChannel()); 
-				
-		    	records.put(log.getChannel(), log);
-		    	addCallLog(log);
 				
 			}
 			
-		}	
+			if(command[1].equals(xStrings.getString("CallLogPanel.name"))){ 
+				
+				LOGGER.info(xStrings.getString("CallLogPanel.logNameUpdate")); 
+				
+				//Set Internal Record
+				records.get(command[2]).setName(command[3]);
+				
+				//Set table row value
+				changeCallLog(command[2], "name", command[3]); 
+				
+			}else if(command[1].equals(xStrings.getString("CallLogPanel.conversation"))){ 
+				
+				LOGGER.info(xStrings.getString("CallLogPanel.logConversationUpdate")); 
+				
+				//Set Internal Record
+				records.get(command[2]).setConversation(command[3]);
+				
+				//Set table row value
+				changeCallLog(command[2], "conversation", command[3]); 
+				
+			}else if(command[1].equals(xStrings.getString("CallLogPanel.location"))){ 
+				
+				LOGGER.info(xStrings.getString("CallLogPanel.logLocationUpdate")); 
+				
+				//Set Internal Record
+				records.get(command[2]).setLocation(command[3]);
+				
+				//Set table row value
+				changeCallLog(command[2], "location", command[3]); 
+				
+			}
+		
+		}else if(command.length == 4 && command[0].equals(
+				xStrings.getString("CallLogPanel.commandQueue")) && 
+				command[1].equals(incomingQueue)){//QUEUE INCOMING
+			
+			//Add to call log table
+			LOGGER.info(xStrings.getString("CallLogPanel.logQUEUE")); 
+			
+			CallLog log = new CallLog(language, country,
+	    			command[3],
+	    			readConnection, true);
+	    	//TODO DEBUG change back to info
+			LOGGER.severe(
+					xStrings.getString("CallLogPanel.addingChannelToLog") + 
+					log.getChannel()); 
+			
+	    	records.put(log.getChannel(), log);
+	    	addCallLog(log);
+	    		
+	    }else if(command.length == 4 && command[0].equals(
+	    		xStrings.getString("CallLogPanel.commandEndPoint"))){ 
+	    	//TODO DEBUG change back to info
+	    	//Store as we'll expect a channel swap on this
+	    	LOGGER.severe(xStrings.getString("CallLogPanel.logEndPoint") + " " +   
+	    			"Number: " + command[3] + " Channel: " + command[1]);   
+	    	channelSwapList.put(command[3], command[1]);//key = number, value = channel
+	    	
+	    }else if(command.length == 4 && command[0].equals(
+	    		xStrings.getString("CallLogPanel.commandQueue")) && 
+	    		command[1].equals(onairQueue)){ //QUEUE ON AIR
+	    	
+	    	//Check for channel swap
+	    	if(channelSwapList.size() > 0){
+	    		
+	    		if(channelSwapList.containsKey(command[2])){
+	    			
+	    			LOGGER.info(xStrings.getString("CallLogPanel.receivedSwapOnAirQueue")); 
+		    		swapChannel(channelSwapList.get(command[2]), command[3]);
+	    			channelSwapList.remove(command[2]);
+	    			
+	    		}
+	    		
+	    	}
+	    	
+	    }else if(command.length == 3 && command[0].equals(
+				xStrings.getString("CallLogPanel.changed"))){ 
+			
+			/* CHANGED
+			 * Update log record for a given channel to another person only 
+			 * need to change name and location as the rest of the call
+			 * follows the channelID
+	    	 */
+			//CHANGED/channelID/personID
+	    	
+	    	String[] person = getPerson(readConnection, 
+	    			Integer.parseInt(command[2]));
+	    	
+	    	changeCallLog(command[1], "name", person[0]); 
+	    	changeCallLog(command[1], "location", person[1]); 
+	    	
+		}else if(command.length == 3 && command[0].equals(
+				xStrings.getString("CallLogPanel.manual"))){
+			
+			//Add to call log table
+			LOGGER.info(xStrings.getString("CallLogPanel.logManual")); 
+			
+			CallLog log = new CallLog(language, country,
+	    			command[1],
+	    			readConnection, true);
+	    	
+			LOGGER.info(
+					xStrings.getString("CallLogPanel.addingChannelToLog") + 
+					log.getChannel()); 
+			
+	    	records.put(log.getChannel(), log);
+	    	addCallLog(log);
+			
+		}
 
 	}
 
@@ -552,18 +544,9 @@ public class CallLogPanel implements PacketListener, ChatManagerListener, Messag
 		
 	}
 
+	/* MESSAGE LISTENER -> IncomingChatMessageListener */
 	@Override
-	public void chatCreated(Chat chat, boolean createdLocally) {
-		
-		//New chat initiated so add a message listener to it
-		chat.addMessageListener(this);
-		LOGGER.info(xStrings.getString("CallLogPanel.receivedPrivateChatRequest")); 
-				
-	}
-
-	/* MESSAGE LISTENER */
-	@Override
-	public void processMessage(Chat chat, Message message) {
+	public void newIncomingMessage(EntityBareJid jid, Message message, Chat chat) {
 		
 		//Can pass this on to the processPacket method as part of normal message handling
 		LOGGER.info(xStrings.getString("CallLogPanel.receivedPrivateMessage") 
