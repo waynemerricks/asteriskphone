@@ -33,13 +33,12 @@ import org.asteriskjava.live.internal.AsteriskAgentImpl;
 import org.asteriskjava.manager.TimeoutException;
 import org.asteriskjava.manager.action.ExtensionStateAction;
 import org.asteriskjava.manager.response.ExtensionStateResponse;
-import org.jivesoftware.smack.Chat;
+import org.jivesoftware.smack.chat2.Chat;
+import org.jivesoftware.smack.chat2.ChatManager;
 import org.jivesoftware.smack.MessageListener;
-import org.jivesoftware.smack.PacketListener;
-import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smackx.muc.MultiUserChat;
+import org.jxmpp.jid.impl.JidCreate;
 
 import com.github.waynemerricks.asteriskphone.database.ActivePersonChanger;
 import com.github.waynemerricks.asteriskphone.database.DatabaseManager;
@@ -49,7 +48,7 @@ import com.github.waynemerricks.asteriskphone.records.OutgoingCall;
 import com.github.waynemerricks.asteriskphone.records.PhoneCall;
 import com.github.waynemerricks.asteriskphone.records.TrackDial;
 
-public class AsteriskManager implements AsteriskServerListener, PropertyChangeListener, OriginateCallback, PacketListener, MessageListener {
+public class AsteriskManager implements AsteriskServerListener, PropertyChangeListener, OriginateCallback, MessageListener{
 
 	//STATICS
 	private static final Logger AST_LOGGER = Logger.getLogger("org.asteriskjava"); 
@@ -343,13 +342,17 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 	 */
 	private void sendPrivateMessage(String recipient, String message){
 	
-		Chat chat = controlRoom.createPrivateChat(controlRoom.getRoom() + "/" + recipient, this); 
-		
 		try {
+			
 			LOGGER.info(xStrings.getString("AsteriskManager.sendingPrivateMessage") +  
 					recipient + "/" + message); 
-			chat.sendMessage(message);
-		} catch (XMPPException e) {
+			
+			Chat chat = ChatManager.getInstanceFor(controlRoom.getXmppConnection())
+					.chatWith(JidCreate.entityBareFrom(controlRoom.getRoom() + "/" + recipient));
+			
+			chat.send(message);
+			
+		} catch (Exception e) {
 			LOGGER.warning(xStrings.getString("AsteriskManager.errorSendingPrivateMessage") + 
 					recipient); 
 		}
@@ -789,28 +792,24 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 				
 			controlRoom.sendMessage(message);
 			
-		}catch(XMPPException e){
+		}catch(Exception e){
 			LOGGER.severe(xStrings.getString("AsteriskManager.XMPPError")); 
-		}catch(IllegalStateException e){
-			LOGGER.severe(xStrings.getString("AsteriskManager.XMPPServerGoneError")); 
 		}
 		
 	}
 	
-	/** PacketListener **/
+	/** PacketListener -> MessageListener **/
 	@Override
-	public void processPacket(Packet XMPPPacket) {
+	public void processMessage(Message message) {
 		
-		if(!startup && XMPPPacket instanceof Message){
+		if(!startup){
 			
-			Message message = (Message)XMPPPacket;
-			
-			String from = message.getFrom();
+			String from = message.getFrom().toString();
 			
 			if(from.contains("/")) 
 				from = from.split("/")[1]; 
 			
-			if(!from.equals(controlRoom.getNickname())){//If the message didn't come from me 
+			if(!from.equals(controlRoom.getNickname().toString())){//If the message didn't come from me 
 				
 				//React to commands thread all of this if performance is a problem
 				LOGGER.info(xStrings.getString("AsteriskManager.receivedMessage") + 
@@ -1396,14 +1395,6 @@ public class AsteriskManager implements AsteriskServerListener, PropertyChangeLi
 			}
 			
 		}
-		
-	}
-	
-	/** MESSAGE LISTENER **/
-	@Override
-	public void processMessage(Chat chat, Message message) {
-		
-		//We don't care about any private messages we get so just ignore
 		
 	}
 	
